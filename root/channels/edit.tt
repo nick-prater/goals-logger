@@ -1,0 +1,38 @@
+[% # Template to display a list of Audio Inputs -%]
+ 
+[%- # Provide a title -%]
+[% META title = 'Input List' -%]
+
+
+
+<form
+	action="[% update_uri %]"
+	method="post"
+>
+
+	<div>
+		<label>Source Label
+			<input
+				type="text"
+				name="source_label"
+				value="[% channel.source_label %]"
+			/>
+		</label>
+	</div>
+
+	<div>
+		<label>Source
+			<input
+				type="text"
+				name="source"
+				value="[% channel.source %]"
+			/>
+		</label>
+	</div>
+
+	<input type="submit" value="Update" />
+
+</form>
+
+
+
