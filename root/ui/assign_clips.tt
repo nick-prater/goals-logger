@@ -118,7 +118,10 @@
 									<a href="javascript:clear_button([% button.button_id %])">clear</a>
 								</span>
 								<span class="button_box_play_link">
-									<a href="javascript:play_button([% button.button_id %])">play</a>
+									<a
+										href="javascript:play_button([% button.button_id %])"
+										id="button_box_play_link_[% button.button_id %]"
+									>play</a>
 								</span>
 							</div>
 						</td>
@@ -148,7 +151,7 @@
 
 				
 			<!-- Player is not visible - controlled by javascript -->
-			<audio id="player" autoplay="autoplay">
+			<audio id="player">
 				<!-- source populated dynamically by javascript -->
 			</audio>
 
@@ -217,19 +220,39 @@
 			player.addEventListener(
 				"pause",
 				function(event) {
-				
+ 					clear_player();
+				}
+			);
+			
+			player.addEventListener(
+				"canplay",
+				function(event) {
+ 					player.play();
+				}
+			);
+			
+
+			function clear_player() {
+			
+				player.pause();
+
+				if(playing_button_id) {
 					var duration_node = document.getElementById("button_box_duration_" + playing_button_id);
 					duration_node.innerHTML = playing_button_duration_original_html;
 					
 					/* Reset style to normal, non-playing button */
 					var button_node = document.getElementById("button_box_button_" + playing_button_id);
 					button_node.setAttribute("class", "button_box_button");
-										
-					playing_button_id = 0;
-				}
-			);
-			
 
+					/* Reset 'pause' button to 'play' */
+					var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
+					play_link.innerHTML = 'play';
+					
+					playing_button_id = 0;
+					playing_button_duration_original_html = "";
+				}
+			}
+			
 		
 			function update_buttons() {
 			
@@ -548,6 +571,7 @@
 			
 				/* Cancel any assignment already in progress */
 				cancel_assign_clip();
+				clear_player();
 			
 				/* Set global flag */
 				assigning_clip_id = clip_id;
@@ -587,6 +611,11 @@
 		
 		
 			function clear_button(button_id) {
+
+				/* If we are playing this button, stop it before clearing */
+				if(playing_button_id == button_id) {
+					clear_player();
+				}
 			
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
@@ -618,43 +647,30 @@
 
 			
 			
-			function stop_playing() {
-			
-				var player = document.getElementById("player");
-				player.pause;
-				
-				if(playing_button_id) {
-					stop_playing_button(playing_button_id);
-					playing_button_id = 0;
-				}				
-			}
-			
-			
 			function play_button(button_id) {
 			
 				if(playing_button_id == button_id) {
-				
-					/* Already playing it... */
-				
+					player.play();
+					return;
+					clear_player();
+					return;				
 				}
+			
+				clear_player();
 			
 				/* Highlight Button Clicked */
 				var button_node = document.getElementById("button_box_button_" + button_id);
 				button_node.setAttribute("class", "button_box_button_playing");
 				
-				/* Extract Time div */
 				var duration_node = document.getElementById("button_box_duration_" + button_id);
-				playing_button_duration_original_html = duration_node.innerHTML;
-				
-				playing_button_id = button_id;
-			
-				var player = document.getElementById("player");
 				var audio_url = "/button_box/audio/" + button_id;
-				player.pause;
+				playing_button_duration_original_html = duration_node.innerHTML;
+				playing_button_id = button_id;
 				player.src = audio_url;
 				
-				
-				
+				/* Change link from 'play' to 'stop' */
+				var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
+				play_link.innerHTML = 'stop';				
 			}
 			
 			
@@ -727,7 +743,7 @@
 					".wav"
 				)
 				
-				player.pause;
+				clear_player();
 				player.src = audio_url;
 				
 			}
