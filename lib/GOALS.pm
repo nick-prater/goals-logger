@@ -41,6 +41,13 @@ __PACKAGE__->config(
     disable_component_resolution_regex_fallback => 1,
 );
 
+
+# Allow static serving of any file extensions
+# Otherwise html files are banned!
+GOALS->config->{static}->{ignore_extensions} = [
+   
+];
+
 # Start the application
 __PACKAGE__->setup();
 
