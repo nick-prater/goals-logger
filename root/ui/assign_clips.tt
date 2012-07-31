@@ -495,11 +495,11 @@
 				if(playing_clip_id == clip_row.clip_id) {
 					
 					/* Highlight relevant table row */
-					var row_node = document.getElementById("clip_row_" + clip_id);
+					var row_node = document.getElementById("clip_row_" + clip_row.clip_id);
 					row_node.setAttribute("class", "play_row");
 					
 					/* change 'play' button to 'stop' */
-					var play_node = document.getElementById("clip_play_link_" + clip_id);
+					var play_node = document.getElementById("clip_play_link_" + clip_row.clip_id);
 					play_node.innerHTML = "stop";				
 				}
 				
