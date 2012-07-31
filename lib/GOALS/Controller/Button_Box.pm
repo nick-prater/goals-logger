@@ -50,7 +50,8 @@ sub audio : Local : Args(1) {
 	
 	# Respond according to whether a button has a clip assigned or not
 	if($clip_id) {
-		my $url = "/clip/$clip_id.wav";
+		my $prefix = $c->config->{clip_url_prefix} || '';
+		my $url = "$prefix/clip/$clip_id.wav";
 		$c->log->debug("button $button_id maps to clip_id $clip_id");
 		$c->log->debug("redirecting to $url");
 		$c->response->redirect($url);		
