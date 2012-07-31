@@ -132,6 +132,10 @@ sub all : Path('all') : Args(0) {
 	
 	foreach my $clip(@clips) {
 	
+		# Set timezone, so we can extract time and date in channel's 
+		# time zone. This should be pushed back into the DB model class,
+		$clip->clip_start_timestamp->set_time_zone( $clip->channel->timezone );	
+	
 		$json_data->{$clip->clip_id} = {
 			clip_id => $clip->clip_id,
 			title => $clip->title,
@@ -140,7 +144,9 @@ sub all : Path('all') : Args(0) {
 			duration_seconds => $clip->duration_seconds,
 			match_title => $clip->match_title,
 			commentator => $clip->commentator,
-			
+			source => $clip->source_label,
+			display_date => $clip->clip_start_timestamp->strftime('%a %d/%m/%Y'),# In audio time zone 
+			display_time => $clip->clip_start_timestamp->strftime('%H:%M:%S'),   # In audio time zone
 		};
 	}
 	
