@@ -61,6 +61,17 @@
 		
 	.button_box_button {
 		position: relative;
+		/*background: #ff0000; */
+	}
+	
+	.button_box_button_playing {
+		position: relative;
+		background: #bbffbb;
+	}
+
+	.button_box_button_assigning {
+		position: relative;
+		background: #ffffbb;
 	}
 	
 	.button_box_title {

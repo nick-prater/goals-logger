@@ -102,7 +102,11 @@
 						[% FOREACH button IN row %]
 						<td id="button_[% button.button_id %]" width="20%" class="button_box">
 						
-							<div class="button_box_button" onclick="click_button([% button.button_id %])">
+							<div
+								class="button_box_button"
+								id="button_box_button_[% button.button_id %]"
+								onclick="click_button([% button.button_id %])"
+							>
 							
 								<span class="button_box_title" id="button_box_title_[% button.button_id %]"></span>
 								<br />
@@ -179,6 +183,10 @@
 			/* Indicates which clip_id we are in the process of assigning, 0 if none */
 			assigning_clip_id = 0;
 
+			playing_button_id = 0;
+			var playing_button_duration_original_html;
+			
+			
 			/* If a specific clip_id is specified, display only that clip and select it for assignment */
 			var assign_clip_id = [% assign_clip_id %];
 			
@@ -187,6 +195,39 @@
 			var poll_ajax_timer;
 			update_buttons();
 			update_clip_list();
+
+			/* Define handlers for player events */
+			var player = document.getElementById("player");
+
+			player.addEventListener(
+				"timeupdate",
+				function(event) {
+				
+					/* Sanity Check */
+					if(!playing_button_id) {
+						return;
+					}
+					
+					var duration_node = document.getElementById("button_box_duration_" + playing_button_id);
+					var seconds_remaining = (player.duration - player.currentTime);
+					duration_node.innerHTML = seconds_to_mins_secs(seconds_remaining);
+				}
+			);
+				
+			player.addEventListener(
+				"pause",
+				function(event) {
+				
+					var duration_node = document.getElementById("button_box_duration_" + playing_button_id);
+					duration_node.innerHTML = playing_button_duration_original_html;
+					
+					/* Reset style to normal, non-playing button */
+					var button_node = document.getElementById("button_box_button_" + playing_button_id);
+					button_node.setAttribute("class", "button_box_button");
+										
+					playing_button_id = 0;
+				}
+			);
 			
 
 		
@@ -246,6 +287,10 @@
 					else {
 						node.innerHTML = "";
 					}
+					
+					/* Update style class */
+					node = document.getElementById("button_box_button_" + button.button_id);
+					node.setAttribute("class", "button_box_button");
 				}
 			}
 		
@@ -572,13 +617,48 @@
 			}
 
 			
+			
+			function stop_playing() {
+			
+				var player = document.getElementById("player");
+				player.pause;
+				
+				if(playing_button_id) {
+					stop_playing_button(playing_button_id);
+					playing_button_id = 0;
+				}				
+			}
+			
+			
 			function play_button(button_id) {
+			
+				if(playing_button_id == button_id) {
+				
+					/* Already playing it... */
+				
+				}
+			
+				/* Highlight Button Clicked */
+				var button_node = document.getElementById("button_box_button_" + button_id);
+				button_node.setAttribute("class", "button_box_button_playing");
+				
+				/* Extract Time div */
+				var duration_node = document.getElementById("button_box_duration_" + button_id);
+				playing_button_duration_original_html = duration_node.innerHTML;
+				
+				playing_button_id = button_id;
 			
 				var player = document.getElementById("player");
 				var audio_url = "/button_box/audio/" + button_id;
 				player.pause;
-				player.src = audio_url;;
+				player.src = audio_url;
+				
+				
+				
 			}
+			
+			
+			
 			
 			
 			function click_button(button_id) {
@@ -588,12 +668,16 @@
 					return;
 				}
 			
-				assign_clip_to_button(assigning_clip_id, button_id);
+				/* Highlight Button Clicked */
+				var node = document.getElementById("button_box_button_" + button_id);
+				node.setAttribute("class", "button_box_button_assigning");
+			
+				assign_clip_to_button(assigning_clip_id, button_id, button);
 				cancel_assign_clip();
 			}
 			
 			
-			function assign_clip_to_button(clip_id, button_id) {
+			function assign_clip_to_button(clip_id, button_id, button) {
 										
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
@@ -610,6 +694,9 @@
 					/* Free Up HTTP request object */
 					delete request;
 
+					update_buttons();
+					update_clip_list();
+					
 					/* If page is loaded with assign_clip_id defined, that
 					 * means we are only assigning a single clip, so return to player
 					 */
@@ -618,11 +705,11 @@
 						return;
 					}
 					
-					/* Process the payload */
-					update_clip_list();
-					update_buttons();
 				}
-			
+
+				
+				
+				
 				/* Send request */
 				var url = "/button_box/assign/" + button_id + "/" + clip_id;
 				request.open("GET", url, true);
@@ -641,7 +728,8 @@
 				)
 				
 				player.pause;
-				player.src = audio_url;;
+				player.src = audio_url;
+				
 			}
 			
 			
