@@ -1,7 +1,7 @@
 [% # Template to display a list of Audio Inputs -%]
  
 [%- # Provide a title -%]
-[% META title = 'Input List' -%]
+[% META title = "Recording Channel channel.channel_id" -%]
 
 
 
@@ -10,29 +10,52 @@
 	method="post"
 >
 
-	<div>
-		<label>Source Label
-			<input
-				type="text"
-				name="source_label"
-				value="[% channel.source_label %]"
-			/>
-		</label>
-	</div>
+	<fieldset>
+		<legend>Edit Recording Channel Details</legend>
+	
+		<ol>
+			<li>
+				<label for="source_label">source label</label>
+				<input 
+					type="text"
+					name="source_label"
+					value="[% channel.source_label %]"
+					required
+					size="60"
+				/>
+			</li>
 
-	<div>
-		<label>Source
-			<input
-				type="text"
-				name="source"
-				value="[% channel.source %]"
-			/>
-		</label>
-	</div>
+			<li>
+				<label for="match_title">match title</label>
+				<input 
+					type="text"
+					name="match_title"
+					value="[% channel.match_title %]"
+					placeholder="Team 1 v Team 2"
+					size="40"
+				/>
+			</li>
+			<li>
+				<label for="commentator">commentator</label>
+				<input
+					type="text"
+					name="commentator"
+					value="[% channel.commentator %]"
+					placeholder="Name of the Commentator"
+					size="40"
+				/>
+			</li>
+
+		</ol>
+
+	</fieldset>
 
 	<input type="submit" value="Update" />
-
 </form>
+
+<input type="button" name="Cancel" value="Cancel" onclick="window.location='[% cancel_uri %]'" />
+
+
 
 
 

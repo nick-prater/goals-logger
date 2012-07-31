@@ -11,7 +11,7 @@
 		<th>ID</th>
 		<th>Source Label</th>
 		<th>Source</th>
-                <th>Game</th>
+                <th>Match Title</th>
                 <th>Commentator</th>
 	</tr>
 
@@ -23,8 +23,12 @@
 		<td>[% channel.audio_input_id -%]</td>
 		<td>[% channel.source_label   -%]</td>
 		<td>[% channel.source         -%]</td>
+		<td>[% channel.match_title    -%]</td>
+		<td>[% channel.commentator    -%]</td>
 	</tr>
 	[% END -%]
 </table>
 
+<p />
 
+<a href="/ui/player">DONE</a>

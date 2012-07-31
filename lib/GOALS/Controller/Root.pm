@@ -30,8 +30,13 @@ sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
 
     # Hello World
-    $c->response->body( $c->welcome_message );
+    #$c->response->body( $c->welcome_message );
+    return $c->redirect('/hello_world.html');
 }
+
+
+
+
 
 =head2 default
 

@@ -11,7 +11,7 @@ use MooseX::NonMoose;
 use namespace::autoclean;
 extends 'DBIx::Class::Core';
 
-__PACKAGE__->load_components("InflateColumn::DateTime", "PassphraseColumn");
+__PACKAGE__->load_components("InflateColumn::DateTime");
 
 =head1 NAME
 
@@ -41,13 +41,27 @@ __PACKAGE__->table("events");
 
   data_type: 'timestamp'
   datetime_undef_if_invalid: 1
-  default_value: current_timestamp
+  default_value: '0000-00-00 00:00:00'
   is_nullable: 0
 
 =head2 event_type
 
   data_type: 'enum'
   extra: {list => ["on","off","instance"]}
+  is_nullable: 0
+
+=head2 status
+
+  data_type: 'enum'
+  default_value: 'new'
+  extra: {list => ["new","open","exported","deleted"]}
+  is_nullable: 0
+
+=head2 update_timestamp
+
+  data_type: 'timestamp'
+  datetime_undef_if_invalid: 1
+  default_value: current_timestamp
   is_nullable: 0
 
 =cut
@@ -71,7 +85,7 @@ __PACKAGE__->add_columns(
   {
     data_type => "timestamp",
     datetime_undef_if_invalid => 1,
-    default_value => \"current_timestamp",
+    default_value => "0000-00-00 00:00:00",
     is_nullable => 0,
   },
   "event_type",
@@ -80,10 +94,39 @@ __PACKAGE__->add_columns(
     extra => { list => ["on", "off", "instance"] },
     is_nullable => 0,
   },
+  "status",
+  {
+    data_type => "enum",
+    default_value => "new",
+    extra => { list => ["new", "open", "exported", "deleted"] },
+    is_nullable => 0,
+  },
+  "update_timestamp",
+  {
+    data_type => "timestamp",
+    datetime_undef_if_invalid => 1,
+    default_value => \"current_timestamp",
+    is_nullable => 0,
+  },
 );
 __PACKAGE__->set_primary_key("event_id");
 
 =head1 RELATIONS
+
+=head2 clips
+
+Type: has_many
+
+Related object: L<Schema::Result::Clip>
+
+=cut
+
+__PACKAGE__->has_many(
+  "clips",
+  "Schema::Result::Clip",
+  { "foreign.event_id" => "self.event_id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
 
 =head2 event_input
 
@@ -101,8 +144,21 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-05-31 14:24:43
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6Aop642740wpKmZAgH4Ntg
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-07-11 17:01:50
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hAO7crslahXiMvJDX/bttg
+
+
+__PACKAGE__->many_to_many(
+	'channels',
+	'channel_events',
+	'channel'
+);
+
+
+
+
+
+
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
