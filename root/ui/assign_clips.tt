@@ -242,30 +242,42 @@
 
 				if(playing_button_id) {
 					var duration_node = document.getElementById("button_box_duration_" + playing_button_id);
-					duration_node.innerHTML = duration_original_html;
+					if(duration_node) {
+						duration_node.innerHTML = duration_original_html;
+					}
 					
 					/* Reset style to normal, non-playing button */
 					var button_node = document.getElementById("button_box_button_" + playing_button_id);
-					button_node.setAttribute("class", "button_box_button");
+					if(button_node) {
+						button_node.setAttribute("class", "button_box_button");
+					}
 
 					/* Reset 'pause' button to 'play' */
 					var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
-					play_link.innerHTML = 'play';
+					if(play_link) {
+						play_link.innerHTML = 'play';
+					}
 				}
 				
 				if(playing_clip_id) {
 				
 					/* Highlight relevant table row */
 					var row_node = document.getElementById("clip_row_" + playing_clip_id);
-					row_node.setAttribute("class", "clip_row");
+					if(row_node) {
+						row_node.setAttribute("class", "clip_row");
+					}
 										
 					/* Reset 'stop' button to 'play' */
 					var play_link = document.getElementById("clip_play_link_" + playing_clip_id);
-					play_link.innerHTML = 'play';
+					if(play_link) {
+						play_link.innerHTML = 'play';
+					}
 					
 					/* Reset duration text */
 					var duration_node = document.getElementById("clip_duration_" + playing_clip_id);
-					duration_node.innerHTML = duration_original_html;	
+					if(duration_node) {
+						duration_node.innerHTML = duration_original_html;
+					}
 				}				
 				
 				playing_clip_id = 0;
@@ -453,7 +465,18 @@
 					}
 				
 					populate_clip_row( json_data[clip_id] );
-				}								
+				}
+				
+				/* If we are playing a clip during the refresh, check that it
+				 * still exista after the refresh. Otherwise stop playing and
+				 * clear the player */
+				if(playing_clip_id) {
+					var node = document.getElementById("clip_row_" + playing_clip_id);
+					if(!node) {
+						/* Clip has been removed */
+						clear_player();
+					}
+				}
 			}
 		
 		
