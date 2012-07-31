@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>talkSPORT GOALS</title>
+
+		<style type="text/css">
+
+			#source_list_container {
+				position: absolute;
+				left:0%;
+				top:5%;
+				width:10%;
+			}
+
+			#body_container {
+				position: absolute;
+				left:10%;
+				width:90%;				
+			}
+
+			#waveform_container {
+				position:relative;
+				left:5%;
+				width:90%;
+			}
+
+
+			body {
+				font-family: Arial, Helvetica, Verdana, sans-serif;
+			}
+
+			form#clip_metadata label {
+				float: left;
+				font-size: 14px;
+				width: 110px;
+			}
+
+			form#clip_metadata ol li {
+				list-style: none;
+			}
+
+			table#clip_list tr:nth-child(even) {  
+			    background: #E3E3E3;  
+			}
+
+			
+			.source_text {
+				font-size: 90%;
+			}
+
+
+		</style>
+
+	</head>
+	<body>
+	
+		<div id="source_list_container">
+
+			<hr />
+			<div align="center"><b>event filter</b></div>
+			<form>
+				<fieldset>
+					<legend>source</legend>
+					<table>
+						<!-- TODO: This should be dynamically populated in case updated elsewhere -->
+						[% FOREACH channel IN channels %]
+							<tr>
+								<td>
+									<input
+										type="checkbox"
+										name="clip_source_to_show"
+										value="[% channel.channel_id %]"
+										checked="true"
+										onchange="refresh_event_list()"
+									/>
+								</td>
+								<td>
+									<span class="source_text">
+										[% channel.source_label %]
+										<!-- <br />
+										[% channel.match_title %]
+										-->
+									</span>
+								</td>
+							</tr>
+						[% END %]
+					</table>
+				</fieldset>	
+				<fieldset id="status_to_show_fieldset">
+					<legend>status</legend>
+					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" checked="true" value="new" />new<br />
+					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" checked="true" value="open" />open<br />
+					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" value="exported" />exported<br />
+					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" value="deleted" />deleted<br />
+				</fieldset>
+			</form>
+			<hr />
+			<a href="/channels">channel names</a>
+			<br />
+			<a href="upload_clip">upload clip</a>
+			<br />
+			<a href="assign_clips">hotkeys</a>
+			<hr />
+
+		</div>
+
+
+		<div id="body_container">
+
+			<!-- Player is not visible - controlled by javascript -->
+			<audio id="player">
+				<!-- source populated dynamically by javascript -->
+			</audio>
+
+			
+			<div id="audio_selection" align="center">
+								
+				<label for="channel">source:</label>
+				<select name="channel_id" id="channel_id">
+					<option value="0">select channel</option>
+					[% FOREACH channel IN channels %]
+						<option value="[% channel.channel_id %]">[% channel.source_label _ " : " _ channel.match_title %]</option>
+					[% END %]
+				</select>
+					
+				<label for="start_date">start date:</label>
+				<select name="start_date" id="start_date">
+					[% FOREACH dt IN start_dates %]
+						<option value="[% dt.strftime('%Y-%m-%d') %]">[% dt.strftime('%A %d/%m/%Y') %]</option>
+					[% END %]
+				</select>
+				<select name="start_hour" id="start_hour">
+					<option value="0">HH</option>
+					[% FOREACH hour IN [0..23] %]
+						<option value="[% hour %]">[% hour FILTER format("%02u") %]</option>
+					[% END %]
+				</select>
+				:
+				<select name="start_minute" id="start_minute">
+					<option value="0">MM</option>
+					[% FOREACH minute IN [0..59] %]
+						<option value="[% minute %]">[% minute FILTER format("%02u") %]</option>
+					[% END %]
+				</select>
+				:	
+				<select name="start_second" id="start_second" placeholder="jj">
+					<option value="0">SS</option>
+					[% FOREACH second IN [0..59] %]
+						<option value="[% second %]">[% second FILTER format("%02u") %]</option>
+					[% END %]
+				</select>
+				&mdash;
+				<select name="end_hour" id="end_hour">
+					<option value="0">HH</option>
+					[% FOREACH hour IN [0..23] %]
+						<option value="[% hour %]">[% hour FILTER format("%02u") %]</option>
+					[% END %]
+				</select>
+				:
+				<select name="end_minute" id="end_minute">
+					<option value="0">MM</option>
+					[% FOREACH minute IN [0..59] %]
+						<option value="[% minute %]">[% minute FILTER format("%02u") %]</option>
+					[% END %]
+				</select>
+				:	
+				<select name="end_second" id="end_second">
+					<option value="0">SS</option>
+					[% FOREACH second IN [0..59] %]
+						<option value="[% second %]">[% second FILTER format("%02u") %]</option>
+					[% END %]
+				</select>
+				<button type="button" onclick="audio_start_fractional_seconds = 0; audio_end_fractional_seconds = 0; load_audio()">LOAD AUDIO</button>
+			</div>
+			
+			
+			<div id="waveform_container">
+
+				<!-- size of SVG is defined by style of waveform_container -->
+				<svg 
+					id="waveform_svg"
+					xmlns="http://www.w3.org/2000/svg"
+					xmlns:xlink="http://www.w3.org/1999/xlink"
+					version="1.1"
+					width="100%"
+	 				height="20%"
+				>
+
+					<rect
+						width="100%"
+						height="100%"
+						fill="rgb(200,200,200)"
+					/>
+
+					<image
+						x="0%"
+						y="0%"
+						width="100%"
+						height="100%"
+						preserveAspectRatio="none"
+						xlink:href="/default_waveform.png"
+						id="waveform_image"
+					/>
+
+					<line
+						id="clip_marker"
+						stroke="rgb(202,0,153)"
+						stroke-width="5%"
+						x1="0"
+						y1="5%"
+						x2="0"
+						y2="5%"
+						display="none"
+					/>
+
+					<line
+						id="cursor"
+						x1="0"
+						y1="0"
+						x2="0"
+						y2="100%"
+						stroke="blue"
+						stroke-width="0.5%"
+						draggable="true"
+					/>
+				</svg>
+				
+				<div id="time below_player" align="center">
+					<table style="width:100%">
+						<tr>
+							<td align="left"><b id="in_time">--:--:--.--</b></td>
+							<td align="center"><b id="time">--:--:--.--</b></td>
+							<td align="right"><b id="out_time"">--:--:--.--</b></td>
+						</tr>
+					</table>
+				</div>				
+			</div>
+
+
+			<div id="buttons_below_player" align="center">
+				<button type="button" onclick="mark_in()">MARK IN</button>
+				<button type="button" onclick="mark_out()">MARK OUT</button>
+				<button type="button" onclick="clear_mark()">CLEAR MARK</button>
+				<button type="button" onclick="play_from_in_point()">|----</button>
+				<button type="button" onclick="play_to_out_point(10)">----|</button>
+				<button type="button" onclick="display_clip_metadata()" id="export_clip_button">CREATE CLIP</button>
+				<button type="button" onclick="play_pause()" id="play_pause_button">PLAY</button>
+			</div>
+			
+			<hr />
+			
+			<!-- This div contains the form used to input metadata for a new audio clip
+			     it is hidden until the create clip button is pressed
+			-->
+			<div id="clip_metadata_container" style="display: none">
+
+				<b>Create Clip</b> : enter clip details and click OK
+				<form id="clip_metadata" method="post" action=>
+
+					<ol>
+						<li>
+							<label for="title">title</label>
+							<input 
+								type="text"
+								name="title"
+								placeholder="Short title to show on hotkey"
+								required
+								size="60"
+								id="clip_title"
+							/>
+						</li>
+
+						<li>
+							<label for="people">people</label>
+							<input 
+								type="text"
+								name="people"
+								placeholder="Names of the people speaking"
+								size="60"
+								id="clip_people"
+							/>
+						</li>
+						<li>
+							<label for="description">description</label>
+							<textarea
+								name="description"
+								placeholder="A longer description of the clip or notes for the presenter"
+								rows="4"
+								cols="45"
+								id="clip_description"
+							>
+							</textarea>
+						</li>
+
+						<li>
+							<label for="out_cue">out cue</label>
+							<input 
+								type="text"
+								name="out_cue"
+								placeholder="enter the last few words or describe how the clip ends"
+								size="60"
+								id="clip_out_cue"
+							/>
+						</li>
+
+						<li>
+							<label for="category">category</label>
+							<select name="category" id="clip_category">
+								<option value="goal">Goal</option>
+								<option value="half_time_report">Half-time Report</option>
+								<option value="full_time_report">Full-time Report</option>
+								<option value="interview">Interview</option>
+								<option value="commercial">Commercial</option>
+								<option value="other">Other</option>
+							</select>
+						</li>
+
+						<li>
+							<label for="language">language</label>
+							<select name="language" id="clip_language">
+								<option value="english" selected="true">English</option>
+								<option value="spanish">Spanish</option>
+								<option value="mandarin">Mandarin</option>
+								<option value="other">Other</option>
+							</select>
+						</li>
+						
+						<li>
+							<label for="duration">duration</label>
+							<span id="create_clip_duration">--:--</span>
+						</li>
+						<li>
+							<button type="button" onclick="post_clip_metadata()">OK</button>
+							<button type="button" onclick="hide_clip_metadata()">Cancel</button>
+						</li>
+					</ol>
+				</form>
+			</div>
+
+			
+			<!-- This div contains the form used to display status feedback when clips are created.
+			     It is hidden until the create clip button is pressed. Message is populated dynamically
+			-->
+			<div id="progress_message_container" style="display: none">
+			</div>
+
+			<!-- This div contains the list of marked clips, which can be selected for editing.
+			-->
+			<div id="clip_list_container" align="center">
+
+				<table id="clip_list" style="width:100%">
+
+					<tr>
+						<th>status</th>
+						<th>date</th>
+						<th>time</th>
+						<th>source</th>
+						<th>match</th>
+						<th>commentator</th>
+					</tr>
+
+					<!-- data rows will be populated dynamically -->
+				</table>
+
+			<div>
+
+
+		</div>
+
+
+
+		<script type="text/javascript">
+
+			/* Do these lookups once, to save having to query the DOM
+			 * every time in each function that references the objects. As a 
+			 * consequence, this code must go after the HTML which
+			 * creates the objects.
+			 */
+			var player = document.getElementById('player');
+			var cursor = document.getElementById('cursor');
+			var play_pause_button = document.getElementById('play_pause_button');
+			var time = document.getElementById('time');
+			var clip_marker = document.getElementById('clip_marker');
+			var waveform_svg = document.getElementById('waveform_svg');	
+			var clip_metadata = document.getElementById('clip_metadata_container');
+
+			/* Global state variables */
+			var in_point_seconds;          // Marked clip in point, relative to start of audio, to ms resolution
+			var out_point_seconds;         // Marked clip out point, relative to start of audio, to ms resolution
+			var audio_start_dt = new Date; // Updated each time audio is loaded - In channel's timezone
+			var audio_end_dt = new Date;   // Updated each time audio is loaded - In channel's timezone
+			var audio_event_id = 0;        // Updated whenever audio from an event is opened
+			var stop_at_clip_end = true;   // if true, play stop at the marked clip end, otherwise continue to end of audio
+			var autoplay = true;           // If true, start playing as soon as audio is loaded, via canplay event
+			
+			/* Keep track of fractional seconds for selected audio:
+			 * When audio is loaded, we get the time-span from drop-down boxes on the form,
+			 * but these don't allow finer resolution than 1 second to be specified. For clips,
+			 * where we require higher resolution, these variables act as placeholders for the
+			 * fractional second part of the timespec in milliseconds */
+			audio_start_fractional_seconds = 0;
+			audio_end_fractional_seconds = 0;
+			
+			/* Use a standard javascript timer to update the play cursor and stop
+			 * at the marked clip end. The built-in audio timeupdate event fires
+			 * too infrequently (typically only evert 250ms or so, browser dependent
+			 */
+			var run_play_timer = true;
+			var play_timer;
+			
+			/* Timer to update the event/clip list */
+			var poll_ajax_timer_period_ms = 15000; // Set to 0 to disable
+			var poll_ajax_timer;
+			refresh_event_list();
+			
+			
+			function play_pause() {
+
+				/* If we are playing, then pause.
+				 * If we are paused, start playing
+				 */
+				if(player.paused) {
+
+					/* Allow playback beyone end of marked clip */
+					if(player.currentTime >= out_point_seconds) {
+						stop_at_clip_end = false;
+					}
+
+					player.play();
+				}
+				else {
+					player.pause();
+				}
+			}
+
+			
+			function skip(seconds) {
+
+				/* Move player forward or back by specified number of seconds.
+				 * This does no bounds checking, so expects the browser to
+				 * gracefully handle attempts to seek beyond the start or end
+				 * of the audio. Need to check this in spec and with all browsers.
+				 */
+				player.currentTime += seconds;
+			}
+
+			function set_out_point_seconds(seconds) {
+
+				/* Called to update to global outpoint variable
+				 * takes care of updating graphics and text fields
+				 */
+				out_point_seconds = seconds;
+				display_clip_marker(in_point_seconds, out_point_seconds);
+			}
+
+			function set_in_point_seconds(seconds) {
+
+				/* Called to update to global outpoint variable
+				 * takes care of updating graphics and text fields
+				 */
+				in_point_seconds = seconds;
+				display_clip_marker(in_point_seconds, out_point_seconds);
+			}
+
+
+			function display_clip_marker(in_seconds, out_seconds) {
+
+				var window_start_seconds = 0;
+				var window_end_seconds = player.duration;
+				var window_duration_seconds = window_end_seconds - window_start_seconds;
+
+				/* Limit displayed clip marker to the display boundaries */
+				if(in_seconds < window_start_seconds) {
+					in_seconds = window_start_seconds;
+				}
+
+				if(out_seconds > window_end_seconds) {
+					out_seconds = window_end_seconds;
+				}
+								
+				var in_marker_percent = ((in_seconds / window_duration_seconds) * 100);
+				var out_marker_percent = ((out_seconds / window_duration_seconds) * 100);
+
+				/* Sanity Check */
+				if(isNaN(in_marker_percent) || isNaN(out_marker_percent)) {
+					return;
+				}
+				
+				/* Update marker bar */
+				clip_marker.setAttribute("x1", in_marker_percent + "%");
+				clip_marker.setAttribute("x2", out_marker_percent + "%");
+				clip_marker.setAttribute("display", "inherit"); // show clip marker bar
+
+				/* Update display in_point field */
+				var text_field = document.getElementById('out_time');
+				text_field.innerHTML = player_seconds_to_hmsc(out_point_seconds);
+
+				/* Update display out_point field */
+				text_field = document.getElementById('in_time');
+				text_field.innerHTML = player_seconds_to_hmsc(in_point_seconds);
+			}
+
+
+			function clear_mark() {
+
+				/* Reset clip marks to defaults - whole of audio */
+				in_point_seconds = 0;
+				out_point_seconds = player.duration;
+	
+				/* We call this to update relevant text fields */
+				display_clip_marker(in_point_seconds, out_point_seconds);
+
+				/* Then hide the marker bar */
+				clip_marker.setAttribute("display", "none"); // hide clip marker bar
+			}
+
+
+			function mark_in() {
+
+				/* Out-point cannot be before in-point.
+				 * If new in-point is after previously marked out-point,
+				 * reset out-point to end-of-clip
+				 */
+				if(player.currentTime > out_point_seconds) {
+					out_point_seconds = player.duration;
+				}
+
+				set_in_point_seconds(player.currentTime);
+			}
+
+
+			function mark_out() {
+
+				/* Out-point cannot be before in-point.
+				 * If new out-point is before previously marked in-point,
+				 * reset in-point to beginning-of-clip
+				 */
+				if(player.currentTime < in_point_seconds) {
+					in_point_seconds = 0;
+				}
+
+				set_out_point_seconds(player.currentTime);
+			}
+
+
+			function display_clip_metadata() {
+
+				/* Hide clip list */
+				var clip_list = document.getElementById('clip_list_container');
+				clip_list.style.display = "none";
+				
+				/* Update times */
+				var in_point_ms  = audio_start_dt.valueOf() + (in_point_seconds * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + (out_point_seconds * 1000);
+				var duration_seconds = (out_point_seconds - in_point_seconds);
+				
+				/* This updates the drop down boxes to reflect the given start/end points */
+				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
+								
+				/* Load Audio for marked clip */
+				autoplay = false;
+				load_audio();				
+				
+				/* Update text fields on metadata form */
+				var duration_text_field = document.getElementById('create_clip_duration');
+				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				
+				/* Show clip_details div */
+				clip_metadata.style.display = "block";
+			}
+
+
+			function hide_clip_metadata() {
+
+				/* Hide clip_details div */
+				clip_metadata.style.display = "none";
+
+				/* Show clip list */
+				var clip_list = document.getElementById('clip_list_container');
+				clip_list.style.display = "block";	
+			}
+
+
+			function play_from_in_point() {
+
+				player.currentTime = in_point_seconds;
+				player.play();				
+			}
+
+
+			function play_to_out_point(preroll_seconds) {
+			
+				var start_seconds = out_point_seconds - preroll_seconds;
+
+				if(start_seconds < in_point_seconds) {
+					start_seconds = in_point_seconds;
+				}
+
+				player.currentTime = start_seconds;
+				player.play();
+			}
+
+
+			function arrow_left(event) {
+
+				/* What to do when the left arrow button is pressed.
+				 * This is to be called from within a keyboard event handler
+				 * the logic is separated out into a separate function because it
+				 * is too complex to be clearly included inline within the keyboard
+				 * event handler
+				 */
+
+				if(event.ctrlKey) {
+
+					/* If Control is held, in the first instance skip back to marked 
+					 * end, then clip start, then beginning of audio
+					 */
+					if(player.currentTime > out_point_seconds) {
+						player.currentTime = out_point_seconds;
+					}
+					else if(player.currentTime > in_point_seconds) {
+						player.currentTime = in_point_seconds;
+					}
+					else {
+						player.currentTime = 0;
+					}
+
+				}
+				else {
+				
+					/* Skip one minute if Shift key is also pressed down */
+					skip_seconds = event.shiftKey ? -60 : -2;
+					skip(skip_seconds);
+				}
+			}
+
+
+			function arrow_right(event) {
+
+				/* What to do when the right arrow button is pressed.
+				 * This is to be called from within a keyboard event handler
+				 * the logic is separated out into a separate function because it
+				 * is too complex to be clearly included inline within the keyboard
+				 * event handler
+				 */
+
+				if(event.ctrlKey) {
+
+					/* If Control is held, in the first instance skip forward
+					 * to marked clip start, then marked clip end, then end of audio
+					 */
+					if(player.currentTime < in_point_seconds) {
+						player.currentTime = in_point_seconds;
+					}
+					else if(player.currentTime < out_point_seconds) {
+						player.currentTime = out_point_seconds;
+					}
+					else {
+						player.currentTime = player.duration;
+					}
+
+				}
+				else {
+				
+					/* Skip one minute if Shift key is also pressed down */
+					skip_seconds = event.shiftKey ? 60 : 2;
+					skip(skip_seconds);
+				}
+			}
+
+
+
+			/* Audio Player Event Handlers */
+
+			player.addEventListener(
+				"pause",
+				function() {
+					play_pause_button.innerHTML = 'PLAY';
+					cursor.setAttribute("stroke", "blue");
+				}
+			);
+
+			player.addEventListener(
+				"play",
+				function() {
+					play_pause_button.innerHTML = 'PAUSE';
+					player.volume = 100;
+					cursor.setAttribute("stroke", "red");
+				}
+			);
+
+
+			/* We no longer use the built-in timeupdate event as it
+			 * only fires every 250ms or so. This is too slow to ensure
+			 * smooth scrolling of the play bar, or to accurately stop
+			 * at the marked clip end. Instead we use a standard javascript
+			 * timer event to poll the player position and react accordingly.
+			 *
+			 *	player.addEventListener(
+			 *		"timeupdate",
+			 *		function() {
+			 *			player_time_change()
+			 *		}
+			 *	);
+			 */
+
+
+			player.addEventListener(
+				"canplay",
+				function() {
+
+					/* Set default clip in and out points */
+					out_point_seconds = player.duration;
+					in_point_seconds = 0;
+
+					/* Start running timer to respond to player time changes
+					 * we use our own timer rather than the built-in timeupdate
+					 * event so that we can have a faster refresh rate
+					 */
+					run_play_timer = true;
+					play_timer_event();
+					
+					if(autoplay) {
+						player.play();
+					}
+				}
+			);
+
+
+			function player_time_change() {
+
+				/* Update time display */
+				time.innerHTML = player_seconds_to_hmsc(player.currentTime);
+
+				/* Reposition play cursor */
+				var position_percent = ((player.currentTime / player.duration) * 100);
+				
+				/* Sanity Check */
+				if(isNaN(position_percent)) {
+					return;
+				}
+				
+				cursor.setAttribute("x1", position_percent + '%');
+				cursor.setAttribute("x2", position_percent + '%');
+
+				/* Stop once we reach the out_point */
+				if(player.currentTime < out_point_seconds) {
+					stop_at_clip_end = true;
+				}
+				else if(stop_at_clip_end) {
+					player.pause();
+				}
+				
+			}
+
+
+			function play_timer_event() {
+
+				player_time_change();
+
+				/* Schedule next timer if we're running it */
+				if(run_play_timer) {
+					play_timer = setTimeout("play_timer_event()", 20);
+				}
+			}
+
+
+			/* Keyboard Event Handlers */
+
+			document.addEventListener(
+				"keydown",
+				function(event) {
+
+					/* Suppress keyboard shortcuts if clip metadata form is being
+					 * displayed to avoid conflict. For example, if we didn't do this,
+					 * every time a space character was entered into the clip metadata
+					 * form, the player would alternate between pause and play.
+					 */
+					if(clip_metadata.style.display == "block") {
+						return;
+					}
+								
+					switch(event.keyCode) {
+
+						case 37: // Left Arrow
+							arrow_left(event);
+							event.preventDefault();
+							break;
+
+						case 39: // Right Arrow
+							arrow_right(event);
+							event.preventDefault();
+							break;
+
+						case 38: // Up Arrow
+							mark_in();
+							event.preventDefault();
+							break;
+
+						case 40: // Down Arrow
+							mark_out();
+							event.preventDefault();
+							break;
+
+					}
+				}
+			);
+
+
+			document.addEventListener(
+				"keypress",
+				function(event) {
+				
+					/* Suppress keyboard shortcuts if clip metadata form is being
+					 * displayed to avoid conflict. For example, if we didn't do this,
+					 * every time a space character was entered into the clip metadata
+					 * form, the player would alternate between pause and play.
+					 */
+					if(clip_metadata.style.display == "block") {
+						return;
+					}
+
+					switch(event.keyCode) {
+
+						case 32: // Space Bar
+							play_pause();
+							break;
+
+					}
+				}
+			);
+
+
+
+			/* Waveform Display Event Handlers */			 
+			waveform_svg.addEventListener("mousedown", waveform_mouse_down);
+			
+			/* Dynamically load the waveform once the player starts loading data */
+			player.addEventListener("loadstart", load_waveform);
+			
+			/* Resize event only triggers on outermost container, therfore
+			 * we have to listen to the window.resize event, rather than the
+			 * waveform_svg.resize event.
+			 * Or is this a bug... because SVG does't seem to like an addEventListener
+			 * for the load event, yet putting an onload(...) into the svg tag itself
+			 * is working fine... hmmmm... */
+			window.addEventListener("resize", load_waveform);
+
+			function load_waveform(event) {
+
+				/* Extract actual size in pixels of SVG on screen */
+				var bounds = waveform_svg.getBoundingClientRect();
+				
+				/*
+				URL formats:
+				audio/wav/2/2012-07-03T10:22:22Z/2012-07-03T10:23:44
+				audio/waveform/2/2012-07-03T10:22:22Z/2012-07-03T10:23:44/width/height/colour
+				*/
+				
+				/* Extract a valid audio URI from the player object */
+				var audio_uri = player.currentSrc;
+				if(audio_uri.search("audio/wav/") == -1) {
+					/* Audio is not a valid URL for some reason */
+					return;
+				}
+				
+				/* Generate waveform URI based on audio URI */			
+				var waveform_uri = audio_uri.replace("wav", "waveform");
+				waveform_uri += "/" + bounds.width;
+				waveform_uri += "/" + bounds.height;		 
+				waveform_uri += "/" + '112233'; // colour in rrggbb html format
+				
+				var image = document.getElementById("waveform_image");
+				image.setAttribute("xlink:href",waveform_uri);
+			}
+			
+			
+			function waveform_mouse_down(event) {
+
+				/* React to the click position */
+				waveform_mouse_move(event);
+				
+				/* Capture and react to any further movement over the waveform */
+				waveform_svg.addEventListener("mousemove", waveform_mouse_move);
+
+				/* Stop capturing movement when mouse button is released anywhere */
+				document.addEventListener("mouseup", waveform_mouse_up);
+			}
+
+
+			function waveform_mouse_up(event) {
+
+				/* Stop reacting to mouse movements, if we were doing so */
+				waveform_svg.removeEventListener("mousemove", waveform_mouse_move);
+				document.removeEventListener("mouseup", waveform_mouse_up);
+			}
+
+
+			function waveform_mouse_move(event) {
+
+				/* Position the play cursor where the mouse was clicked */
+
+				/* It seems that identifying the mouse click position relative to
+				 * the SVG box is far from simple. Surely there is an easier way?
+				 * Please tell if you know of one...
+				 */
+
+				/* Work out click position relative to top-left corner of SVG */
+				/* reference: http://tech.groups.yahoo.com/group/svg-developers/message/52701 */
+				var p = waveform_svg.createSVGPoint();
+				var m = waveform_svg.getScreenCTM();
+				p.x = event.clientX;
+				p.y = event.clientY;
+				p = p.matrixTransform(m.inverse());
+
+				/* Extract actual size in pixels of SVG on screen */
+				var bounds = waveform_svg.getBoundingClientRect();
+
+				/* Calculate horizontal percentage of mouse click */
+				var click_x_percent = (p.x / bounds.width) * 100;
+
+				/* Calculate how many seconds that represents */
+				var click_seconds = ((player.duration / 100) * click_x_percent);
+
+				/* Position play cursor at appropriate point */
+				player.currentTime = click_seconds;
+			}
+
+
+			function player_seconds_to_hmsc(seconds) {
+			
+				var t = new Date((seconds * 1000) + audio_start_dt.valueOf());
+				var text = t.toISOString();
+				return text.substr(11, 11);
+			}
+			
+
+			function seconds_to_mins_secs(seconds) {
+			
+				/* Given a number of seconds, returns a string in format M:SS */
+				var minutes = Math.floor(seconds / 60);
+				seconds = Math.floor(seconds % 60);
+				var rv = "";
+				
+				/* Only output minutes if duration is >= 1 minute */
+				if( minutes > 0 ) {
+					rv = minutes + " minute";
+					if(minutes > 1) { rv += "s" }; // plural-ise if required
+					rv += "  ";
+				}
+				
+				/* Always output seconds */
+				rv += seconds + " second";
+				if(seconds > 1) { rv += "s" }; // plural-ise if required
+				
+				return rv;
+				
+			}
+
+			
+			function zero_pad(n, desired_length) {
+				/* Given a string and desired length, keep adding '0' to the start
+				 * until the desired length is attained. Used for zero-padding numbers
+				 */
+				 
+				/* Coerce number into a string */
+				n = "" + n;
+				
+				/* Keep adding zeros to the front until we have desired length */
+				while( n.length < desired_length) {
+					n = "0" + n;	
+				}
+				return n;			
+			}
+			
+			
+			/* Functions to dynamically load Clip Event List */
+			function process_event_json(object) {
+			
+				var table = document.getElementById("clip_list");
+				var rows = table.rows;
+				
+				/* Loop through current table to remove redundant rows.
+				 * Work through table rows from highest index, otherwise
+				 * the indexes will start moving around beneath our feet
+				 * as we delete a row and the others all shift up by one
+				 * position. Don't test index 0 as this is the title row.
+				 */
+				for (var i = (rows.length - 1); i > 0; i--) {
+					
+					/* row ids are composed as event_row_XXX, where
+					 * XXX is the event_id, which we will extract
+					 */
+					var event_id = rows[i].id.substr(5);
+					
+					/* Sanity check that we have an event_id */
+					if(!event_id) {
+						/* ERROR extracting event_id - skip */
+						continue;
+					}
+					
+					/* Delete row if it's id isn't in latest server response? */
+					if(!object[event_id]) {
+						table.deleteRow(i);	
+					}
+				}
+			
+				/* Loop through each returned event */
+				for (var event_id in object) {
+					
+					/* Skip private object meta properties */
+					if (!object.hasOwnProperty(event_id)) {
+						next;
+					}
+					
+					populate_event_row(object[event_id]);
+				}
+			}			
+	
+	
+			function populate_event_row(event_row) {
+			
+				var table = document.getElementById("clip_list");
+				var row_id = "event_row_" + event_row.id;
+			
+				/* Look to see if we already have a row for this event_row_id */
+				var row = table.rows.namedItem(row_id);
+
+				if(!row) {
+					/* Not an existing row, insert one after header row */
+					row = table.insertRow(1);
+					row.id = row_id;
+					
+					/* The table has 6 cells/fields */
+					row.insertCell(-1);
+					row.insertCell(-1);
+					row.insertCell(-1);
+					row.insertCell(-1);
+					row.insertCell(-1);
+					row.insertCell(-1);
+					row.insertCell(-1); // Edit
+					row.insertCell(-1); // Delete
+				}
+
+				/* Update/populate the fields */
+				row.cells.item(0).innerHTML = event_row.status;
+				row.cells.item(1).innerHTML = event_row.event_date;
+				row.cells.item(2).innerHTML = event_row.event_time;
+				row.cells.item(3).innerHTML = event_row.source_label;
+				row.cells.item(4).innerHTML = event_row.match;
+				row.cells.item(5).innerHTML = event_row.commentator;
+				row.cells.item(6).appendChild(generate_edit_link(event_row));
+				row.cells.item(7).appendChild(generate_delete_link(event_row));
+			}
+	
+	
+			function generate_edit_link(event_row) {
+			
+				var a = document.createElement('a');
+				a.setAttribute('href', '');
+				a.appendChild(document.createTextNode('edit'));
+				a.addEventListener(
+					"click",
+					function(event) {
+						autoplay = true;
+						edit_clip(event_row.local_iso_timestamp, event_row.channel_id, event_row.id);
+						event.preventDefault();
+					}
+				);
+				
+				return a;
+			}
+
+			
+			function generate_delete_link(event_row) {
+			
+				var a = document.createElement('a');
+				a.setAttribute('href', '');
+				
+				if( event_row.status != 'deleted') {
+					
+					a.appendChild(document.createTextNode('delete'));
+					a.addEventListener(
+						"click",
+						function(event) {
+							delete_event(event_row.id);
+							event.preventDefault();
+						}
+					);
+				}
+				else {	
+					a.appendChild(document.createTextNode('undelete'));
+					a.addEventListener(
+						"click",
+						function(event) {
+							undelete_event(event_row.id);
+							event.preventDefault();
+						}
+					);
+								
+				}
+				
+				return a;
+			}
+
+	
+	
+			function refresh_event_list() {
+			
+				var request = new XMLHttpRequest();
+
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					process_event_json(response);
+					
+					/* Schedule next update timer if we're running it */
+					if(poll_ajax_timer_period_ms) {
+						polL_ajax_timer = setTimeout("refresh_event_list()", poll_ajax_timer_period_ms);
+					}
+				}
+			
+				var url = "/events/all?status=" + get_clip_list_status_filters() + ";channel_id=" + get_clip_list_source_filters();
+				request.open("GET", url, true);
+				request.send();
+			}
+			
+			
+			function get_clip_list_status_filters() {
+			
+				/* Read status of filter checkboxes and return a corresponding query string */
+				var checkboxes = document.getElementsByName("clip_status_to_show");
+				var status_list = "";
+				
+				for( var i = 0; i < checkboxes.length; i ++ ) {
+					if(checkboxes[i].checked) {
+						status_list += "," + checkboxes[i].value;
+					}
+				}
+				
+				/* Strip off initial ',' */
+				status_list = status_list.substr(1);
+				return status_list;
+			}
+			
+			
+			function get_clip_list_source_filters() {
+			
+				/* Read status of filter checkboxes and return a corresponding query string */
+				var checkboxes = document.getElementsByName("clip_source_to_show");
+				var list = "";
+				
+				for( var i = 0; i < checkboxes.length; i ++ ) {
+					if(checkboxes[i].checked) {
+						list += "," + checkboxes[i].value;
+					}
+				}
+				
+				/* Strip off initial ',' */
+				list = list.substr(1);
+				return list;
+			}
+			
+			
+			/* Functions to load specified audio timespan */
+			function audio_spec() {
+			
+				/* Extract the channel, time and date specified in the audio selection
+				 * boxes, returning them as a single audio specification object */	
+				this.channel_id = document.getElementById("channel_id").value;
+				this.start_date = document.getElementById("start_date").value;
+				this.start_hour = document.getElementById("start_hour").value;
+				this.start_minute = document.getElementById("start_minute").value;
+				this.start_second = document.getElementById("start_second").value;
+				this.end_hour = document.getElementById("end_hour").value;
+				this.end_minute = document.getElementById("end_minute").value;
+				this.end_second = document.getElementById("end_second").value;
+				
+				/* Parse the date and time paremters into a javascript Date object
+				 specify the times as UTC, even though they may be in a different
+				 timezone, to stop javascript adjusting them based on the browser's
+				 timezone. We want to consider the timestamps as referenced to the
+				 audio channel's timezone (i.e. where it is being recorded) */
+				 
+				/* Decimal part of times are extracted from two global variables,
+				 * rather than the user-interface drop down */
+								
+				var start = new Date(this.start_date);
+				start.setUTCHours(this.start_hour);
+				start.setUTCMinutes(this.start_minute);
+				start.setUTCSeconds(this.start_second);
+				start.setUTCMilliseconds(audio_start_fractional_seconds);
+				
+				var end = new Date(this.start_date);
+				end.setUTCHours(this.end_hour);
+				end.setUTCMinutes(this.end_minute);
+				end.setUTCSeconds(this.end_second);
+				end.setUTCMilliseconds(audio_end_fractional_seconds);
+							
+				if(end <= start) {
+					/* Date portion is shared by the start and end timestamps
+					 * so if end timestamp appears before the start timestamp
+					 * it should be interpreted as being the following day */
+					end.setHours(end.getHours() + 24);
+				}
+				
+				this.start_dt = start;
+				this.end_dt = end;
+				this.duration_seconds = ((end.getTime() - start.getTime()) / 1000);
+				
+				/* Javascript generates extended ISO timestamps in the format:
+				 * 2012-07-06T00:00:00.000Z
+				 * Strip off the final 'Z' UTC designation, as these are not UTC timestamps
+				 * Server will add the time zone based upon the channel_id */
+				this.start_iso = start.toISOString().substr(0, 23);
+				this.end_iso = end.toISOString().substr(0, 23);
+				this.start_epoch_ms = start.valueOf();
+				this.end_epoch_ms = end.valueOf();
+			}
+			
+			
+			function load_audio() {
+							
+				var spec = new audio_spec();
+				
+				var audio_url = (
+					"/audio/wav/" +
+					spec.channel_id + "/" +
+					spec.start_iso + "/" +
+					spec.end_iso
+				)
+				
+				//alert("DEBUG: loading audio_url: " + audio_url);
+				
+				/* Stop player and reset flags */
+				player.pause;
+				player.src = audio_url;
+				clear_mark();
+				audio_start_dt = spec.start_dt;
+				audio_end_dt   = spec.end_dt;
+			}
+			
+			/* We set the select boxes to the appropriate local time,
+			 * because we don't want to rely on the browser's understanding
+			 * of local or channel time zones.
+			 * Alternative is more ajax interaction with server using UTC */
+			function edit_clip(local_iso_timestamp, channel_id, event_id) {
+				
+				set_channel(channel_id);
+				set_start_date(local_iso_timestamp);
+				audio_event_id = event_id; // update global status variable
+				set_audio_times_from_event_local_timestamp(local_iso_timestamp);
+				open_event(event_id)
+				load_audio();
+			}
+		
+		
+			function delete_event(event_id) {
+			
+				var row_id = "event_row_" + event_id;
+				//remove_table_row("clip_list", row_id);
+							
+				/* And fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					//var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					refresh_event_list();
+				}
+			
+				/* Send request */
+				var url = "/events/delete/" + event_id;
+				request.open("GET", url, true);
+				request.send();				
+			}
+		
+		
+			function undelete_event(event_id) {
+										
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					//var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					refresh_event_list();
+				}
+			
+				/* Send request */
+				var url = "/events/undelete/" + event_id;
+				request.open("GET", url, true);
+				request.send();				
+			}
+
+			
+			function open_event(event_id) {
+	
+				/* Set it's status to opened, asynchronously */
+										
+				/* And fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					//var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					refresh_event_list();
+				}
+			
+				/* Send request */
+				var url = "/events/open/" + event_id;
+				request.open("GET", url, true);
+				request.send();				
+			}			
+			
+		
+			function remove_table_row(table_id, row_id) {
+
+				/* Not presently using this function - just refreshing whole list */
+				
+				var table = document.getElementById(table_id);
+				var rows = table.rows;
+				
+				/* Loop through current table to remove redundant rows.
+				 * Work through table rows from highest index, otherwise
+				 * the indexes will start moving around beneath our feet
+				 * as we delete a row and the others all shift up by one
+				 * position. Don't test index 0 as this is the title row.
+				 */
+				for (var i = (rows.length - 1); i > 0; i--) {
+					
+					/* row ids are composed as event_row_XXX, where
+					 * XXX is the event_id, which we will extract
+					 */
+					if( rows[i].id == row_id ) {
+						table.deleteRow(i);
+					}
+				}
+			}
+
+			
+			function set_audio_times_from_event_local_timestamp(local_iso_timestamp) {
+			
+				var dt = new Date(local_iso_timestamp);
+				var preroll_ms  = 60 * 1000;
+				var postroll_ms = 30 * 1000;
+				
+				set_audio_times_from_local_epoch_ms(
+					(dt.valueOf() - preroll_ms),
+					(dt.valueOf() + postroll_ms)
+				);
+			}
+			
+			
+			function set_audio_times_from_local_epoch_ms(start_local_epoch_ms, end_local_epoch_ms) {
+						
+				/* Given an ISO YYYY-MM-DDTHHMMSS.nnn timestamp, in the
+				 * display time zone, populate the audio time selection
+				 * boxes to match this time */				
+				var select_box;
+				
+				var dt_end   = new Date(end_local_epoch_ms);
+				var dt_start = new Date(start_local_epoch_ms);
+				
+				/* Hour, Minute, Seconds fields are indexed in order,
+				 * but first entry is placeholder text, so +1 to minutes,
+				 * hours, or seconds value to get index
+				 * refer to UTC values in Date object to side-step
+				 * javascript timezone manipulation */
+				select_box = document.getElementById("start_hour");
+				select_box.selectedIndex = dt_start.getUTCHours() + 1;
+				select_box = document.getElementById("start_minute");
+				select_box.selectedIndex = dt_start.getUTCMinutes() + 1;
+				select_box = document.getElementById("start_second");
+				select_box.selectedIndex = dt_start.getUTCSeconds() + 1;
+				audio_start_fractional_seconds = dt_start.getUTCMilliseconds();
+			
+				select_box = document.getElementById("end_hour");
+				select_box.selectedIndex = dt_end.getUTCHours() + 1;
+				select_box = document.getElementById("end_minute");
+				select_box.selectedIndex = dt_end.getUTCMinutes() + 1;
+				select_box = document.getElementById("end_second");
+				select_box.selectedIndex = dt_end.getUTCSeconds() + 1;
+				audio_end_fractional_seconds = dt_end.getUTCMilliseconds();
+			}
+		
+			
+			function set_start_date(local_iso_timestamp) {
+						
+				var select_box = document.getElementById("start_date");
+				var iso_date = local_iso_timestamp.substr(0, 10);
+				
+				for(var i = 0; i < select_box.length; i++) {
+					if(select_box.options[i].value == iso_date) {
+						select_box.selectedIndex = i;
+						break;
+					}
+				}
+				
+				/* Check that we were able to select the requested date. There is a possibility
+				 * that the requested date was unavailable in the selction list */
+				if(select_box.value != iso_date) {
+					alert("ERROR: Unable to select audio corresponding to this event. There appears to be no audio available for the relevant date");
+					return false;
+				}
+				
+				return true;
+			}
+			
+			
+			function set_channel(channel_id) {
+
+				var select_box = document.getElementById("channel_id");
+								
+				for(var i = 0; i < select_box.length; i++) {
+					if(select_box.options[i].value == channel_id) {
+						select_box.selectedIndex = i;
+						break;
+					}
+				}
+				
+				/* Check that we were able to select the requested channel. There is a possibility
+				 * that it was not available in the selction list */
+				if(select_box.value != channel_id) {
+					alert("ERROR: Unable to select audio corresponding to this event. There appears to be no audio available for the relevant channel");
+					return false;
+				}
+				
+				return true;				
+			}
+			
+			
+			function post_clip_metadata() {
+			
+ 				var spec = new audio_spec()
+ 				spec.title = document.getElementById("clip_title").value;
+ 				spec.people = document.getElementById("clip_people").value;
+ 				spec.description = document.getElementById("clip_description").value;
+ 				spec.out_cue = document.getElementById("clip_out_cue").value;
+ 				spec.category = document.getElementById("clip_category").value;
+ 				spec.language = document.getElementById("clip_language").value;
+ 				spec.event_id = audio_event_id;
+			
+				var request = new XMLHttpRequest();
+				var progress_container = document.getElementById('progress_message_container');
+				var metadata_container = document.getElementById('clip_metadata_container');
+
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+
+					if(response.clip_id) {
+						/* Clip created OK - forward to hotkey assignment */
+						window.location.href = "assign_clips?clip_id=" + response.clip_id;
+					}
+					else {
+						/* Process the payload */
+						progress_container.innerHTML = "ERROR creating clip";
+					}
+				}
+				
+				/* Show progress message - hide metadata */
+				metadata_container.style.display = "none";
+				progress_container.innerHTML = '<span id="progress_message">Creating clip, please wait...</span>';
+				progress_container.style.display = "block";
+			
+ 				request.open("PUT", "/clips/create", true);
+ 				request.setRequestHeader("Content-Type", "application/json"); //;charset=UTF-8");
+ 				request.send(JSON.stringify(spec));
+			}
+			
+			
+			
+		</script>
+
+
+
+	</body>
+</html>
+
+

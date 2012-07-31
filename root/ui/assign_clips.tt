@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+
+[% USE Date %]
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>talkSPORT GOALS</title>
+
+		[% INSERT goals.css %]
+		
+	</head>
+	<body>
+
+		<div id="source_list_container">
+
+			<hr />
+			
+			[% UNLESS assign_clip_id %]
+			
+			<div align="center"><b>clip filter</b></div>
+			<form>
+			
+				
+				<fieldset>
+					<legend>source</legend>
+					<table>
+						[% FOREACH channel IN channels %]
+							<tr>
+								<td>
+									<input
+										type="checkbox"
+										name="clip_source_to_show"
+										value="[% channel.channel_id %]"
+										checked="true"
+										onchange="update_clip_list()"
+									/>
+								</td>
+								<td>
+									<span class="source_text">
+										[% channel.source_label %]
+										<!-- <br />
+										[% channel.match_title %]
+										-->
+									</span>
+								</td>
+							</tr>
+						[% END %]
+						
+							<tr>
+								<td>
+									<input
+										type="checkbox"
+										name="clip_source_to_show"
+										value="NULL"
+										checked="true"
+										onchange="update_clip_list()"
+									/>
+								</td>
+								<td>
+									<span class="source_text">
+										upload
+									</span>
+								</td>
+							</tr>
+					</table>
+				</fieldset>	
+			
+				<fieldset id="category_to_show_fieldset">
+					<legend>category</legend>
+					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="goal" />goal<br />
+					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="half_time_report" />half-time<br />
+					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="full_time_report" />full-time<br />
+					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="interview" />interview<br />
+					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="commercial" />commerc<br />
+					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="other" />other<br />
+				</fieldset>
+				
+				[% END %]
+				
+			</form>
+			<hr />
+			<div align="center"><b>admin</b></div>
+			<a href="/channels">channel names</a><br />
+			<a href="upload_clip">upload clip</a><br />
+			<a href="player">home</a>
+			<hr />
+
+		</div>
+	
+	
+		<div id="body_container">
+		
+			<div id="button_container" style="display: block">
+			
+			
+				<table id="button_box" class="button_box">
+				
+					[% FOREACH row IN buttons %]
+					<tr>
+					
+						[% FOREACH button IN row %]
+						<td id="button_[% button.button_id %]" width="20%" class="button_box">
+						
+							<div class="button_box_button" onclick="click_button([% button.button_id %])">
+							
+								<span class="button_box_title" id="button_box_title_[% button.button_id %]"></span>
+								<br />
+								<br />
+								<span class="button_box_duration" id="button_box_duration_[% button.button_id %]"></span>
+								<br />
+								<br />
+								<span class="button_box_clear_link">
+									<a href="javascript:clear_button([% button.button_id %])">clear</a>
+								</span>
+								<span class="button_box_play_link">
+									<a href="javascript:play_button([% button.button_id %])">play</a>
+								</span>
+							</div>
+						</td>
+						[% END %]
+						
+						
+					</tr>				
+					[% END %]
+				<table>
+			
+				<!--
+				<button type="button" onclick="update_buttons()">refresh buttons</button>
+				<button type="button" onclick="update_clip_list()">refresh clip list</button>
+				-->
+				
+				<!-- This ontains the form used to display status feedback when clips are created.
+				     It is hidden until the create clip button is pressed. Message is populated dynamically
+				-->
+				<div id="progress_message_container">:</div>
+				
+			</div>
+			
+			
+			
+			
+			</div>
+
+				
+			<!-- Player is not visible - controlled by javascript -->
+			<audio id="player" autoplay="autoplay">
+				<!-- source populated dynamically by javascript -->
+			</audio>
+
+			
+			<!-- This div contains the list of marked clips, which can be selected for editing.
+			-->
+			<div id="clip_list_container" align="center">
+
+				<table id="clip_list" style="width:100%">
+				
+					<tr>
+						<th>assign</th>
+						<th>delete</th>
+						<th>play</th>
+						<th>title</th>
+						<th>source</th>
+						<th>category</th>
+						<th>date</th>
+						<th>time</th>
+						<th>duration</th>
+					</tr>
+
+					<!-- data rows will be populated dynamically -->
+				</table>
+			<div>
+			
+		</div>
+
+
+		<script type="text/javascript">
+
+			/* Indicates which clip_id we are in the process of assigning, 0 if none */
+			assigning_clip_id = 0;
+
+			/* If a specific clip_id is specified, display only that clip and select it for assignment */
+			var assign_clip_id = [% assign_clip_id %];
+			
+			/* Timer to update the buttons */
+			var run_poll_ajax_timer = true;
+			var poll_ajax_timer;
+			update_buttons();
+			update_clip_list();
+			
+
+		
+			function update_buttons() {
+			
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					var json_data = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					populate_button_box_from_json(json_data);
+				}
+			
+				/* Send request */
+				var url = "/button_box/buttons_json";
+				request.open("GET", url, true);
+				request.send();
+			}
+		
+		
+			function populate_button_box_from_json(json_data) {
+			
+				for (var button_id in json_data) {
+					
+					/* Skip private object meta properties */
+					if (!json_data.hasOwnProperty(button_id)) {
+						next;
+					}
+					
+					button = json_data[button_id];
+					
+					/* Update Title */
+					var node;
+					node = document.getElementById('button_box_title_' + button.button_id);
+					node.innerHTML = button.title;
+					
+					/* Update Duration */
+					node = document.getElementById('button_box_duration_' + button.button_id);
+					if(button.clip_id) {
+						var minutes = Math.floor(button.duration_seconds / 60);
+						var seconds = Math.floor(button.duration_seconds % 60);
+						node.innerHTML = minutes + ":" + zero_pad(seconds, 2);
+					}
+					else {
+						node.innerHTML = "";
+					}
+				}
+			}
+		
+		
+			function update_clip_list() {
+			
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					var json_data = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					populate_clip_list_from_json(json_data);
+
+					/* If page is loaded with assign_clip_id defined, that
+					 * means we should select that clip for assignment
+					 */
+					if(assign_clip_id) {
+						assign_clip(assign_clip_id);
+					}
+				}
+			
+				/* Send request */
+				var url = (
+					"/clips/all?category=" +
+					get_clip_list_category_filters() + 
+					"&channel_id=" + 
+					get_clip_list_source_filters()
+				);
+				
+				/* If page is loaded with assign_clip_id defined, that
+				 * means we should load just that clip into the list 
+				 */
+				if(assign_clip_id) {
+					url = "/clips/all?clip_id=" + assign_clip_id;
+				}
+				
+				request.open("GET", url, true);
+				request.send();
+			}
+		
+		
+			function get_clip_list_category_filters() {
+			
+				/* Read status of filter checkboxes and return a corresponding query string */
+				var checkboxes = document.getElementsByName("clip_category_to_show");
+				var status_list = "";
+				
+				for( var i = 0; i < checkboxes.length; i ++ ) {
+					if(checkboxes[i].checked) {
+						status_list += "," + checkboxes[i].value;
+					}
+				}
+				
+				/* Strip off initial ',' */
+				status_list = status_list.substr(1);
+				return status_list;
+			}
+			
+			
+			function get_clip_list_source_filters() {
+			
+				/* Read status of filter checkboxes and return a corresponding query string */
+				var checkboxes = document.getElementsByName("clip_source_to_show");
+				var list = "";
+				
+				for( var i = 0; i < checkboxes.length; i ++ ) {
+					if(checkboxes[i].checked) {
+						list += "," + checkboxes[i].value;
+					}
+				}
+				
+				/* Strip off initial ',' */
+				list = list.substr(1);
+				return list;
+			}
+		
+		
+			function populate_clip_list_from_json(json_data) {
+			
+				var table = document.getElementById("clip_list");
+				var rows = table.rows;
+				
+				/* Loop through current table to remove redundant rows.
+				 * Work through table rows from highest index, otherwise
+				 * the indexes will start moving around beneath our feet
+				 * as we delete a row and the others all shift up by one
+				 * position. Don't test index 0 as this is the title row.
+				 */
+				for (var i = (rows.length - 1); i > 0; i--) {
+					/* Actually, for now, just delete all existing rows and re-populate later */
+					table.deleteRow(i);
+				}
+			
+				/* Then update/create needed rows */
+				for (var clip_id in json_data) {
+					
+					/* Skip private object meta properties */
+					if (!json_data.hasOwnProperty(clip_id)) {
+						next;
+					}
+				
+					populate_clip_row( json_data[clip_id] );
+				}								
+			}
+		
+		
+			function populate_clip_row(clip_row) {
+			
+				var table = document.getElementById("clip_list");
+				var row_id = "clip_row_" + clip_row.clip_id;
+			
+				/* Look to see if we already have a row for this event_row_id */
+				var row = table.rows.namedItem(row_id);
+
+				if(!row) {
+					/* Not an existing row, insert one after header row */
+					row = table.insertRow(1);
+					row.id = row_id;
+					
+					/* The table has 9 cells/fields */
+					for( var i = 0; i < 9; i ++  ) {
+						row.insertCell(-1);
+					}
+					
+					/* These elements are invariant. so only populate when row is created */
+					row.setAttribute("class", "clip_row");
+					row.cells.item(0).appendChild( generate_assign_link(clip_row) ); // Assign
+					row.cells.item(1).appendChild( generate_delete_link(clip_row) ); // Delete
+					row.cells.item(2).appendChild( generate_play_link(clip_row) );   // Play
+				}
+				
+				/* Update/populate the fields */
+				row.cells.item(3).innerHTML = clip_row.title;        // Title
+				row.cells.item(4).innerHTML = clip_row.source;       // Source
+				row.cells.item(5).innerHTML = clip_row.category;     // Category
+				row.cells.item(6).innerHTML = clip_row.display_date; // Date
+				row.cells.item(7).innerHTML = clip_row.display_time; // Time
+				row.cells.item(8).innerHTML = seconds_to_mins_secs(clip_row.duration_seconds); // Duration
+			}
+		
+		
+			function generate_assign_link(clip_row) {
+			
+ 				var a = document.createElement('a');
+ 				a.setAttribute('href', '');
+ 				a.appendChild(document.createTextNode('assign'));
+ 				a.addEventListener(
+ 					"click",
+ 					function(event) {
+ 						assign_clip(clip_row.clip_id);
+ 						event.preventDefault();
+ 					}
+ 				);
+ 				
+ 				return a;
+			}
+			
+			
+			function generate_delete_link(clip_row) {
+			
+ 				var a = document.createElement('a');
+ 				a.setAttribute('href', '');
+ 				a.appendChild(document.createTextNode('delete'));
+ 				a.addEventListener(
+ 					"click",
+ 					function(event) {
+ 						delete_clip(clip_row.clip_id);
+ 						event.preventDefault();
+ 					}
+ 				);
+ 				
+ 				return a;
+			}			
+			
+
+			function generate_play_link(clip_row) {
+			
+ 				var a = document.createElement('a');
+ 				a.setAttribute('href', '');
+ 				a.appendChild(document.createTextNode('play'));
+ 				a.addEventListener(
+ 					"click",
+ 					function(event) {
+ 						play_clip(clip_row.clip_id);
+ 						event.preventDefault();
+ 					}
+ 				);
+ 				
+ 				return a;
+			}			
+
+
+			function delete_clip(clip_id) {
+										
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					//var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					update_clip_list();
+				}
+			
+				/* Send request */
+				var url = "/clips/delete/" + clip_id;
+				request.open("GET", url, true);
+				request.send();				
+			}
+		
+
+			function cancel_assign_clip() {
+			
+				/* If we are already assigning a clip, cancel it */
+				if(assigning_clip_id > 0) {
+					var row_id = "clip_row_" + assigning_clip_id;
+					var row = document.getElementById(row_id);
+			
+					if(row) {
+						row.setAttribute("class", "clip_row");
+					};
+					
+					assigning_clip_id = 0;
+				}
+				
+				/* Clear message */
+				var message = document.getElementById("progress_message_container");
+				message.innerHTML = ":";
+			}
+		
+		
+			function assign_clip(clip_id) {
+			
+				/* Cancel any assignment already in progress */
+				cancel_assign_clip();
+			
+				/* Set global flag */
+				assigning_clip_id = clip_id;
+			
+				/* Find relevant table row */
+				var row_id = "clip_row_" + clip_id;
+				var row = document.getElementById(row_id);
+			
+				if( ! row ) {
+					alert("row not found");
+				};
+			
+				/* Highlight Row */
+				row.setAttribute("class", "assign_row");
+				
+				/* Set message */
+				var message = document.getElementById("progress_message_container");
+				message.innerHTML = "click on a hotkey above to load with clip " + clip_id + ' or <a href="" >cancel</a>';
+			
+			}			
+			
+			
+			function zero_pad(n, desired_length) {
+				/* Given a string and desired length, keep adding '0' to the start
+				 * until the desired length is attained. Used for zero-padding numbers
+				 */
+				 
+				/* Coerce number into a string */
+				n = "" + n;
+				
+				/* Keep adding zeros to the front until we have desired length */
+				while( n.length < desired_length) {
+					n = "0" + n;	
+				}
+				return n;			
+			}
+		
+		
+			function clear_button(button_id) {
+			
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					var json_data = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+				
+					/* Process the payload */
+					populate_button_box_from_json(json_data);
+					update_clip_list();
+				}
+			
+				/* Send request */
+				var url = "/button_box/clear_button/" + button_id;
+				request.open("GET", url, true);
+				request.send();			
+			}
+
+			
+			function play_button(button_id) {
+			
+				var player = document.getElementById("player");
+				var audio_url = "/button_box/audio/" + button_id;
+				player.pause;
+				player.src = audio_url;;
+			}
+			
+			
+			function click_button(button_id) {
+
+				/* Clicking on a button assigns a clip, but only if a clip is already selected */
+				if(assigning_clip_id == 0) {
+					return;
+				}
+			
+				assign_clip_to_button(assigning_clip_id, button_id);
+				cancel_assign_clip();
+			}
+			
+			
+			function assign_clip_to_button(clip_id, button_id) {
+										
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				request.onreadystatechange = function() {
+				
+					/* Only respond to successful completion */
+					if (request.readyState != 4 || request.status != 200) {
+						return;
+					}
+				
+					/* Extract and parse payload */
+					//var response = JSON.parse(request.responseText);
+					
+					/* Free Up HTTP request object */
+					delete request;
+
+					/* If page is loaded with assign_clip_id defined, that
+					 * means we are only assigning a single clip, so return to player
+					 */
+					if(assign_clip_id) {
+						window.location.href = "player";
+						return;
+					}
+					
+					/* Process the payload */
+					update_clip_list();
+					update_buttons();
+				}
+			
+				/* Send request */
+				var url = "/button_box/assign/" + button_id + "/" + clip_id;
+				request.open("GET", url, true);
+				request.send();				
+			}
+			
+			
+			function play_clip(clip_id) {
+				
+				var player = document.getElementById("player");
+	
+				var audio_url = (
+					"http://localhost/clips/" +
+					clip_id +
+					".wav"
+				)
+				
+				player.pause;
+				player.src = audio_url;;
+			}
+			
+			
+			function seconds_to_mins_secs(seconds) {
+			
+				/* Given a number of seconds, returns a string in format M:SS */
+				var minutes = Math.floor(seconds / 60);
+				seconds = Math.floor(seconds % 60);
+				var rv = "";
+				
+				rv = minutes + ":" + zero_pad(seconds, 2);
+				return rv;				
+			}
+			
+		
+		</script>
+
+
+	</body>
+</html>
+	
