@@ -1,0 +1,91 @@
+
+
+
+<style type="text/css">
+
+	#source_list_container {
+		position: absolute;
+		left:0%;
+		top:5%;
+		width:10%;
+	}
+
+	#body_container {
+		position: absolute;
+		left:10%;
+		width:90%;				
+	}
+
+	#waveform_container {
+		position:relative;
+		left:5%;
+		width:90%;
+	}
+
+
+	body {
+		font-family: Arial, Helvetica, Verdana, sans-serif;
+	}
+
+	form#clip_metadata label {
+		float: left;
+		font-size: 14px;
+		width: 110px;
+	}
+
+	form#clip_metadata ol li {
+		list-style: none;
+	}
+
+
+	table#clip_list tr.clip_row:nth-child(even) {  
+		background: #E3E3E3;  
+	}
+	
+	.source_text {
+		font-size: 90%;
+	}
+
+	
+	
+	/* Styling for studio player 'Button Box' */
+	table.button_box {
+		width: 100%;
+		background: #eeeeee;
+		text-align: center;
+	}
+
+	td.button_box, tr.button_box {
+		border: 3px solid black;
+	}
+		
+	.button_box_button {
+		position: relative;
+	}
+	
+	.button_box_title {
+		top: 50%;
+	}
+	
+	.button_box_duration {
+		text-align: center;
+	}
+	
+	.button_box_play_link {
+		position: absolute;
+		left: 1%;
+		bottom: 0%;
+	}
+	
+	.button_box_clear_link {
+		position: absolute;
+		right: 1%;
+		bottom: 0%;
+	}
+	
+	.assign_row {
+		background: #FDFC8F;		
+	}
+	
+	
+</style>
