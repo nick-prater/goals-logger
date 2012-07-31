@@ -118,7 +118,7 @@ sub all : Path('all') : Args(0) {
 	# multiple status values are comma separated
 	if( $c->request->param('clip_id') ) {
  		$c->log->debug("searching for clips with clip_id of: " . $c->request->param('clip_id'));
-		$where->{clip_id} = [ split(',', $c->request->param('clip_id')) ];
+		$where->{'me.clip_id'} = [ split(',', $c->request->param('clip_id')) ];
 	};
 	
 	# Restrict results by category, if parameter is supplied

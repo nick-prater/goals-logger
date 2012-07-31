@@ -66,7 +66,7 @@ sub wav : Path('wav') : Args(3) {
 	if (-f $cache_file) {
 		
 		my $uri = sprintf(
-			"http://localhost/cache/audio/wav/%d/%s/%s.wav",
+			"/cache/audio/wav/%d/%s/%s.wav",
 			$args{channel_id},
 			$c->stash->{start_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
 			$c->stash->{end_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
@@ -116,7 +116,8 @@ sub waveform : Path('waveform') : Args(6) {
 	if (-f $cache_file) {
 		
 		my $uri = sprintf(
-			"/cache/audio/waveform/%u/%s/%s/%u/%u/%s.png",
+			"%s/audio/waveform/%u/%s/%s/%u/%u/%s.png",
+			'/cache',
 			$args{channel_id},
 			$c->stash->{start_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
 			$c->stash->{end_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
@@ -148,7 +149,8 @@ sub generate_audio : Private {
 	my %args = @_;
 
 	my $directory = sprintf(
-		"root/cache/audio/wav/%d/%s",
+		"%s/audio/wav/%d/%s",
+		$c->config->{cache_path},
 		$args{channel_id},
 		$c->stash->{start_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
 	);
@@ -187,13 +189,13 @@ sub generate_audio : Private {
 	
 	my $audio_prefix = sprintf(
 		"%s/%u/",
-		"root/audio",
+		$c->config->{audio_log_path},
 		$args{channel_id}
 	);
 		
 	# Generate waveform
 	my @command = (
-		'rotjoin',
+		$c->config->{rotjoin},
 		'-p', $audio_prefix,
 		'-f', 'wav',
 		'-o', $temp_path,
@@ -233,7 +235,8 @@ sub generate_waveform : Private {
 	my %args = @_;
 
 	my $directory = sprintf(
-		"root/cache/audio/waveform/%u/%s/%s/%u/%u",
+		"%s/audio/waveform/%u/%s/%s/%u/%u",
+		$c->config->{cache_path},
 		$args{channel_id},
 		$c->stash->{start_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
 		$c->stash->{end_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
@@ -285,7 +288,7 @@ sub generate_waveform : Private {
 		
 	# Generate waveform
 	my @command = (
-		'audiograph',
+		$c->config->{audiograph},
 		$audio_file,
 		$temp_path,
 		$args{width_pixels},

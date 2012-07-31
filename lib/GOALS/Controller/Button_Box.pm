@@ -50,7 +50,7 @@ sub audio : Local : Args(1) {
 	
 	# Respond according to whether a button has a clip assigned or not
 	if($clip_id) {
-		my $url = "http://localhost/clips/$clip_id.wav";
+		my $url = "/clip/$clip_id.wav";
 		$c->log->debug("button $button_id maps to clip_id $clip_id");
 		$c->log->debug("redirecting to $url");
 		$c->response->redirect($url);		
@@ -160,10 +160,7 @@ sub refresh_buttons_config : Private {
 	
 	foreach my $button( @{$c->stash->{hotkey_buttons}} ) {
 	
-		my $path = sprintf(
-			"clips/%s.wav",
-			($button->clip ? $button->clip_id : '')
-		);
+		my $path = $button->clip ? sprintf("%s.wav", $button->clip_id) : '';
 		$ini .= "[Button " . $button->button_id . "]\r\n";
 		$ini .= "File=$path\r\n";
 		$ini .= "Text=" . ($button->clip ? $button->clip->title : '') . "\r\n";
