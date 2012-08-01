@@ -80,10 +80,9 @@
 				
 			</form>
 			<hr />
-			<div align="center"><b>admin</b></div>
 			<a href="/channels">channel names</a><br />
 			<a href="upload_clip">upload clip</a><br />
-			<a href="player">home</a>
+			<a href="player">audio editor</a>
 			<hr />
 
 		</div>
@@ -140,11 +139,14 @@
 				<!-- This ontains the form used to display status feedback when clips are created.
 				     It is hidden until the create clip button is pressed. Message is populated dynamically
 				-->
-				<div id="progress_message_container">:</div>
+				<div 
+					id="progress_message_container"
+					class="assign_clips_user_message"
+				/>
 				
 			</div>
 			
-			
+			<hr />
 			
 			
 			</div>
@@ -163,9 +165,9 @@
 				<table id="clip_list" style="width:100%">
 				
 					<tr>
-						<th>assign</th>
-						<th>delete</th>
-						<th>play</th>
+						<th></th>
+						<th></th>
+						<th></th>
 						<th>title</th>
 						<th>source</th>
 						<th>category</th>
@@ -537,10 +539,11 @@
  				a.addEventListener(
  					"click",
  					function(event) {
- 						assign_clip(clip_row.clip_id);
+ 						assign_clip(clip_row.clip_id, clip_row.title);
  						event.preventDefault();
  					}
  				);
+ 				a.setAttribute("id", "clip_assign_link_" + clip_row.clip_id);
 				
  				return a;
 			}
@@ -621,24 +624,39 @@
 			
 				/* If we are already assigning a clip, cancel it */
 				if(assigning_clip_id > 0) {
-					var row_id = "clip_row_" + assigning_clip_id;
-					var row = document.getElementById(row_id);
-			
+					
+					/* Unset row highlighting */
+					var row = document.getElementById("clip_row_" + assigning_clip_id);
 					if(row) {
 						row.setAttribute("class", "clip_row");
 					};
-					
+			
+					/* Change 'cancel' button back to 'assign' */
+					var assign_node = document.getElementById("clip_assign_link_" + assigning_clip_id);
+					if(assign_node) {
+						assign_node.innerHTML = 'assign';
+					}
+			
 					assigning_clip_id = 0;
 				}
 				
 				/* Clear message */
 				var message = document.getElementById("progress_message_container");
-				message.innerHTML = ":";
+				message.innerHTML = "";
+				
+				assign_clip_id = 0;
 			}
 		
 		
-			function assign_clip(clip_id) {
+			function assign_clip(clip_id, clip_title) {
 			
+				if(assigning_clip_id == clip_id) {
+					/* Already assigning this clip, so CANCEL action */
+					cancel_assign_clip();
+					clear_player();
+					return;
+				}
+					
 				/* Cancel any assignment already in progress */
 				cancel_assign_clip();
 				clear_player();
@@ -646,21 +664,21 @@
 				/* Set global flag */
 				assigning_clip_id = clip_id;
 			
-				/* Find relevant table row */
-				var row_id = "clip_row_" + clip_id;
-				var row = document.getElementById(row_id);
-			
-				if( ! row ) {
-					alert("row not found");
-				};
-			
-				/* Highlight Row */
-				row.setAttribute("class", "assign_row");
+				/* Highlight clip row  */
+				var row = document.getElementById("clip_row_" + clip_id);
+				if(row) {
+					row.setAttribute("class", "assign_row");
+				}
 				
-				/* Set message */
+				/* Change 'cancel' button back to 'assign' */
+				var assign_node = document.getElementById("clip_assign_link_" + clip_id);
+				if(assign_node) {
+					assign_node.innerHTML = 'cancel';
+				}
+				
+				/* Set user message */
 				var message = document.getElementById("progress_message_container");
-				message.innerHTML = "click on a hotkey above to load with clip " + clip_id + ' or <a href="" >cancel</a>';
-			
+				message.innerHTML = "click on one of the player hotkey buttons above to load with clip <i>" + clip_title + "</i>";
 			}			
 			
 			
