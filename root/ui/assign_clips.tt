@@ -80,9 +80,11 @@
 				
 			</form>
 			<hr />
-			<a href="/channels">channel names</a><br />
-			<a href="upload_clip">upload clip</a><br />
-			<a href="player">audio editor</a>
+			<span class="menu_links">
+				<a href="/channels" class="menu_links">channel names</a><br />
+				<a href="upload_clip">upload clip</a><br />
+				<a href="player">audio editor</a>
+			</span>
 			<hr />
 
 		</div>
@@ -162,18 +164,18 @@
 			-->
 			<div id="clip_list_container" align="center">
 
-				<table id="clip_list" style="width:100%">
+				<table id="clip_list" class="clip_list">
 				
-					<tr>
-						<th></th>
-						<th></th>
-						<th></th>
-						<th>title</th>
-						<th>source</th>
-						<th>category</th>
-						<th>date</th>
-						<th>time</th>
-						<th>duration</th>
+					<tr class="title_row">
+						<th class="clip_list_assign"></th>
+						<th class="clip_list_delete"></th>
+						<th class="clip_list_play"></th>
+						<th class="clip_list_title">title</th>
+						<th class="clip_list_source">source</th>
+						<th class="clip_list_category">category</th>
+						<th class="clip_list_date">date</th>
+						<th class="clip_list_time">time</th>
+						<th class="clip_list_duration">duration</th>
 					</tr>
 
 					<!-- data rows will be populated dynamically -->
@@ -510,17 +512,26 @@
 					/* These elements are invariant. so only populate when row is created */
 					row.setAttribute("class", "clip_row");
 					row.cells.item(0).appendChild( generate_assign_link(clip_row) ); // Assign
+					row.cells.item(0).setAttribute("class", "clip_list_assign");
 					row.cells.item(1).appendChild( generate_delete_link(clip_row) ); // Delete
+					row.cells.item(1).setAttribute("class", "clip_list_delete");
 					row.cells.item(2).appendChild( generate_play_link(clip_row) );   // Play
+					row.cells.item(2).setAttribute("class", "clip_list_play");
 				}
 				
 				/* Update/populate the fields */
 				row.cells.item(3).innerHTML = clip_row.title;        // Title
+				row.cells.item(3).setAttribute("class", "clip_list_title");
 				row.cells.item(4).innerHTML = clip_row.source;       // Source
+				row.cells.item(4).setAttribute("class", "clip_list_source");
 				row.cells.item(5).innerHTML = clip_row.category;     // Category
+				row.cells.item(5).setAttribute("class", "clip_list_category");
 				row.cells.item(6).innerHTML = clip_row.display_date; // Date
+				row.cells.item(6).setAttribute("class", "clip_list_date");
 				row.cells.item(7).innerHTML = clip_row.display_time; // Time
+				row.cells.item(7).setAttribute("class", "clip_list_time");
 				row.cells.item(8).innerHTML = seconds_to_mins_secs(clip_row.duration_seconds); // Duration
+				row.cells.item(8).setAttribute("class", "clip_list_duration");
 				row.cells.item(8).setAttribute("id", "clip_duration_" + clip_row.clip_id);
 				
 				/* Highlight row if it is playing */

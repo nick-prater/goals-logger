@@ -1,6 +1,3 @@
-
-
-
 <style type="text/css">
 
 	#source_list_container {
@@ -21,8 +18,7 @@
 		left:5%;
 		width:90%;
 	}
-
-
+	
 	body {
 		font-family: Arial, Helvetica, Verdana, sans-serif;
 	}
@@ -37,15 +33,9 @@
 		list-style: none;
 	}
 
-
-	table#clip_list tr.clip_row:nth-child(even) {  
-		background: #E3E3E3;  
-	}
-	
 	.source_text {
 		font-size: 90%;
 	}
-
 	
 	
 	/* Styling for studio player 'Button Box' */
@@ -99,8 +89,22 @@
 		bottom: 0%;
 	}
 	
+		
+	table#clip_list {
+		width: 100%;
+		table-layout: fixed;		
+	}
+	
+	table#clip_list tr.clip_row:nth-child(even) { 
+		background: #e3E3E3;		
+	}
+		
 	.clip_row {
 		
+	}
+	
+	.title_row {
+		color: #000000;
 	}
 	
 	.assign_row {
@@ -111,12 +115,52 @@
 		background: #bbffbb;
 	}
 	
+	.clip_list_assign {
+		width: 3em;
+	}
+	
+	.clip_list_delete {
+		width: 3em;
+	}
+	
+	.clip_list_play {
+		width: 2em;
+	}
+	
+	.clip_list_title {
+		
+	}
+	
+	.clip_list_source {
+		width: 6em;
+		text-align: center;
+	}
+	
+	.clip_list_category {
+		width: 5em;
+		text-align: center;
+	}
+	
+	.clip_list_date {
+		width: 8em;
+		text-align: center;
+	}
+	
+	.clip_list_time {
+		width: 5em;
+		text-align: center;
+	}
+	
+	.clip_list_duration {
+		width: 4em;
+		text-align: center;
+	}
+	
 	.assign_clips_user_message {
 		color: #bb0000;
 		text-align: center;
 		height: 12pt;
 		
 	}
-	
 	
 </style>
