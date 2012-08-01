@@ -110,8 +110,16 @@ sub all : Path('all') : Args(0) {
 	# Restrict results by channel_id, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('channel_id') ) {
- 		$c->log->debug("searching for clips with channel_id of: " . $c->request->param('channel_id'));
-		$where->{channel_id} = [ split(',', $c->request->param('channel_id')) ];
+		$c->log->debug("searching for clips with channel_id of: " . $c->request->param('channel_id'));
+		
+		my @channel_ids = split(',', $c->request->param('channel_id'));
+		
+		# If NULL is specified, replace with undef;
+		foreach my $channel_id(@channel_ids) {
+			$channel_id eq 'NULL' and $channel_id = undef;
+		}		
+		
+ 		$where->{channel_id} = [ @channel_ids ];
 	};
 	
 	# Restrict results by channel_id, if parameter is supplied
@@ -132,9 +140,9 @@ sub all : Path('all') : Args(0) {
 	
 	foreach my $clip(@clips) {
 	
-		# Set timezone, so we can extract time and date in channel's 
-		# time zone. This should be pushed back into the DB model class,
-		$clip->clip_start_timestamp->set_time_zone( $clip->channel->timezone );	
+		# Normally display name of studio/audio source, unless it is a user upload,
+		# which doesn't have an internal source or channel
+		my $display_source = ($clip->source eq 'user_upload' ? 'user upload' : $clip->source_label);
 	
 		$json_data->{$clip->clip_id} = {
 			clip_id => $clip->clip_id,
@@ -144,10 +152,24 @@ sub all : Path('all') : Args(0) {
 			duration_seconds => $clip->duration_seconds,
 			match_title => $clip->match_title,
 			commentator => $clip->commentator,
-			source => $clip->source_label,
-			display_date => $clip->clip_start_timestamp->strftime('%a %d/%m/%Y'),# In audio time zone 
-			display_time => $clip->clip_start_timestamp->strftime('%H:%M:%S'),   # In audio time zone
+			source => $display_source,
 		};
+		
+		# Set timezone, so we can extract time and date in channel's 
+		# time zone. This should be pushed back into the DB model class.
+		# This only applies to clips assigned to a channel. User uploads, for example,
+		# do not have a time or timezone
+		if( $clip->channel && $clip->clip_start_timestamp && $clip->channel->timezone ) {
+			$clip->clip_start_timestamp->set_time_zone( $clip->channel->timezone );
+		
+			# Resulting display dates and times will be in the channel's time zone
+			$json_data->{$clip->clip_id}->{display_date} = $clip->clip_start_timestamp->strftime('%a %d/%m/%Y');
+			$json_data->{$clip->clip_id}->{display_time} = $clip->clip_start_timestamp->strftime('%H:%M:%S');
+		}
+		else {
+			$json_data->{$clip->clip_id}->{display_date} = "";
+			$json_data->{$clip->clip_id}->{display_time} = "";
+		}
 	}
 	
 	# Return status to page
