@@ -52,7 +52,7 @@
 									<input
 										type="checkbox"
 										name="clip_source_to_show"
-										value="NULL"
+										value="NULL" 
 										checked="true"
 										onchange="update_clip_list()"
 									/>
@@ -347,9 +347,13 @@
 						node.innerHTML = "";
 					}
 					
-					/* Update style class */
-					node = document.getElementById("button_box_button_" + button.button_id);
-					node.setAttribute("class", "button_box_button");
+					/* Update style class, except if this is the button we are assigning
+					 * in which case we want to leave the style alone as it is set by
+					 * the assigning process */
+					if(assigning_clip_id != button.clip_id) {
+						node = document.getElementById("button_box_button_" + button.button_id);
+						node.setAttribute("class", "button_box_button");
+					}
 				}
 			}
 		
@@ -417,6 +421,9 @@
 						status_list += "," + checkboxes[i].value;
 					}
 				}
+				
+				/* Always include user upload */
+				status_list += "," + 'user_upload';
 				
 				/* Strip off initial ',' */
 				status_list = status_list.substr(1);
@@ -641,9 +648,8 @@
 				}
 				
 				/* Clear message */
-				var message = document.getElementById("progress_message_container");
-				message.innerHTML = "";
-				
+				set_user_message("");
+								
 				assign_clip_id = 0;
 			}
 		
@@ -677,8 +683,11 @@
 				}
 				
 				/* Set user message */
-				var message = document.getElementById("progress_message_container");
-				message.innerHTML = "click on one of the player hotkey buttons above to load with clip <i>" + clip_title + "</i>";
+				set_user_message (
+					"click on one of the player hotkey buttons above to load with clip <i>" +
+					clip_title +
+					"</i>"
+				);
 			}			
 			
 			
@@ -704,6 +713,10 @@
 				if(playing_button_id == button_id) {
 					clear_player();
 				}
+			
+				/* Highlight Button Clicked */
+				var node = document.getElementById("button_box_button_" + button_id);
+				node.setAttribute("class", "button_box_button_clearing");
 			
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
@@ -793,19 +806,30 @@
 					/* Free Up HTTP request object */
 					delete request;
 
-					update_buttons();
-					update_clip_list();
+					update_buttons();											
+					//set_user_message("OK : clip assigned to button");
 					
-					/* If page is loaded with assign_clip_id defined, that
-					 * means we are only assigning a single clip, so return to player
-					 */
-					if(assign_clip_id) {
-						window.location.href = "player";
-						return;
-					}
+					/* Set timeout to clear user message */
+					message_timeout = setTimeout(
+						function() {
+							/* If page is loaded with assign_clip_id defined, that
+							* means we are only assigning a single clip, so return to player */
+							if(assign_clip_id) {
+								assign_clip_id = 0;
+								window.location.href = "player";
+							}
+							
+							assign_clip_id = 0;
+							
+						},
+						500
+					);
 					
+					update_clip_list(); // has side-effect of clearing user message
 				}
 
+				set_user_message("saving clip to button, please wait...");
+				
 				/* Send request */
 				var url = "/button_box/assign/" + button_id + "/" + clip_id;
 				request.open("GET", url, true);
@@ -859,6 +883,12 @@
 				return rv;				
 			}
 			
+			
+			function set_user_message(message) {
+				/* Set innerHTML of user message div */
+				var node = document.getElementById("progress_message_container");
+				node.innerHTML = message;
+			}
 		
 		</script>
 

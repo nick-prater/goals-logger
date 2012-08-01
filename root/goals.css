@@ -73,6 +73,11 @@
 		position: relative;
 		background: #ffffbb;
 	}
+
+	.button_box_button_clearing {
+		position: relative;
+		background: #ffffbb;
+	}
 	
 	.button_box_title {
 		top: 50%;
