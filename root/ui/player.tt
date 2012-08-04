@@ -527,7 +527,7 @@
 			var play_timer;
 			
 			/* Timer to update the event/clip list */
-			var poll_ajax_timer_period_ms = 15000; // Set to 0 to disable
+			var poll_ajax_timer_period_ms = 5000; // Set to 0 to disable
 			var poll_ajax_timer;
 			refresh_event_list();
 			
