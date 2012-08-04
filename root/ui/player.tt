@@ -704,7 +704,14 @@
 				/* Hide clip_details div */
 				clip_metadata.style.display = "none";
 
-				/* Show clip list */
+				/* Hide trim buttons */
+				var node;
+				node = document.getElementById("buttons_left_of_player");
+				node.style.display = "none";
+				node = document.getElementById("buttons_right_of_player");
+				node.style.display = "none";
+				
+				/* Show event list */
 				var clip_list = document.getElementById('clip_list_container');
 				clip_list.style.display = "block";	
 			}
