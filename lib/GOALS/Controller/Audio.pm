@@ -66,7 +66,8 @@ sub wav : Path('wav') : Args(3) {
 	if (-f $cache_file) {
 		
 		my $uri = sprintf(
-			"/cache/audio/wav/%d/%s/%s.wav",
+			"%s/cache/audio/wav/%d/%s/%s.wav",
+			$c->config->{clip_url_prefix} || '',
 			$args{channel_id},
 			$c->stash->{start_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
 			$c->stash->{end_dt}->strftime("%Y-%m-%dT%H:%M:%S.%3NZ"),
