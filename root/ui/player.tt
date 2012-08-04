@@ -25,7 +25,42 @@
 				width:90%;
 			}
 
+			#buttons_left_of_player {
+				position: absolute;;
+				float: left;
+				width: 5%;
+			}
+			
+			#buttons_right_of_player {
+				position: absolute;;
+				left: 95%;
+				width: 5%;
+			}
 
+			.side_buttons_heading {
+				text-align: center;
+				font-size: 10pt;
+				font-weight: bold;
+			}
+			
+			.side_buttons_label {
+				text-align: center;
+				font-size: 8pt;
+				background: #ffffff;
+			}
+			
+			.side_button_left {
+				float: left;
+				width: 25px;
+				font-size: 10px;
+			}
+			.side_button_right {
+				float: right;
+				width: 25x;
+				font-size: 10px;
+			}
+			
+			
 			body {
 				font-family: Arial, Helvetica, Verdana, sans-serif;
 			}
@@ -175,69 +210,108 @@
 			</div>
 			
 			
-			<div id="waveform_container">
-
-				<!-- size of SVG is defined by style of waveform_container -->
-				<svg 
-					id="waveform_svg"
-					xmlns="http://www.w3.org/2000/svg"
-					xmlns:xlink="http://www.w3.org/1999/xlink"
-					version="1.1"
-					width="100%"
-	 				height="20%"
-				>
-
-					<rect
-						width="100%"
-						height="100%"
-						fill="rgb(200,200,200)"
-					/>
-
-					<image
-						x="0%"
-						y="0%"
-						width="100%"
-						height="100%"
-						preserveAspectRatio="none"
-						xlink:href="/default_waveform.png"
-						id="waveform_image"
-					/>
-
-					<line
-						id="clip_marker"
-						stroke="rgb(202,0,153)"
-						stroke-width="5%"
-						x1="0"
-						y1="5%"
-						x2="0"
-						y2="5%"
-						display="none"
-					/>
-
-					<line
-						id="cursor"
-						x1="0"
-						y1="0"
-						x2="0"
-						y2="100%"
-						stroke="blue"
-						stroke-width="0.5%"
-						draggable="true"
-					/>
-				</svg>
+			<div name="player_container">
+	
+				<div id="buttons_left_of_player" style="display: none">
+					<div class="side_buttons_heading">trim start</div>
+					
+					<div>
+						<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
+						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
+						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+					</div>
+					
+					<div>
+						<div class="side_buttons_label">&mdash; 1s &mdash;</div>
+						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
+						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+					</div>
+					
+				</div>
 				
-				<div id="time below_player" align="center">
-					<table style="width:100%">
-						<tr>
-							<td align="left"><b id="in_time">--:--:--.--</b></td>
-							<td align="center"><b id="time">--:--:--.--</b></td>
-							<td align="right"><b id="out_time"">--:--:--.--</b></td>
-						</tr>
-					</table>
-				</div>				
+				<div id="buttons_right_of_player" style="display: none">
+					<div class="side_buttons_heading">trim end</div>
+					<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
+					<div>
+						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
+						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+					</div>
+					<div class="side_buttons_label">&mdash; 1s &mdash;</div>
+					<div>
+						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
+						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+					</div>
+				</div>
+			
+			
+				<div id="waveform_container">
+
+					<!-- size of SVG is defined by style of waveform_container -->
+					<svg 
+						id="waveform_svg"
+						xmlns="http://www.w3.org/2000/svg"
+						xmlns:xlink="http://www.w3.org/1999/xlink"
+						version="1.1"
+						width="100%"
+						height="20%"
+					>
+
+						<rect
+							width="100%"
+							height="100%"
+							fill="rgb(200,200,200)"
+						/>
+
+						<image
+							x="0%"
+							y="0%"
+							width="100%"
+							height="100%"
+							preserveAspectRatio="none"
+							xlink:href="/default_waveform.png"
+							id="waveform_image"
+						/>
+
+						<line
+							id="clip_marker"
+							stroke="rgb(202,0,153)"
+							stroke-width="5%"
+							x1="0"
+							y1="5%"
+							x2="0"
+							y2="5%"
+							display="none"
+						/>
+
+						<line
+							id="cursor"
+							x1="0"
+							y1="0"
+							x2="0"
+							y2="100%"
+							stroke="blue"
+							stroke-width="0.5%"
+							draggable="true"
+						/>
+					</svg>
+				
+				
+				
+					<div id="time below_player" align="center">
+						<table style="width:100%">
+							<tr>
+								<td align="left"><b id="in_time">--:--:--.--</b></td>
+								<td align="center"><b id="time">--:--:--.--</b></td>
+								<td align="right"><b id="out_time"">--:--:--.--</b></td>
+							</tr>
+						</table>
+					</div>				
+				</div>
+
 			</div>
-
-
+				
+			
+			
 			<div id="buttons_below_player" align="center">
 				<button type="button" onclick="mark_in()">MARK IN</button>
 				<button type="button" onclick="mark_out()">MARK OUT</button>
@@ -568,6 +642,13 @@
 				
 				/* Show clip_details div */
 				clip_metadata.style.display = "block";
+				
+				/* Show clip trim buttons */
+				var node;
+				node = document.getElementById("buttons_left_of_player");
+				node.style.display = "block";
+				node = document.getElementById("buttons_right_of_player");
+				node.style.display = "block";
 			}
 
 
@@ -685,7 +766,7 @@
 				"play",
 				function() {
 					play_pause_button.innerHTML = 'PAUSE';
-					player.volume = 100;
+					player.volume = 1;
 					cursor.setAttribute("stroke", "red");
 				}
 			);
