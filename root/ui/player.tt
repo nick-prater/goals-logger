@@ -259,14 +259,14 @@
 					
 					<div>
 						<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
-						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
-						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+						<button class="side_button_left" type="button" onclick="trim_start(-0.1)">&larr;</button>
+						<button class="side_button_right" type="button" onclick="trim_start(0.1)">&rarr;</button>
 					</div>
 					
 					<div>
 						<div class="side_buttons_label">&mdash; 1s &mdash;</div>
-						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
-						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+						<button class="side_button_left" type="button" onclick="trim_start(-1.0)">&larr;</button>
+						<button class="side_button_right" type="button" onclick="trim_start(1.0)">&rarr;</button>
 					</div>
 					
 				</div>
@@ -275,13 +275,13 @@
 					<div class="side_buttons_heading">trim end</div>
 					<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
 					<div>
-						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
-						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+						<button class="side_button_left" type="button" onclick="trim_end(-0.1)">&larr;</button>
+						<button class="side_button_right" type="button" onclick=trim_end(0.1)">&rarr;</button>
 					</div>
 					<div class="side_buttons_label">&mdash; 1s &mdash;</div>
 					<div>
-						<button class="side_button_left" type="button" onclick="mark_in()">&larr;</button>
-						<button class="side_button_right" type="button" onclick="mark_in()">&rarr;</button>
+						<button class="side_button_left" type="button" onclick="trim_end(-1.0)">&larr;</button>
+						<button class="side_button_right" type="button" onclick="trim_end(1.0)">&rarr;</button>
 					</div>
 				</div>
 			
@@ -359,7 +359,7 @@
 				<button type="button" onclick="mark_out()">MARK OUT</button>
 				<button type="button" onclick="clear_mark()">CLEAR MARK</button>
 				<button type="button" onclick="play_from_in_point()">|----</button>
-				<button type="button" onclick="play_to_out_point(10)">----|</button>
+				<button type="button" onclick="play_to_out_point(1.5)">----|</button>
 				<button type="button" onclick="display_clip_metadata()" id="export_clip_button">CREATE CLIP</button>
 				<button type="button" onclick="play_pause()" id="play_pause_button">PLAY</button>
 			</div>
@@ -509,6 +509,7 @@
 			var audio_event_id = 0;        // Updated whenever audio from an event is opened
 			var stop_at_clip_end = true;   // if true, play stop at the marked clip end, otherwise continue to end of audio
 			var autoplay = true;           // If true, start playing as soon as audio is loaded, via canplay event
+			var load_position_seconds = 0; // If non-zero, autoplay starts from this time position in audio
 			
 			/* Keep track of fractional seconds for selected audio:
 			 * When audio is loaded, we get the time-span from drop-down boxes on the form,
@@ -716,7 +717,48 @@
 				clip_list.style.display = "block";	
 			}
 
-
+			
+			function trim_start(seconds) {
+			
+				/* Update times */
+				var in_point_ms  = audio_start_dt.valueOf() + (seconds * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + (player.duration * 1000);
+				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
+				
+				/* This updates the drop down boxes to reflect the given start/end points */
+				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
+								
+				/* Load Audio for marked clip */
+				autoplay = true;
+				load_audio();
+				
+				/* Update text fields on metadata form */
+				var duration_text_field = document.getElementById('create_clip_duration');
+				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+			}
+			
+			
+			function trim_end(seconds) {
+			
+				/* Update times */
+				var in_point_ms  = audio_start_dt.valueOf();
+				var out_point_ms = audio_start_dt.valueOf() + ((player.duration + seconds) * 1000);
+				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
+				
+				/* This updates the drop down boxes to reflect the given start/end points */
+				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
+								
+				/* Load Audio for marked clip */
+				autoplay = true;
+				load_position_seconds = (out_point_ms / 1000) - 1;				
+				load_audio();
+				
+				/* Update text fields on metadata form */
+				var duration_text_field = document.getElementById('create_clip_duration');
+				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+			}
+			
+			
 			function play_from_in_point() {
 
 				player.currentTime = in_point_seconds;
@@ -856,7 +898,13 @@
 					run_play_timer = true;
 					play_timer_event();
 					
-					if(autoplay) {
+					/* This is used when trimming end of a clip, so that
+					 * autoplay starts from somewhere other than start of clip */
+					if(load_position_seconds) {
+						load_position_seconds = 0;
+						play_to_out_point(1.5);
+					}
+					else if(autoplay) {
 						player.play();
 					}
 				}
