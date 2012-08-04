@@ -15,13 +15,13 @@
 		<div id="source_list_container">
 
 			<hr />
+						
+			<div [% IF assign_clip_id %] style="display: none" [% END %]>
 			
-			[% UNLESS assign_clip_id %]
-			
-			<div align="center"><b>clip filter</b></div>
-			<form>
-			
-				
+				<div align="center">
+					<b>clip filter</b>
+				</div>
+					
 				<fieldset>
 					<legend>source</legend>
 					<table>
@@ -76,10 +76,10 @@
 					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="other" />other<br />
 				</fieldset>
 				
-				[% END %]
-				
-			</form>
+			</div>
+			
 			<hr />
+			
 			<span class="menu_links">
 				<a href="/channels" class="menu_links">channel names</a><br />
 				<a href="upload_clip">upload clip</a><br />
@@ -195,6 +195,7 @@
 			
 			/* If a specific clip_id is specified, display only that clip and select it for assignment */
 			var assign_clip_id = [% assign_clip_id %];
+			var assign_clip_title = '';
 			
 			/* Timer to update the buttons */
 			var run_poll_ajax_timer = true;
@@ -387,8 +388,8 @@
 					/* If page is loaded with assign_clip_id defined, that
 					 * means we should select that clip for assignment
 					 */
-					if(assign_clip_id) {
-						assign_clip(assign_clip_id);
+					if( [% assign_clip_id %] ) {
+						assign_clip( [% assign_clip_id %], assign_clip_title );
 					}
 				}
 			
@@ -403,8 +404,8 @@
 				/* If page is loaded with assign_clip_id defined, that
 				 * means we should load just that clip into the list 
 				 */
-				if(assign_clip_id) {
-					url = "/clips/all?clip_id=" + assign_clip_id;
+				if( [% assign_clip_id %] ) {
+					url = "/clips/all?clip_id=" + [% assign_clip_id %];
 				}
 				
 				request.open("GET", url, true);
@@ -476,6 +477,11 @@
 					}
 				
 					populate_clip_row( json_data[clip_id] );
+					
+					/* Capture the title of this clip for later use, if assigning a single clip */
+					if( [% assign_clip_id %] && clip_id == [% assign_clip_id %] ) {
+						assign_clip_title = json_data[clip_id].title;
+					}
 				}
 				
 				/* If we are playing a clip during the refresh, check that it
@@ -825,7 +831,7 @@
 						function() {
 							/* If page is loaded with assign_clip_id defined, that
 							* means we are only assigning a single clip, so return to player */
-							if(assign_clip_id) {
+							if([% assign_clip_id %]) {
 								assign_clip_id = 0;
 								window.location.href = "player";
 							}
