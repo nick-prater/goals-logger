@@ -65,6 +65,9 @@
 				font-family: Arial, Helvetica, Verdana, sans-serif;
 			}
 
+			
+			
+			
 			form#clip_metadata label {
 				float: left;
 				font-size: 14px;
@@ -75,10 +78,49 @@
 				list-style: none;
 			}
 
+			
+			
 			table#clip_list tr:nth-child(even) {  
 			    background: #E3E3E3;  
 			}
 
+			.clip_list_status {
+				width: 4em;
+				text-align: center;
+			}
+	
+			.clip_list_date {
+				width: 5em;
+				text-align: center;
+			}
+			
+			.clip_list_time {
+				width: 4em;
+				text-align: center;
+			}
+
+			.clip_list_source {
+				width: 6em;
+				text-align: center;
+			}
+
+			.clip_list_match {
+				
+			}
+
+			.clip_list_commentator {
+				
+			}
+			
+			.clip_list_edit {
+				width: 2em;
+			}
+			
+			.clip_list_delete {
+				width: 4em;
+			}
+			
+			
 			
 			.source_text {
 				font-size: 90%;
@@ -426,12 +468,12 @@
 				<table id="clip_list" style="width:100%">
 
 					<tr>
-						<th>status</th>
-						<th>date</th>
-						<th>time</th>
-						<th>source</th>
-						<th>match</th>
-						<th>commentator</th>
+						<th class="clip_list_status">status</th>
+						<th class="clip_list_date">date</th>
+						<th class="clip_list_time">time</th>
+						<th class="clip_list_source">source</th>
+						<th class="clip_list_match">match</th>
+						<th class="clip_list_commentator">commentator</th>
 					</tr>
 
 					<!-- data rows will be populated dynamically -->
@@ -1126,13 +1168,21 @@
 
 				/* Update/populate the fields */
 				row.cells.item(0).innerHTML = event_row.status;
+				row.cells.item(0).setAttribute("class", "clip_list_status");
 				row.cells.item(1).innerHTML = event_row.event_date;
+				row.cells.item(1).setAttribute("class", "clip_list_date");
 				row.cells.item(2).innerHTML = event_row.event_time;
+				row.cells.item(2).setAttribute("class", "clip_list_time");
 				row.cells.item(3).innerHTML = event_row.source_label;
+				row.cells.item(3).setAttribute("class", "clip_list_source");
 				row.cells.item(4).innerHTML = event_row.match;
+				row.cells.item(4).setAttribute("class", "clip_list_match");
 				row.cells.item(5).innerHTML = event_row.commentator;
+				row.cells.item(5).setAttribute("class", "clip_list_commentator");
 				row.cells.item(6).appendChild(generate_edit_link(event_row));
+				row.cells.item(6).setAttribute("class", "clip_list_edit");
 				row.cells.item(7).appendChild(generate_delete_link(event_row));
+				row.cells.item(7).setAttribute("class", "clip_list_delete");
 			}
 	
 	
