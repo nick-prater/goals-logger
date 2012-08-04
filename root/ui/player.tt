@@ -543,6 +543,11 @@
 						stop_at_clip_end = false;
 					}
 
+					/* If player is stopped at end, pressing play again re-starts from beginning */
+					if(player.currentTime >= player.duration) {
+						player.currentTime = 0;
+					}
+					
 					player.play();
 				}
 				else {
