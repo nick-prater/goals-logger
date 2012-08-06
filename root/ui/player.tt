@@ -1628,7 +1628,10 @@
 			
 			function set_audio_times_from_event_local_timestamp(local_iso_timestamp) {
 			
-				var dt = new Date(local_iso_timestamp);
+				/* Although local_iso_timestamp isn't in UTC, but is in the audio recording
+				 * timezone, add a 'Z' to indicate UTC. This will prevent any automatic
+				 * timezone translation by javascript */
+				var dt = new Date(local_iso_timestamp + "Z");
 				var preroll_ms  = 60 * 1000;
 				var postroll_ms = 30 * 1000;
 				
