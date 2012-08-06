@@ -19,16 +19,22 @@
 				width:90%;				
 			}
 
+			#player_container {
+				
+			}
+			
 			#waveform_container {
 				position:relative;
 				left:5%;
 				width:90%;
+				background: #bbb;
 			}
 
 			#buttons_left_of_player {
 				position: absolute;;
 				float: left;
 				width: 5%;
+				
 			}
 			
 			#buttons_right_of_player {
@@ -56,7 +62,7 @@
 			}
 			.side_button_right {
 				float: right;
-				width: 25x;
+				width: 25px;
 				font-size: 10px;
 			}
 			
@@ -340,9 +346,10 @@
 						<rect
 							width="100%"
 							height="100%"
-							fill="rgb(200,200,200)"
+							stroke="rgb(0,0,0)"
+							fill="rgb(255,255,255)"
 						/>
-
+					
 						<image
 							x="0%"
 							y="0%"
@@ -352,6 +359,7 @@
 							xlink:href="/default_waveform.png"
 							id="waveform_image"
 						/>
+						
 
 						<line
 							id="clip_marker"
@@ -566,7 +574,7 @@
 			var play_timer;
 			
 			/* Timer to update the event/clip list */
-			var poll_ajax_timer_period_ms = 5000; // Set to 0 to disable
+			var poll_ajax_timer_period_ms = 0;//5000; // Set to 0 to disable
 			var poll_ajax_timer;
 			refresh_event_list();
 			
@@ -1089,8 +1097,8 @@
 				
 				/* Generate waveform URI based on audio URI */			
 				var waveform_uri = audio_uri.replace("wav", "waveform");
-				waveform_uri += "/" + bounds.width;
-				waveform_uri += "/" + bounds.height;		 
+				waveform_uri += "/" + Math.floor(bounds.width) ;
+				waveform_uri += "/" + Math.floor(bounds.height);
 				waveform_uri += "/" + '112233'; // colour in rrggbb html format
 				
 				var image = document.getElementById("waveform_image");
