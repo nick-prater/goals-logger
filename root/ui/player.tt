@@ -557,6 +557,7 @@
 			var stop_at_clip_end = true;   // if true, play stop at the marked clip end, otherwise continue to end of audio
 			var autoplay = true;           // If true, start playing as soon as audio is loaded, via canplay event
 			var load_position_seconds = 0; // If non-zero, autoplay starts from this time position in audio
+			var click_seconds = 0;         // Keeps track of where mouse button was last clicked
 			
 			/* Keep track of fractional seconds for selected audio:
 			 * When audio is loaded, we get the time-span from drop-down boxes on the form,
@@ -574,7 +575,7 @@
 			var play_timer;
 			
 			/* Timer to update the event/clip list */
-			var poll_ajax_timer_period_ms = 0;//5000; // Set to 0 to disable
+			var poll_ajax_timer_period_ms = 5000; // Set to 0 to disable
 			var poll_ajax_timer;
 			refresh_event_list();
 			
@@ -1116,6 +1117,8 @@
 
 				/* Stop capturing movement when mouse button is released anywhere */
 				document.addEventListener("mouseup", waveform_mouse_up);
+				
+				player.play();
 			}
 
 
@@ -1124,6 +1127,10 @@
 				/* Stop reacting to mouse movements, if we were doing so */
 				waveform_svg.removeEventListener("mousemove", waveform_mouse_move);
 				document.removeEventListener("mouseup", waveform_mouse_up);
+				
+				/* Pause and eposition player back to where we last clicked/moved */
+				player.pause();
+				player.currentTime = click_seconds;
 			}
 
 
@@ -1151,7 +1158,7 @@
 				var click_x_percent = (p.x / bounds.width) * 100;
 
 				/* Calculate how many seconds that represents */
-				var click_seconds = ((player.duration / 100) * click_x_percent);
+				click_seconds = ((player.duration / 100) * click_x_percent);
 
 				/* Position play cursor at appropriate point */
 				player.currentTime = click_seconds;
