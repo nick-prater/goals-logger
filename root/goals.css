@@ -88,6 +88,15 @@
 		right: 1%;
 		bottom: 0%;
 	}
+
+	.button_box_download_link {
+		position: absolute;
+		left: 50%;
+		width: 10em;
+		margin-left: -5em;
+		text-align: center;
+		bottom: 0%;
+	}
 	
 		
 	table#clip_list {
@@ -125,6 +134,11 @@
 	
 	.clip_list_play {
 		width: 2em;
+	}
+	
+	.clip_list_download {
+		width: 5em;
+		text-align: center;
 	}
 	
 	.clip_list_title {

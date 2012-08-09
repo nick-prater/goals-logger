@@ -118,6 +118,9 @@
 								<span class="button_box_clear_link">
 									<a href="javascript:clear_button([% button.button_id %])">clear</a>
 								</span>
+								<span class="button_box_download_link">
+									<a href="javascript:download_button([% button.button_id %])">download</a>
+								</span>
 								<span class="button_box_play_link">
 									<a
 										href="javascript:play_button([% button.button_id %])"
@@ -170,6 +173,7 @@
 						<th class="clip_list_assign"></th>
 						<th class="clip_list_delete"></th>
 						<th class="clip_list_play"></th>
+						<th class="clip_list_download"></th>
 						<th class="clip_list_title">title</th>
 						<th class="clip_list_source">source</th>
 						<th class="clip_list_category">category</th>
@@ -510,8 +514,8 @@
 					row = table.insertRow(1);
 					row.id = row_id;
 					
-					/* The table has 9 cells/fields */
-					for( var i = 0; i < 9; i ++  ) {
+					/* The table has 10 cells/fields */
+					for( var i = 0; i < 10; i ++  ) {
 						row.insertCell(-1);
 					}
 					
@@ -523,22 +527,24 @@
 					row.cells.item(1).setAttribute("class", "clip_list_delete");
 					row.cells.item(2).appendChild( generate_play_link(clip_row) );   // Play
 					row.cells.item(2).setAttribute("class", "clip_list_play");
+					row.cells.item(3).appendChild( generate_download_link(clip_row) );   // Play
+					row.cells.item(3).setAttribute("class", "clip_list_download");
 				}
 				
 				/* Update/populate the fields */
-				row.cells.item(3).innerHTML = clip_row.title;        // Title
-				row.cells.item(3).setAttribute("class", "clip_list_title");
-				row.cells.item(4).innerHTML = clip_row.source;       // Source
-				row.cells.item(4).setAttribute("class", "clip_list_source");
-				row.cells.item(5).innerHTML = clip_row.category;     // Category
-				row.cells.item(5).setAttribute("class", "clip_list_category");
-				row.cells.item(6).innerHTML = clip_row.display_date; // Date
-				row.cells.item(6).setAttribute("class", "clip_list_date");
-				row.cells.item(7).innerHTML = clip_row.display_time; // Time
-				row.cells.item(7).setAttribute("class", "clip_list_time");
-				row.cells.item(8).innerHTML = seconds_to_mins_secs(clip_row.duration_seconds); // Duration
-				row.cells.item(8).setAttribute("class", "clip_list_duration");
-				row.cells.item(8).setAttribute("id", "clip_duration_" + clip_row.clip_id);
+				row.cells.item(4).innerHTML = clip_row.title;        // Title
+				row.cells.item(4).setAttribute("class", "clip_list_title");
+				row.cells.item(5).innerHTML = clip_row.source;       // Source
+				row.cells.item(5).setAttribute("class", "clip_list_source");
+				row.cells.item(6).innerHTML = clip_row.category;     // Category
+				row.cells.item(6).setAttribute("class", "clip_list_category");
+				row.cells.item(7).innerHTML = clip_row.display_date; // Date
+				row.cells.item(7).setAttribute("class", "clip_list_date");
+				row.cells.item(8).innerHTML = clip_row.display_time; // Time
+				row.cells.item(8).setAttribute("class", "clip_list_time");
+				row.cells.item(9).innerHTML = seconds_to_mins_secs(clip_row.duration_seconds); // Duration
+				row.cells.item(9).setAttribute("class", "clip_list_duration");
+				row.cells.item(9).setAttribute("id", "clip_duration_" + clip_row.clip_id);
 				
 				/* Highlight row if it is playing */
 				if(playing_clip_id == clip_row.clip_id) {
@@ -603,6 +609,23 @@
  					}
  				);
  				a.setAttribute("id", "clip_play_link_" + clip_row.clip_id);
+ 				
+ 				return a;
+			}
+			
+			function generate_download_link(clip_row) {
+			
+ 				var a = document.createElement('a');
+ 				a.setAttribute('href', '');
+ 				a.appendChild(document.createTextNode('download'));
+ 				a.addEventListener(
+ 					"click",
+ 					function(event) {
+ 						download_clip(clip_row.clip_id);
+ 						event.preventDefault();
+ 					}
+ 				);
+ 				a.setAttribute("id", "clip_download_link_" + clip_row.clip_id);
  				
  				return a;
 			}			
@@ -764,6 +787,12 @@
 			}
 
 			
+			function download_button(button_id) {
+			
+				var audio_url = "/button_box/audio/" + button_id;
+				window.open(audio_url, "_self");			
+			}
+						
 			
 			function play_button(button_id) {
 			
@@ -887,6 +916,19 @@
 				player.src = audio_url;
 				
 			}
+			
+			
+			function download_clip(clip_id) {
+			
+				var audio_url = (
+					"http://localhost/clip/" +
+					clip_id +
+					".wav"
+				)
+
+				window.open(audio_url, "_self");
+			}
+			
 			
 			
 			function seconds_to_mins_secs(seconds) {
