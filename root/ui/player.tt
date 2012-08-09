@@ -66,6 +66,10 @@
 				font-size: 10px;
 			}
 			
+
+			.play_pause_button {
+				width: 6em;
+			}
 			
 			body {
 				font-family: Arial, Helvetica, Verdana, sans-serif;
@@ -408,7 +412,7 @@
 				<button type="button" onclick="play_to_out_point(1.5)">----|</button>
 				<button type="button" onclick="display_clip_metadata()" id="export_clip_button">CREATE CLIP</button>
 				<button type="button" onclick="download_clip()">DOWNLOAD</button>
-				<button type="button" onclick="play_pause()" id="play_pause_button">PLAY</button>
+				<button type="button" onclick="play_pause()" id="play_pause_button" class="play_pause_button">PLAY</button>
 			</div>
 			
 			<hr />
