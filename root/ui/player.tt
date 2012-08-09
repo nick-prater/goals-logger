@@ -320,7 +320,7 @@
 						<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
 						<div>
 							<button class="side_button_left" type="button" onclick="trim_end(-0.1)">&larr;</button>
-							<button class="side_button_right" type="button" onclick=trim_end(0.1)">&rarr;</button>
+							<button class="side_button_right" type="button" onclick="trim_end(0.1)" >&rarr;</button>
 						</div>
 						<div class="side_buttons_label">&mdash; 1s &mdash;</div>
 						<div>
@@ -398,8 +398,7 @@
 				</div>
 
 			</div>
-				
-			
+						
 			
 			<div id="buttons_below_player" align="center">
 				<button type="button" onclick="mark_in()">MARK IN</button>
@@ -408,6 +407,7 @@
 				<button type="button" onclick="play_from_in_point()">|----</button>
 				<button type="button" onclick="play_to_out_point(1.5)">----|</button>
 				<button type="button" onclick="display_clip_metadata()" id="export_clip_button">CREATE CLIP</button>
+				<button type="button" onclick="download_clip()">DOWNLOAD</button>
 				<button type="button" onclick="play_pause()" id="play_pause_button">PLAY</button>
 			</div>
 			
@@ -787,6 +787,8 @@
 			
 			
 			function trim_end(seconds) {
+			
+				//alert("trim end " + seconds);
 			
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf();
@@ -1474,6 +1476,30 @@
 				this.end_iso = end.toISOString().substr(0, 23);
 				this.start_epoch_ms = start.valueOf();
 				this.end_epoch_ms = end.valueOf();
+			}
+			
+			function download_clip() {
+			
+				var channel_id = this.channel_id = document.getElementById("channel_id").value;
+				var in_point_ms  = audio_start_dt.valueOf() + (in_point_seconds * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + (out_point_seconds * 1000);
+				
+				var start = new Date(in_point_ms);
+				var end = new Date(out_point_ms);
+							
+				var start_iso = start.toISOString().substr(0, 23);
+				var end_iso = end.toISOString().substr(0, 23);
+				
+				var audio_url = (
+					"/audio/wav/" +
+					channel_id + "/" +
+					start_iso + "/" +
+					end_iso +
+					"?filename=audio.wav"
+				)
+				
+				window.open(audio_url, "_self");
+				//alert("DEBUG: loading audio_url: " + audio_url);			
 			}
 			
 			
