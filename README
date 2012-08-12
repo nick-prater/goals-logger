@@ -1,1 +1,41 @@
-Run script/goals_server.pl to test the application.
+GOALS-logger
+============
+
+Written by:
+  * Nick Prater
+  * Andrew White
+  * Paul Kelly
+  
+Copyright (C) 2012 NP Broadcast Ltd.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU Affero General Public License
+as published by the Free Software Foundation; either version 3
+of the License, or (at your option) any later version.
+
+
+SUMMARY
+=======
+
+GOALS-logger is a broadcast audio logging system, optimised for 
+capturing sports commentaries and extracting highlights
+for rebroadcast or republishing.
+
+Multiple users may simultaneously access the system, via it's browser-
+based interface.
+
+Server-side code is written in Perl and makes use of the Catalyst Web
+Framework. Audio recording is via Nick Humphrey's rotter program.
+Audio compilation and waveform drawing is via Paul Kelly's audiograph
+and rotjoin programs.
+
+The system is designed to register event inputs via an external GPIO
+interface. This allows, for example, a football commentator to press
+a button whenever a goal is scored. Audio associated with this event
+may then be quickly accessed and edited for rebroadcast.
+
+The system operates with uncompressed WAV or losslessly compressed 
+FLAC audio file formats and is therefore designed to be accessed over
+a high speed local network, rather than over a slow internet connection.
+
+
