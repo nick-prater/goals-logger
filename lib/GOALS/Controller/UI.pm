@@ -53,7 +53,7 @@ sub assign_clips : Local {
 	# to assign a single clip, then return.
 	$c->stash(
 		assign_clip_id  => $c->request->param('clip_id') || 0,
-		clip_url_prefix => $c->config->{clip_url_prefix}
+		clip_url_prefix => $c->config->{clip_url_prefix} || '',
 	)		
 
 }
