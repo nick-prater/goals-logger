@@ -52,7 +52,8 @@ sub assign_clips : Local {
 	# Setting this on the stash configures the hotkey page
 	# to assign a single clip, then return.
 	$c->stash(
-		assign_clip_id => $c->request->param('clip_id') || 0,
+		assign_clip_id  => $c->request->param('clip_id') || 0,
+		clip_url_prefix => $c->config->{clip_url_prefix}
 	)		
 
 }

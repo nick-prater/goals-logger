@@ -170,7 +170,7 @@
 					id="progress_message_container"
 					class="assign_clips_user_message"
 				/>
-				
+						
 			</div>
 			
 			<hr />
@@ -929,7 +929,8 @@
 				duration_original_html = duration_node.innerHTML;				
 				
 				var audio_url = (
-					"http://localhost/clip/" +
+					"[% clip_url_prefix %]" +
+					"/clip/" +
 					clip_id +
 					".wav"
 				)
@@ -943,7 +944,8 @@
 			function download_clip(clip_id) {
 			
 				var audio_url = (
-					"http://localhost/clip/" +
+					"[% clip_url_prefix %]" +
+					"/clip/" +
 					clip_id +
 					".wav"
 				)
