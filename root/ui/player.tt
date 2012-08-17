@@ -39,7 +39,8 @@
 			#body_container {
 				position: absolute;
 				left:10%;
-				width:90%;				
+				width:90%;
+				height: 100%;
 			}
 
 			#player_container {
@@ -50,18 +51,28 @@
 				position:relative;
 				left:5%;
 				width:90%;
+				height: 100%;
 				background: #bbb;
 			}
 
+			#clip_list_container {
+				height: 60%;
+				overflow: auto;
+			}
+			
+			#clip_list {
+				width: 100%;
+			}
+			
 			#buttons_left_of_player {
-				position: absolute;;
+				position: absolute;
 				float: left;
 				width: 5%;
 				
 			}
 			
 			#buttons_right_of_player {
-				position: absolute;;
+				position: absolute;
 				left: 95%;
 				width: 5%;
 			}
@@ -88,7 +99,6 @@
 				width: 25px;
 				font-size: 10px;
 			}
-			
 
 			.play_pause_button {
 				width: 6em;
@@ -96,10 +106,8 @@
 			
 			body {
 				font-family: Arial, Helvetica, Verdana, sans-serif;
+				height: 100%;
 			}
-
-			
-			
 			
 			form#clip_metadata label {
 				float: left;
@@ -147,13 +155,10 @@
 			
 			.clip_list_edit {
 				width: 2em;
-			}
-			
+			}			
 			.clip_list_delete {
 				width: 4em;
 			}
-			
-			
 			
 			.source_text {
 				font-size: 90%;
@@ -539,7 +544,7 @@
 			-->
 			<div id="clip_list_container" align="center">
 
-				<table id="clip_list" style="width:100%">
+				<table id="clip_list">
 
 					<tr>
 						<th class="clip_list_status">status</th>
