@@ -1,0 +1,194 @@
+#!/usr/bin/perl
+
+=head1 jack_manager
+
+This script is part of the NP Broadcast GOALS logging/production system, as
+developed for use at talkSPORT.
+
+This checks the output of jack_lsp to ensure that JACK is running correctly
+and restarts it if not
+
+=head1 COPYRIGHT
+
+Copyright Nick Prater / NP Broadcast Limited July 2012
+
+=cut
+
+use warnings;
+use strict;
+use NPB::Log;
+use NPB::jackd;
+use Config::ApacheFormat;
+use File::Pid;
+
+our $VERSION = 1.0;
+my $LOOP_DELAY_SECONDS = 5;
+my $SKIP_DAEMONISE = 0;
+
+# Config file can be specified as a command line argument
+my $config = read_config();
+
+# Daemonise...
+unless( $SKIP_DAEMONISE ) {
+	my $daemon = fork;
+	if ($daemon) {
+		print "started $0 with process id: $daemon\n";
+		print "log file being written as $config->{log_file}\n";
+		exit;
+	}
+
+	defined($daemon) or die "Failed to daemonise - couldn't fork: $!";
+	POSIX::setsid()  or die "Failed to daemonise - couldn't start a new session: $!";
+}
+
+# Ininitialise logging
+my $log = NPB::Log::configure_logging($config->{log_file});
+$log->info("$0 starting");
+
+my $pid = write_pid();
+
+
+# Trap SIGINT so that child recorder processes can be gracefully shut-down
+$SIG{INT}  = \&handle_SIGINT_TERM;
+$SIG{TERM} = \&handle_SIGINT_TERM;
+#$SIG{CHLD} = \&handle_SIGCHLD;
+
+
+my $jackd;
+
+while (1) {
+
+	unless( $jackd && $jackd->is_alive ) {
+		$log->warn('jackd object is not alive');
+		undef $jackd;
+	}
+
+	unless( jack_server_ok() ) {
+		undef $jackd;
+	}
+
+
+	# Start a new jackd server object if we don't have one
+	unless($jackd) {
+		$jackd = NPB::jackd->new(
+			log_path => '/var/log/npb/jackd.' . time . '.log'
+		);
+		$jackd && $jackd->start;		
+	}
+
+	$log->info("sleeping for $LOOP_DELAY_SECONDS seconds, or until interrupted by a signal");
+	sleep $LOOP_DELAY_SECONDS;	
+}
+
+
+exit;
+
+
+sub jack_server_ok {
+
+	my $command = '/usr/bin/jack_samplerate';
+	my $timeout_seconds = 3;
+	my $result = 0;
+
+	# These eval wrappers form a timeout mechanism in case the jack server hangs on our request
+	eval { 
+		local $SIG{ALRM} = sub {
+			$log->error("timed out waiting for response from JACK server after $timeout_seconds seconds");
+			die;
+		};
+
+		alarm $timeout_seconds;
+
+		eval { 
+			$log->debug("running command $command");
+			if( system("$command 1>/dev/null 2>/dev/null") ) {
+				$log->error("ERROR running command: $!");
+				die;
+			}
+			else {
+				$log->debug("JACK server OK");
+				$result = 1;
+			}
+		};
+
+		alarm 0; # Cancel the alarm
+	};
+
+	alarm 0; # race condition protectioni
+
+	return $result;
+}
+
+
+
+
+sub handle_SIGINT_TERM {
+
+	$log->info("received SIGINT or SIGTERM, shutting down...");
+	
+
+	$log->warn("removing pid file");
+	$pid->remove;	
+
+	exit;
+}
+
+
+sub handle_SIGCHLD {
+
+	$log->debug("received SIGCHLD");
+
+}
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	
+	my $config_file = $ARGV[0] || '/etc/npb.conf';
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		warn "ERROR reading configuration file $config_file : $!\n";
+		die  "aborting\n";
+	};
+
+	$rv->{log_file} = $c->block('jack_manager')->get('log_file') or do {
+		warn "ERROR: rot_manager/log_file is not defined in the configuration file, using /dev/stdout\n";
+		$rv->{log_file} = '/dev/stdout';
+	};
+	
+
+	$rv->{pid_file_path} = $c->block('jack_manager')->get('pid_file') or do {
+		die "ERROR: pid_file is not defined or invalid in the configuration_file\n";
+	};
+
+
+	return $rv;	
+}
+
+
+sub write_pid {
+
+	$log->debug("writing pid file: $config->{pid_file_path}");
+
+	my $pid = File::Pid->new({
+		file => $config->{pid_file_path}
+	}) or do {
+		$log->error("ERROR creating pid object $!");
+	};
+
+	if( $_ = $pid->running ) {
+		$log->fatal("ERROR - a conflicting process is already running with pid $_");
+		exit;
+	};
+
+	$pid->write;
+
+	return $pid;
+};
+
+
+

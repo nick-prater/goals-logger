@@ -1,0 +1,307 @@
+#!/usr/bin/perl
+
+=head1 read_gpi
+
+This script is part of the NP Broadcast GOALS logging/production system, as
+developed for use at talkSPORT.
+
+It receives data from a VIOM GPI module, connected to a serial port.
+
+In response to an active GPI, this script submits an event to the main
+database server using an asynchronous HTTP request.
+
+GPI inputs 1-16 are hard-coded to map to event_input_id 1-16.
+
+=head1 COPYRIGHT
+
+Copyright Nick Prater, NP Broadcast Limited 2012
+
+
+=head2 VERSIONS
+
+=item 0.2 : Trap SIGINT and SIGTERM, remove pid file on exit
+
+=cut
+
+
+use warnings;
+use strict;
+use IO::Stty;
+use NPB::Log;
+use AnyEvent;
+use AnyEvent::Handle;
+use AnyEvent::HTTP;
+use POSIX;
+use Config::ApacheFormat;
+use File::Pid;
+
+our $VERSION = 0.2;
+our $SKIP_DAEMONISE = 0;
+
+# Config file can be specified as a command line argument
+my $config = read_config();
+
+# Daemonise...
+unless( $SKIP_DAEMONISE ) {
+	my $daemon = fork;
+	if ($daemon) {
+		print "started $0 with process id: $daemon\n";
+		print "log file being written as $config->{log_file}\n";
+		exit;
+	}
+
+	defined($daemon) or die "Failed to daemonise - couldn't fork: $!";
+	POSIX::setsid()  or die "Failed to daemonise - couldn't start a new session: $!";
+}
+
+# Ininitialise logging
+my $log = NPB::Log::configure_logging($config->{log_file});
+$log->info("$0 starting");
+
+# Trap exit signals
+$SIG{INT}  = \&handle_exit;
+$SIG{TERM} = \&handle_exit;
+
+# Initialise pid file
+my $pid = write_pid();
+
+# This script is really rather specific to this application
+# and makes certain assumptions about the mapping of GPI pins
+# to event_id and channel_id numvers
+my $gpi = configure_port($config->{gpi_port});
+my $gpi_count = 16;
+
+my @previous_gpi_status = split(//, ('0' x $gpi_count));
+
+
+# Set up event handlers to respond to input from GPI interface
+# This allows us to do asynchronous HTTP requests.
+
+# Wait on this conditional variable to keep
+# event loop alive
+my $cv = AnyEvent->condvar;
+
+# Attach events to the GPI interface filehandle
+my $handle = AnyEvent::Handle->new(
+	fh => \*$gpi,
+	on_error => sub {
+		my $handle = shift;
+		my $message = shift;
+		$log->error("gpi file error: $message");
+		$handle->destroy;
+		$cv->send;
+	}
+);
+
+# Define a recursive event handler
+# Schedule another read as each line is received
+my @read_request;
+@read_request = (
+	line => "\n",
+	sub {
+		my $handle = shift;
+		my $line = shift;
+		process_line($line);
+		$handle->push_read(@read_request);
+	}
+);
+
+# Start the recursive read event handler
+$handle->push_read(@read_request);
+
+# Wait here, servicing the event loop
+$cv->recv;
+
+
+$log->info("$0 finished");
+
+
+
+
+sub process_line {
+
+	# Handle a line of data received from the GPI module
+	my $line = shift;
+
+	# Strip trialing new lines
+	chomp $line;
+	
+	# Ignore blank lines
+	$line or return;
+	
+	# Log received line for debugging purposes
+	$log->info("RX: [$line]");
+
+	if ( $line =~ m/^\d{$gpi_count}$/ )  {
+
+		$log->debug("input status updated");
+
+		my @gpi_status = split(//, $line);		
+
+		# Which inputs have changed?
+		for ( my $i = 0; $i < $gpi_count; $i ++ ) {
+
+			# Array is indexed from 0, but GPI's are numbered from 1
+			my $gpi_number = $i + 1;
+
+			# Same as last time?
+			$previous_gpi_status[$i] == $gpi_status[$i] and next;
+
+			if($gpi_status[$i] == 1) {
+				$log->info("GPI $gpi_number :: ACTIVE");
+				submit_event($gpi_number);
+			}
+			else {
+				$log->info("GPI $gpi_number :: INACTIVE");
+				# Don't need to submit this
+			}
+		}		
+
+		@previous_gpi_status = @gpi_status;
+	}
+
+}
+
+
+
+sub submit_event {
+
+	my $event_id = shift;
+	my $url = sprintf(
+		'http://%s/events/add/%u',
+		"localhost",
+		$event_id,
+	);
+
+	$log->info("submitting event with url: $url");
+
+	http_get(
+		$url,
+		sub {
+			my $data = shift;
+			my $header = shift;
+			my $status = $header->{Status};
+			
+			if ($status =~ /^2/) {
+				$log->debug("$url :: OK-$status");
+			}
+			else {
+				$log->error("$url :: ERROR-$status $header->{Reason}");
+			}
+			
+			#TODO: 
+			# Could retry if first submission fails
+		}
+	);
+}
+
+
+
+sub configure_port {
+
+	my $port = shift;
+
+	open my $gpi, "+<$port" or do {
+		$log->fatal("unable to open gpi port $port: $!");
+		exit;
+	};
+
+	my @stty_options = 
+		(
+			'cread',   # allow input to be received
+			'-parenb', # no parity
+			'cs8',     # 8 data bits
+			'-cstopb', # 1 stop bit
+			'9600',    # bits per second
+			'-echo',   # don't echo input characters
+			'clocal',  # disable modem control signals
+			'ignbrk',  # ignore break characters
+			'-ixon',   # disable XON/XOFF flow control
+			'-isig',   # disable interrupt, quit and suspend special chars
+			'-icanon', # Disable erase, kill, werase and rprnt special chars
+		)
+	;
+
+	IO::Stty::stty(\*$gpi, @stty_options) or do {
+		$log->fatal("unable to configure stty settings: $!");
+		exit;
+	};
+
+	# Configure mode of GPI interface board
+	print $gpi "\r\n";     # clear any partial command in the buffer
+	print $gpi "CIC1\r\n"; # Configure GPI interface to notify every input change
+
+	$log->info("GPI port is open and configured");
+
+	return $gpi;
+}
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	
+	my $config_file = $ARGV[0] || '/etc/npb.conf';
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		warn "ERROR reading configuration file $config_file : $!\n";
+		die  "aborting\n";
+	};
+
+	$rv->{log_file} = $c->block('read_gpi')->get('log_file') or do {
+		warn "ERROR: log_file is not defined in the configuration file, using /dev/stdout\n";
+		$rv->{log_file} = '/dev/stdout';
+	};
+	
+
+	$rv->{pid_file_path} = $c->block('read_gpi')->get('pid_file') or do {
+		die "ERROR: pid_file is not defined or invalid in the configuration_file\n";
+	};
+
+
+	$rv->{gpi_port} = $c->block('read_gpi')->get('gpi_port') or do {
+		die "ERROR: gpi_port is not defined or invalid in the configuration_file\n";
+	};
+
+
+	return $rv;	
+}
+
+
+sub write_pid {
+
+	$log->debug("writing pid file: $config->{pid_file_path}");
+
+	my $pid = File::Pid->new({
+		file => $config->{pid_file_path}
+	}) or do {
+		$log->error("ERROR creating pid object $!");
+	};
+
+	if( $_ = $pid->running ) {
+		$log->fatal("ERROR - a conflicting process is already running with pid $_");
+		warn "ERROR - a conflicting process is already running with pid $_\n";
+		exit;
+	};
+
+	$pid->write;
+
+	return $pid;
+};
+
+
+sub handle_exit {
+
+	$log->info("SIGTERM or SIGKILL received, shutting down...");
+
+	if( defined $pid ) {
+		$log->info("removing pid file");
+		$pid->remove;
+	}
+
+	exit;
+}
+

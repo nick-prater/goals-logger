@@ -1,0 +1,273 @@
+#!/usr/bin/perl
+
+=head1 rot_manager
+
+This script is part of the NP Broadcast GOALS logging/production system, as
+developed for use at talkSPORT.
+
+It looks to a master configuration file, the path to which is either specified as a
+command-line argument, or by default /etc/npb.conf
+
+This in turn points to an XML file defining which channels are to be recorded.
+
+Rotter processes are started and monitored as required to fulfill the channel
+configuration.
+
+=head1 COPYRIGHT
+
+Copyright Nick Prater / NP Broadcast Limited July 2012
+
+=cut
+
+use warnings;
+use strict;
+use NPB::Log;
+use NPB::Audio::Rotter;
+use XML::LibXML;
+use POSIX;
+use Config::ApacheFormat;
+use File::Pid;
+
+our $VERSION = 1.0;
+my $LOOP_DELAY_SECONDS = 25;
+my $SKIP_DAEMONISE = 0;
+
+# Config file can be specified as a command line argument
+my $config = read_config();
+
+# Daemonise...
+unless( $SKIP_DAEMONISE ) {
+	my $daemon = fork;
+	if ($daemon) {
+		print "started $0 with process id: $daemon\n";
+		print "log file being written as $config->{log_file}\n";
+		exit;
+	}
+
+	defined($daemon) or die "Failed to daemonise - couldn't fork: $!";
+	POSIX::setsid()  or die "Failed to daemonise - couldn't start a new session: $!";
+}
+
+# Ininitialise logging
+my $log = NPB::Log::configure_logging($config->{log_file});
+$log->info("$0 starting");
+
+my $pid = write_pid();
+
+
+# Trap SIGINT so that child recorder processes can be gracefully shut-down
+$SIG{INT}  = \&handle_SIGINT_TERM;
+$SIG{TERM} = \&handle_SIGINT_TERM;
+$SIG{CHLD} = \&handle_SIGCHLD;
+
+# Channel configuration XML file is specified as an argument
+my $channel_config = read_channel_config( $config->{channel_config_path} ) or exit;
+my @channels = $channel_config->findnodes('/channels/channel');
+$log->info("channel configuration loaded with ", scalar(@channels), " channels");
+
+# Keep track of each child record process, keyed by unique channel_id
+# Global state variable
+my %recorders;
+
+
+while (1) {
+
+	foreach my $channel(@channels) {
+
+		my $channel_id = $channel->findvalue('channel_id') or do {
+			$log->error("channel does not seem to have a valid channel_id - skipping");
+			next;
+		};
+
+		$log->info("checking channel_id $channel_id");
+		
+		my $source = $channel->findvalue('source') or do {
+			$log->warn("channel does not have a source defined - skipping");
+			next;
+		};
+
+		if( $recorders{$channel_id} ) {
+		
+			if($recorders{$channel_id}->is_alive) {
+				$log->info("OK - recorder is running");
+				next;
+			}
+			else {
+				$log->error("PROBLEM: recorder seems to have stopped");
+				undef $recorders{$channel_id};
+
+				#start new recorder
+				$log->info("starting new recorder");
+				$recorders{$channel_id} = start_recorder($channel) or do {
+					$log->error("unable to start recorder");
+				};
+			}	
+		}
+		else {
+			$log->info("starting new recorder");
+		
+			$recorders{$channel_id} = start_recorder($channel) or do {
+				$log->error("unable to start recorder");
+			};
+		}
+		
+	}
+
+	$log->info("sleeping for $LOOP_DELAY_SECONDS seconds, or until interrupted by a signal");
+	sleep $LOOP_DELAY_SECONDS;	
+}
+
+
+exit;
+
+
+sub start_recorder {
+
+	my $channel = shift;
+
+	my $channel_id  = $channel->findvalue('channel_id');
+	my $source = $channel->findvalue('source');
+	my $format = 'flac'; # Fixed for now... will extract from XML later
+	my $client_name = "rotter_$channel_id";
+
+	# TODO: retrieve format attribute and configure rotter accordingly
+	
+	# Note about paths:
+	# rotter will not create the root path. If this is missing, it will
+	# refuse to run. However, any directory parts specified in the layout
+	# will be created automatically. This is why we explicitly set the 
+	# layout and include the channel_id prefix there, rather than in the
+	# root path.
+	
+	my $rotter = NPB::Audio::Rotter->new(
+		ports            => [ $source ],
+		root_path        => $config->{audio_log_path},
+		jack_client_name => $client_name,
+		layout           => "$channel_id/%Y-%m-%d/%H%M.flac",
+		log_path         => '/tmp/rotter.log',
+		format           => $format,
+	) or do {
+		$log->error("ERROR initialising NPB::Audio::Rotter object");
+		return undef;
+	};
+
+	$rotter->start or do {
+		$log->error("ERROR starting rotter instance");
+		return undef;
+	};
+	
+	return $rotter;
+}
+
+
+
+sub read_channel_config {
+
+	my $config_path = shift;
+	unless($config_path && -f $config_path) {
+		$log->fatal("configuration file path is either unspecified or missing");
+		return undef;
+	}
+
+	# Parse XML
+	my $xml = XML::LibXML->new();
+	my $tree = $xml->parse_file($config_path) or do {
+		$log->error("ERROR parsing XML channel configuration file");
+		return undef;
+	};
+	my $root = $tree->getDocumentElement or do {
+		$log->error("ERROR finding XML root element");
+		return undef;
+	};
+
+	return $root;
+}
+
+
+sub handle_SIGINT_TERM {
+
+	$log->info("received SIGINT or SIGTERM, shutting down...");
+	
+	foreach my $channel_id(keys %recorders) {
+		$recorders{$channel_id}->stop;
+		undef $recorders{$channel_id};	
+	}
+
+	$log->warn("removing pid file");
+	$pid->remove;	
+
+	exit;
+}
+
+
+sub handle_SIGCHLD {
+
+	$log->debug("received SIGCHLD");
+
+}
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	
+	my $config_file = $ARGV[0] || '/etc/npb.conf';
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		warn "ERROR reading configuration file $config_file : $!\n";
+		die  "aborting\n";
+	};
+
+	$rv->{log_file} = $c->block('rot_manager')->get('log_file') or do {
+		warn "ERROR: rot_manager/log_file is not defined in the configuration file, using /dev/stdout\n";
+		$rv->{log_file} = '/dev/stdout';
+	};
+	
+
+	$rv->{audio_log_path} = $c->get('audio_log_path') or do {
+		die "ERROR: audio_log_path is not defined or invalid in the configuration_file\n";
+	};
+	-d $rv->{audio_log_path} or do {
+		die "ERROR: audio_log_path is missing or invalid: $rv->{audio_log_path}\n";
+	};
+
+
+	$rv->{channel_config_path} = $c->block('rot_manager')->get('channel_config_file') or do {
+		die "ERROR: channel_config_file is not defined or invalid in the configuration_file\n";
+	};
+
+
+	$rv->{pid_file_path} = $c->block('rot_manager')->get('pid_file') or do {
+		die "ERROR: pid_file is not defined or invalid in the configuration_file\n";
+	};
+
+
+	return $rv;	
+}
+
+
+sub write_pid {
+
+	$log->debug("writing pid file: $config->{pid_file_path}");
+
+	my $pid = File::Pid->new({
+		file => $config->{pid_file_path}
+	}) or do {
+		$log->error("ERROR creating pid object $!");
+	};
+
+	if( $_ = $pid->running ) {
+		$log->fatal("ERROR - a conflicting process is already running with pid $_");
+		exit;
+	};
+
+	$pid->write;
+
+	return $pid;
+};
+
+
+
