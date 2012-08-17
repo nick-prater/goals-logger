@@ -169,10 +169,15 @@ sub generate_audio : Private {
 
 	unless(-d $directory) {
 		$c->log->debug("creating destination directory");
+		
+		# We want these directories to be group-writeable,
+		# so over-ride the umask, just for this operation, to be sure.
+		my $old_umask = umask(002);
 		make_path($directory) or do {
 			$c->error("ERROR creating waveform directory: $!");
 			die;
-		};	
+		};
+		umask($old_umask);
 	}
 	
 	# Otherwise create wav file afresh
@@ -260,10 +265,14 @@ sub generate_waveform : Private {
 	
 	unless(-d $directory) {
 		$c->log->debug("creating destination directory");
+		# We want these directories to be group-writeable
+		# so over-ride the umask for this operation only
+		my $old_umask = umask(002);		
 		make_path($directory) or do {
 			$c->error("ERROR creating waveform directory: $!");
 			die;
-		};	
+		};
+		umask($old_umask);
 	}
 	
 	# Write initially to a temporary file, then do an
