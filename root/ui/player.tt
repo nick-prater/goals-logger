@@ -1090,6 +1090,7 @@
 
 						case 32: // Space Bar
 							play_pause();
+							event.preventDefault();
 							break;
 
 					}
