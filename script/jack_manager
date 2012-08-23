@@ -8,9 +8,28 @@ developed for use at talkSPORT.
 This checks the output of jack_lsp to ensure that JACK is running correctly
 and restarts it if not
 
-=head1 COPYRIGHT
+=head1 AUTHOR
 
-Copyright Nick Prater / NP Broadcast Limited July 2012
+Nick Prater
+
+=head1 LICENCE
+
+This file is part of GOALS-logger, a broadcast audio logging system.
+
+Copyright (C) 2012 NP Broadcast Limited.
+
+GOALS-logger is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+GOALS-logger is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
 
