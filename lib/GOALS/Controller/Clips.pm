@@ -71,8 +71,6 @@ sub rename : Local : Args(1) {
 		$c->log->debug("$_ :: $params->{$_}");
 	}
 
-	$c->log->debug("description: " . $params->{description});
-	
 	# Create a clip row - set to processing until we're ready with audio
 	$clip->update({		
 		title => $params->{title},
