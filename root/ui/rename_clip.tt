@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+[% USE HTML %]
+
+<!--
+    This file is part of GOALS-logger, a broadcast audio logging system by:
+       Nick Prater
+       Andrew White
+       Paul Kelly
+
+    Copyright (C) 2012 NP Broadcast Limited.
+
+    GOALS-logger is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    GOALS-logger is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>talkSPORT GOALS</title>
+
+		<style type="text/css">
+
+			#source_list_container {
+				position: absolute;
+				left:0%;
+				top:5%;
+				width:10%;
+			}
+
+			#body_container {
+				position: absolute;
+				left:10%;
+				width:90%;				
+			}
+
+			#waveform_container {
+				position:relative;
+				left:5%;
+				width:90%;
+			}
+
+
+			body {
+				font-family: Arial, Helvetica, Verdana, sans-serif;
+			}
+
+			form#clip_metadata label {
+				float: left;
+				font-size: 14px;
+				width: 110px;
+			}
+
+			form#clip_metadata ol li {
+				list-style: none;
+			}
+
+			table#clip_list tr:nth-child(even) {  
+			    background: #E3E3E3;  
+			}
+
+			
+			.source_text {
+				font-size: 90%;
+			}
+
+
+		</style>
+
+	</head>
+	<body>
+		<div id="body_container">
+
+			<div id="clip_metadata_container" style="display: block">
+
+				<b>Upload Clip</b> - enter clip details and click OK
+				<form id="clip_metadata" name="clip_metadata" method="post" enctype="multipart/form-data">
+
+					<ol>
+					
+						<li>
+							<label for="title">title</label>
+							<input 
+								type="text"
+								name="title"
+								required="required"
+								placeholder="Short title to show on hotkey"
+								value="[% clip.title %]"
+								size="60"
+								id="clip_title"
+							/>
+						</li>
+
+						<li>
+							<label for="people">people</label>
+							<input 
+								type="text"
+								name="people"
+								placeholder="Names of the people speaking"
+								value="[% clip.people %]"
+								size="60"
+								id="clip_people"
+							/>
+						</li>
+						
+						<li>
+							<label for="description">description</label>
+							<textarea
+								name="description"
+								placeholder="A longer description of the clip or notes for the presenter"
+								rows="4"
+								cols="45"
+								id="clip_description"
+							>[%- HTML.escape(clip.description) -%]</textarea>
+						</li>
+
+						<li>
+							<label for="out_cue">out cue</label>
+							<input 
+								type="text"
+								name="out_cue"
+								placeholder="enter the last few words or describe how the clip ends"
+								value="[% clip.out_cue %]"
+								size="60"
+								id="clip_out_cue"
+							/>
+						</li>
+
+						<li>
+							<label for="category">category</label>
+							<select name="category" id="clip_category">
+							[% FOREACH value IN categories.keys %]
+								<option value="[% value %]" 
+									[%- IF clip.category == value -%]
+										selected
+									[%- END -%]
+								>[% categories.$value %]</option>
+							[% END %]
+							</select>
+						</li>
+
+						<li>
+							<label for="language">language</label>
+							<select name="language" id="clip_language">
+							[% FOREACH value IN languages.keys %]
+								<option value="[% value %]"
+									[%- IF clip.language == value -%]
+										selected
+									[%- END -%]
+								>[% languages.$value %]</option>
+							[% END %]
+							</select>
+						</li>
+				
+						<li>
+							<button type="button" onclick="send_form()">OK</button>
+							<button type="button" onclick='window.location.href = "/ui/assign_clips"'>Cancel</button>
+						</li>
+					</ol>
+				</form>
+				
+			</div>
+
+			
+			<!-- This div contains the form used to display status feedback when clips are created.
+			     It is hidden until the create clip button is pressed. Message is populated dynamically
+			-->
+			<div id="progress_message_container" style="display: block">
+			
+			</div>
+
+		</div>
+
+
+		<script type="text/javascript">
+
+		
+			function send_form() {
+			
+				var message_div = document.getElementById("progress_message_container");
+				var form_data = new FormData(document.forms.namedItem("clip_metadata"));
+				var request = new XMLHttpRequest();
+
+				request.open("POST", "/clips/rename/[% clip.id %]", true);
+				request.onload = function(event) {
+				
+					if(request.status != 200) {
+						message_div.innerHTML = "Error " + request.status + " occurred updating clip.<br \/>";
+						return;
+					}
+					
+					/* Clip updated OK - forward to hotkey assignment */
+					window.location.href = "/ui/assign_clips";
+				};
+
+				message_div.innerHTML = "updating clip..."
+				request.send(form_data);
+			}
+
+		</script>
+
+
+	</body>
+</html>
+	
