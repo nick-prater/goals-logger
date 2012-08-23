@@ -59,6 +59,38 @@ sub assign_clips : Local {
 }
 
 
+sub rename_clip : Local : Args(1) {
+
+	my $self = shift;
+	my $c = shift;
+	my $clip_id = shift;
+
+	my $rs = $c->model('DB::Clip');
+	
+	my $clip = $rs->find({
+		clip_id => $clip_id
+	}) or do {
+		die "No such clip";
+	};
+	
+	# Populate stash, and hence form, with current values
+	$c->stash(
+		clip => {
+			id          => $clip_id,
+			title       => $clip->title,
+			people      => $clip->people,
+			description => $clip->description,
+			out_cue     => $clip->out_cue,
+			category    => $clip->category,
+			language    => $clip->language,
+		}	
+	);
+	
+	$c->forward('get_available_categories');
+	$c->forward('get_available_languages');
+}
+
+
 sub get_buttons : Private {
 
 	my ( $self, $c ) = @_;
@@ -131,6 +163,43 @@ sub get_available_start_dates : Private {
 	);
 }
 
+
+sub get_available_categories : Private {
+
+	my $self = shift;
+	my $c = shift;
+	
+	$c->stash(
+		categories => {
+			'goal'             => 'Goal',
+			'half_time_report' => 'Half-time Report',
+			'full_time_report' => 'Full-time Report',
+			'interview'        => 'Interview',
+			'commercial'       => 'Commercial',
+			'other'            => 'Other',
+		}	
+	)
+}
+
+
+sub get_available_languages : Private {
+
+	my $self = shift;
+	my $c = shift;
+	
+	my $default = $c->config->{default_language} || 'english';
+	
+	$c->stash(
+		languages => {
+
+			'english'  => 'English',
+			'spanish'  => 'Spanish',
+			'mandarin' => 'Mandarin',
+			'other'    => 'Other',
+		},
+		default_language => $default,
+	);
+}
 
 =head1 AUTHOR
 

@@ -48,6 +48,50 @@ sub delete : Path('delete') : Args(1) {
 }
 
 
+sub rename : Local : Args(1) {
+
+	my $self = shift;
+	my $c = shift;
+	my $clip_id = shift;
+
+	$c->log->debug("updating clip_id $clip_id");
+	
+	my $rs = $c->model('DB::Clip');
+	
+	my $clip = $rs->find({
+		clip_id => $clip_id
+	}) or do {
+		die "No such clip";
+	};
+
+	# Trim whitespace and Log submitted data
+	my $params = $c->request->body_params;
+	foreach (keys %{$params}) {
+		$params->{$_} = trim_whitespace( $params->{$_} );
+		$c->log->debug("$_ :: $params->{$_}");
+	}
+
+	$c->log->debug("description: " . $params->{description});
+	
+	# Create a clip row - set to processing until we're ready with audio
+	$clip->update({		
+		title => $params->{title},
+		people => $params->{people},
+		description => $params->{description},
+		out_cue => $params->{out_cue},
+		category => $params->{category},
+		language => $params->{language},
+	}) or do {
+		$c->error("ERROR updating clip");
+		die;
+	};
+	
+	# We should return the clip we altered, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK\nclip_id=" . $clip->clip_id);	
+}
+
+
 sub update_status : Path('update_status') : Args(2) {
 
 	my $self = shift;
