@@ -39,3 +39,56 @@ FLAC audio file formats and is therefore designed to be accessed over
 a high speed local network, rather than over a slow internet connection.
 
 
+SYSTEM REQUIREMENTS
+===================
+
+GOALS-logger has been developed for installation on a machine running
+Ubuntu 12.04, but is expected to work on most contemporary Linux
+distributions. It uses JACK as an audio server for recording and makes
+use of Upstart to manage the required daemon processes.
+
+
+BROWSER COMPATIBILITY
+=====================
+
+GOALS-logger was developed for use with the Chrome browser, with which
+it has been developed and tested. It is believed to work with Firefox
+and other standards-compliant browsers supporting SVG, javascript and
+the HTML audio element.
+
+When last tested, it was found to be incompatible with Internet Explorer,
+primarily due to limitations in that browser's support for SVG.
+
+
+MATURITY
+========
+
+This software is in daily use at a national radio station in the UK,
+where it has proved to be stable, reliable and easy to use. Subjectively,
+as the author, I feel there remain a number of rough edges to be polished 
+in terms of look, feel and styling - this work is ongoing.
+
+
+FUTURE DEVELOPMENT
+==================
+
+I welcome patches or suggestions for improvements or new functionality.
+Further development will most likely be driven by the commercial 
+requirements of NP Broadcast clients.
+
+
+SUPPORT
+=======
+
+Commercial (paid-for) support is available from NP Broadcast Limited,
+who can provide fully managed, monitored  and installed systems, 
+customisations, and extensions.
+
+
+CONTACT DETAILS
+===============
+For further information or to enquire about commercial services, please
+contact Nick Prater <nick -at- npbroadcast.com>.
+
+
+Nick Prater, London, August 2012.
