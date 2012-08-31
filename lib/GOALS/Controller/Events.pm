@@ -146,6 +146,7 @@ sub add : Path('add') {
 		event_input_id => $event_input_id,
 		event_timestamp => $timestamp,
 		status => 'new',
+		update_timestamp => DateTime->now(),
 	}) or do {
 		$c->error("problem adding new event record: $!");
 		die;	
@@ -245,6 +246,7 @@ sub update_status : Path('update_status') : Args(2) {
 		
 	$event->update({
 		status => $status,
+		update_timestamp => DateTime->now(),
 	}) or do {
 		$c->error("problem setting status=$status for event_id=$event_id");
 		die;	
