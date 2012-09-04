@@ -172,6 +172,49 @@ sub delete : Path('delete') : Args(1) {
 }
 
 
+sub purge_deleted : Local {
+
+	my $self = shift;
+	my $c = shift;
+
+	# We don't remove 'deleted' event rows from the database immediately.
+	# They are first just marked as status='deleted'. This gives an 
+	# opportunity for users to 'undelete' them.
+	# 
+	# This method is called to remove the rows marked as deleted, after
+	# a certain grace period has expired.
+	
+	# Pull grace period from configuration file, but fall back to a default
+	my $keep_days = $c->config->{keep_deleted_events_days};
+	unless (defined $keep_days) {
+		$keep_days = 28;
+	}
+	
+	my $delete_dt = DateTime->now->subtract( days => $keep_days );
+	my $rs = $c->model('DB::Event');
+	my $where = {};
+	
+	$c->log->debug(
+		"purging from database events marked as 'deleted' prior to ".
+		$delete_dt->strftime("%Y-%m-%dT%H:%M:%SZ")
+	);
+			
+	$where->{update_timestamp} = { '<' => $delete_dt };
+	$where->{status} = 'deleted';
+	
+	my $events = $rs->search($where);
+	$events->delete;
+		
+	# Return an OK
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
+}
+
+
+
+
+
+
 sub open : Path('open') : Args(1) {
 
 	my $self = shift;
