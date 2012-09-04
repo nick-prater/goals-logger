@@ -21,6 +21,7 @@ requires 'File::Path';
 requires 'File::Temp';
 requires 'File::Copy';
 requires 'File::Slurp';
+requires 'File::Find';
 requires 'DateTime::Format::Strptime';
 requires 'JSON';
 requires 'Audio::Wav';

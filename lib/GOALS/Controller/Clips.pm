@@ -6,6 +6,7 @@ use File::Slurp;
 use DateTime;
 use DateTime::Format::Strptime;
 use File::Copy;
+use File::Find;
 use Audio::Wav;
 
 BEGIN {extends 'Catalyst::Controller'; }
@@ -83,6 +84,83 @@ sub delete : Path('delete') : Args(1) {
 	# We should return something more meaningful, but for now OK is fine
 	$c->response->content_type('text/plain');
 	$c->response->body("OK\nevent_id=" . $clip->clip_id);	
+}
+
+
+sub purge_deleted : Local {
+
+	# This shouldn't normally be required, but is useful for cleaning up
+	# old systems which never actually deleted clips from the database
+	# or filesystem. More recent versions do this immediately the user
+	# clicks 'delete'.
+	#
+	# When called, it removes all clip records where status='deleted'
+	# and looks for all files in the clips directory matching /^\d+\.wav$/,
+	# unlinking those that do not have a corresponding clip record.
+	#
+	# Note that Neil's playout directory uses the same directory to hold
+	# ads and fillers. These shouldn't be named so that they collide with
+	# the clips name format, but there is always that possibility. A 
+	# separate directory would have been better, but the playout software
+	# doesn't support that.
+	
+	my $self = shift;
+	my $c = shift;
+	my $clip_id = shift;
+	
+	# Purge database records
+	my $rs = $c->model('DB::Clip');
+	my $where = {};
+	
+	$c->log->debug("purging from database clips marked as 'deleted'");
+	
+	$where->{status} = 'deleted';
+	my $clips = $rs->search($where);
+	$clips->delete;
+	
+	# Purge filesystem
+	my $clip_dir = $c->config->{clips_path};
+	unless( $clip_dir && -d $clip_dir ) {
+		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
+		die;
+	}
+	
+	# Do a recursive search of clip dir
+	$c->log->debug("recursively searching $clip_dir for clip audio files");
+	find(
+		sub {
+			$c->log->debug("considering $File::Find::name");
+		
+			# Only process ordinary files
+			-f $File::Find::name or next;
+			
+			# Only process files matching standard clip format
+			my ($clip_id) = m/^(\d+)\.wav$/ or next;
+			
+			$c->log->debug("found audio file corresponding to clip_id $clip_id");
+
+			# See if corresponding record exists in database
+			my $clip = $rs->find({
+				clip_id => $clip_id
+			});
+			
+			# Delete file if it is no longer active
+			if ($clip) {
+				$c->log->debug("file maps to an active clip - OK");
+			}
+			else {
+				$c->log->debug("file does not map to an active clip - deleting");
+				unlink($File::Find::name) or do {
+					$c->error("ERROR deleting $File::Find::name : $!");
+				};
+			}
+		},
+		$clip_dir
+	);
+	
+	# We should return something more meaningful, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK\n");
 }
 
 
