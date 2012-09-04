@@ -39,12 +39,50 @@ sub delete : Path('delete') : Args(1) {
 	my $self = shift;
 	my $c = shift;
 	my $clip_id = shift;
+		
+	# Deleting a clip really does delete it. Maybe in future we should
+	# have a grace period and an undelete feature? Like we do for events.
+	# The clips table already has a 'deleted' value for status. We would need
+	# to add an update_timestamp field.
 	
-	# Don't really delete, just mark as deleted
-	$c->forward(
-		'update_status',
-		[ $clip_id, 'deleted' ]
-	);	
+	$c->log->debug("deleting clip $clip_id");
+	
+	# Remove database record
+	$c->log->debug("removing database record for clip $clip_id");
+	my $rs = $c->model('DB::Clip');
+	my $clip = $rs->find({
+		clip_id => $clip_id
+	}) or do {
+		die "No such event";
+	};
+	
+	$clip->delete or do {
+		$c->error("problem deleting clip_id=$clip_id from database");
+		die;
+	};
+	
+	# Remove wav file
+	my $clip_dir = $c->config->{clips_path};
+	unless( $clip_dir && -d $clip_dir ) {
+		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
+		die;
+	}
+	
+	my $clip_path = sprintf(
+		"%s/%u.wav",
+		$clip_dir,
+		$clip_id
+	);
+	
+	$c->log->debug("deleting file $clip_path");
+	unlink($clip_path) or do {
+		$c->error("ERROR deleting file $clip_path: $!");
+		die;	
+	};
+	
+	# We should return something more meaningful, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK\nevent_id=" . $clip->clip_id);	
 }
 
 
@@ -97,8 +135,7 @@ sub update_status : Path('update_status') : Args(2) {
 	my $id = shift;
 	my $status = shift;
 
-	# Don't really delete, just mark as deleted
-	# We don't check that the specified event_id or event_type is valid
+	# We don't check that the specified event_id or status is valid
 	# That is enforced by the database, which will raise an error.
 	$c->log->debug("setting status=$status for clip_id=$id");
 	
