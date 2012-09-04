@@ -5,7 +5,8 @@ default_view HTML
 
 default_language english
 max_audio_clip_duration_seconds 3600
-keep_deleted_events_days 28
+keep_deleted_events_days        28
+keep_events_days                90
 
 clips_path       /home/nick/projects/html5_audio/GOALS/root/clip 	
 audio_log_path   /home/nick/projects/html5_audio/GOALS/root/audio

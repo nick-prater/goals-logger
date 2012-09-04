@@ -211,8 +211,42 @@ sub purge_deleted : Local {
 }
 
 
+sub purge_expired : Local {
 
+	my $self = shift;
+	my $c = shift;
 
+	# This removes event rows from the database a number of days
+	# after their event_timestamp, defined in the keep_events_days configuration
+	# parameter. Usually events will lose their relevance once audio has
+	# been deleted, so there is no point in keeping them longer.	
+	# All events with an event_timestamp outside the keep_events_days
+	# time period will be removed, regardless of their status.
+	
+	# Pull grace period from configuration file, but fall back to a default
+	my $keep_days = $c->config->{keep_events_days};
+	unless (defined $keep_days) {
+		$keep_days = 90;
+	}
+	
+	my $delete_dt = DateTime->now->subtract( days => $keep_days );
+	my $rs = $c->model('DB::Event');
+	my $where = {};
+	
+	$c->log->debug(
+		"purging from database events prior to ".
+		$delete_dt->strftime("%Y-%m-%dT%H:%M:%SZ")
+	);
+			
+	$where->{update_timestamp} = { '<' => $delete_dt };
+	
+	my $events = $rs->search($where);
+	$events->delete;
+		
+	# Return an OK
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
+}
 
 
 sub open : Path('open') : Args(1) {
