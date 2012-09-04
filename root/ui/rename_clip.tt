@@ -144,7 +144,7 @@
 									[%- IF clip.category == value -%]
 										selected
 									[%- END -%]
-								>[% categories.$value %]</option>
+								>[% HTML.escape(categories.$value) %]</option>
 							[% END %]
 							</select>
 						</li>
@@ -157,7 +157,7 @@
 									[%- IF clip.language == value -%]
 										selected
 									[%- END -%]
-								>[% languages.$value %]</option>
+								>[% HTML.escape(languages.$value) %]</option>
 							[% END %]
 							</select>
 						</li>
