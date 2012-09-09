@@ -213,9 +213,9 @@
 			<hr />
 			<a href="/channels">channel names</a>
 			<br />
-			<a href="upload_clip">upload clip</a>
+			<a href="/ui/upload_clip/[% profile_code %]">upload clip</a>
 			<br />
-			<a href="assign_clips">hotkeys</a>
+			<a href="/ui/assign_clips/[% profile_code %]">hotkeys</a>
 			<hr />
 
 		</div>

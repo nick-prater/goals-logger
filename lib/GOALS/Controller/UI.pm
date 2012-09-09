@@ -50,13 +50,23 @@ sub player : Local {
 sub upload_clip : Local {
 	my $self = shift;
 	my $c = shift;
+	my $profile_code = shift;
+	
+	$c->stash(
+		profile_code => $profile_code
+	);
 }
 
 
 sub assign_clips : Local {
 	my $self = shift;
 	my $c = shift;
-	$c->forward('get_available_channels');
+	my $profile_code = shift;
+	
+	# Lookup profile_id based on code
+	my $profile_id = $c->forward(	'profile_id_from_code', [ $profile_code ] );
+	
+	$c->forward('get_available_channels',  [ $profile_id ] );
 	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
 	

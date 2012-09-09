@@ -163,7 +163,7 @@
 				
 						<li>
 							<button type="button" onclick="send_form()">OK</button>
-							<button type="button" onclick='window.location.href = "/ui/player"'>Cancel</button>
+							<button type="button" onclick='window.location.href = "/ui/player/[% profile_code %]"'>Cancel</button>
 						</li>
 					</ol>
 				</form>

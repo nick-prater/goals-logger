@@ -37,8 +37,9 @@
 
 		<div id="source_list_container">
 
-			<hr />
-						
+			<div class="profile_name">[% profile_name %]</div>
+			<p />
+		
 			<div [% IF assign_clip_id %] style="display: none" [% END %]>
 			
 				<div align="center">
@@ -108,8 +109,8 @@
 			
 			<span class="menu_links">
 				<a href="/channels" class="menu_links">channel names</a><br />
-				<a href="upload_clip">upload clip</a><br />
-				<a href="player">audio editor</a>
+				<a href="/ui/upload_clip/[% profile_code %]">upload clip</a><br />
+				<a href="/ui/player/[% profile_code %]">audio editor</a>
 			</span>
 			<hr />
 

@@ -25,7 +25,7 @@
 	#source_list_container {
 		position: absolute;
 		left:0%;
-		top:5%;
+		top:0%;
 		width:10%;
 	}
 
@@ -59,6 +59,11 @@
 		font-size: 90%;
 	}
 	
+	.profile_name {
+		text-align: center;
+		background: #222;
+		color: #fff;
+	}
 	
 	/* Styling for studio player 'Button Box' */
 	table.button_box {
