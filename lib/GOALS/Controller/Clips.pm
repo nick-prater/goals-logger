@@ -388,6 +388,7 @@ sub upload : Path : Local {
 		category => $params->{category},
 		language => $params->{language},
 		duration_seconds => $duration_seconds,
+		profile_id => $params->{profile_id},
 	}) or do {
 		$c->error("ERROR inserting clip row in database");
 		die;
@@ -505,6 +506,7 @@ sub create : Path : Local {
 		event_id => $params->{event_id},
 		clip_start_timestamp => $start_dt,
 		clip_end_timestamp => $end_dt,
+		profile_id => $params->{profile_id},
 	}) or do {
 		$c->error("ERROR inserting clip row in database");
 		die;

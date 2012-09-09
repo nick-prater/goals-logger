@@ -1796,6 +1796,8 @@
  				spec.category = document.getElementById("clip_category").value;
  				spec.language = document.getElementById("clip_language").value;
  				spec.event_id = audio_event_id;
+ 				spec.profile_id = "[% profile_id %]";
+ 				spec.profile_code = "[% profile_code %]";
 			
 				var request = new XMLHttpRequest();
 				var progress_container = document.getElementById('progress_message_container');

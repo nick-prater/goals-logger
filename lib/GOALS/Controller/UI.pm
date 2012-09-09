@@ -52,8 +52,10 @@ sub upload_clip : Local {
 	my $c = shift;
 	my $profile_code = shift;
 	
-	$c->stash(
-		profile_code => $profile_code
+	# Lookup profile_id based on code - adds to stash
+	my $profile_id = $c->forward(
+		'profile_id_from_code',
+		[ $profile_code ]
 	);
 }
 

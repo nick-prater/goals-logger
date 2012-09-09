@@ -920,7 +920,7 @@
 							* means we are only assigning a single clip, so return to player */
 							if([% assign_clip_id %]) {
 								assign_clip_id = 0;
-								window.location.href = "player";
+								window.location.href = "/ui/player/[% profile_code %]";
 							}
 							
 							assign_clip_id = 0;
