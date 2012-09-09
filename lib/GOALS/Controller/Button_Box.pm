@@ -47,11 +47,14 @@ sub audio : Local : Args(1) {
 	};
 	
 	my $clip_id = $rs->clip_id;
+	my $profile_code = $rs->profile->profile_code;
+	
+	$c->log->debug("clip has profile_code: $profile_code");
 	
 	# Respond according to whether a button has a clip assigned or not
 	if($clip_id) {
 		my $prefix = $c->config->{clip_url_prefix} || '';
-		my $url = "$prefix/clip/$clip_id.wav";
+		my $url = "$prefix/clip/$profile_code/$clip_id.wav";
 		$c->log->debug("button $button_id maps to clip_id $clip_id");
 		$c->log->debug("redirecting to $url");
 		$c->response->redirect($url);		
@@ -63,11 +66,12 @@ sub audio : Local : Args(1) {
 }
 
 
-sub clear_button : Local : Args(1) {
+sub clear_button : Local : Args(2) {
 
 	my $self = shift;
 	my $c = shift;
-	my $button_id = shift;
+	my $profile_code = shift;
+	my $button_id = shift;	
 
 	$c->log->debug("clearing button_id $button_id");
 	

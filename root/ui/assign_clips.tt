@@ -349,7 +349,7 @@
 				}
 			
 				/* Send request */
-				var url = "/button_box/buttons_json/[% profile_name %]";
+				var url = "/button_box/buttons_json/[% profile_code %]";
 				request.open("GET", url, true);
 				request.send();
 			}
@@ -839,7 +839,7 @@
 				}
 			
 				/* Send request */
-				var url = "/button_box/clear_button/" + button_id;
+				var url = "/button_box/clear_button/[% profile_code %]/" + button_id;
 				request.open("GET", url, true);
 				request.send();			
 			}
@@ -966,7 +966,7 @@
 				
 				var audio_url = (
 					"[% clip_url_prefix %]" +
-					"/clip/" +
+					"/clip/[% profile_code %]/" +
 					clip_id +
 					".wav"
 				)

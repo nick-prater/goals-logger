@@ -290,6 +290,38 @@ sub profile_id_from_code : Private {
 }
 
 
+sub profile_code_from_id : Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $profile_id = shift;
+	
+	# Must have a profile code
+	$profile_id or return undef;
+
+	$c->log->debug("looking up profile_id: $profile_id");
+	my $rs = $c->model('DB::Profile');
+	my $profile = $rs->find({
+		profile_id => $profile_id
+	}) or do {
+		$c->log->error("ERROR: no such profile");
+		return undef;
+	};
+	
+	$c->log->debug("profile_id: " . $profile->profile_id);
+	$c->log->debug("display_name: " . $profile->display_name);
+	
+	# Populate stash, and hence form, with current values
+	$c->stash(
+		profile_code => $profile->profile_code,
+		profile_id   => $profile->profile_id,
+		profile_name => $profile->display_name,
+	);
+
+	return $profile->profile_code;
+}
+
+
 =head1 AUTHOR
 
 Nick Prater

@@ -376,6 +376,17 @@ sub upload : Path : Local {
 		$c->log->debug("$_ :: $params->{$_}");
 	}
 
+	# Validate profile_code
+	# As we use the submitted profile code to determine a
+	# filesystem directory name, this is necessary to prevent
+	# malicious behabviour
+	my $profile_code = $params->{profile_code};
+	my $profile_id = $c->forward(	'/ui/profile_id_from_code', [ $profile_code ] );
+	unless($profile_id) {
+		$c->error("ERROR: profile_code parameter is missing or invalid");
+		die;
+	}
+	
 	# Create a clip row - set to processing until we're ready with audio
 	my $rs = $c->model('DB::Clip');
 	my $clip = $rs->create({
@@ -398,7 +409,12 @@ sub upload : Path : Local {
 	
 	# Move uploaded file to clips directory
 	# Destination of clips is specified in global configuration file
-	my $dest_dir = $c->config->{clips_path};
+	# combined with supplied profile code (which has been validated above)
+	my $dest_dir = sprintf(
+		"%s/%s",
+		$c->config->{clips_path},
+		$params->{profile_code},
+	);
 	unless( $dest_dir && -d $dest_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;
@@ -452,6 +468,17 @@ sub create : Path : Local {
 		$c->log->debug("$_ :: $params->{$_}");
 	}
 
+	# Validate profile_code
+	# As we use the submitted profile code to determine a
+	# filesystem directory name, this is necessary to prevent
+	# malicious behabviour
+	my $profile_code = $params->{profile_code};
+	my $profile_id = $c->forward(	'/ui/profile_id_from_code', [ $profile_code ] );
+	unless($profile_id) {
+		$c->error("ERROR: profile_code parameter is missing or invalid");
+		die;
+	}
+	
 	# Look up relevant channel data;
 	my $channel;
 	if( $params->{channel_id} ) {
@@ -524,7 +551,7 @@ sub create : Path : Local {
 	};
 	
 	# Destination of clips is specified in global configuration file
-	my $dest_dir = $c->config->{clips_path};
+	my $dest_dir = $c->config->{clips_path} . '/' . $profile_code;
 	unless( $dest_dir && -d $dest_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;
