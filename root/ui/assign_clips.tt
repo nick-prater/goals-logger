@@ -430,7 +430,8 @@
 					"/clips/all?category=" +
 					get_clip_list_category_filters() + 
 					"&channel_id=" + 
-					get_clip_list_source_filters()
+					get_clip_list_source_filters() +
+					"&profile_id=[% profile_id %]"
 				);
 				
 				/* If page is loaded with assign_clip_id defined, that

@@ -257,6 +257,12 @@ sub all : Path('all') : Args(0) {
 	$search_params->{join} = 'buttons';
 	$where->{button_id} = undef;
 	
+	# Restrict results by profile_id, if parameter is supplied
+	if( $c->request->param('profile_id') ) {
+		$c->log->debug("searching for clips with profile_id: " . $c->request->param('profile_id'));
+		$where->{profile_id} = $c->request->param('profile_id');
+	}
+	
 	# Restrict results by status, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('status') ) {
