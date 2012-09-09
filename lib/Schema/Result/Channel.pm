@@ -67,6 +67,13 @@ __PACKAGE__->table("channels");
   is_nullable: 0
   size: 30
 
+=head2 profile_id
+
+  data_type: 'integer'
+  extra: {unsigned => 1}
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -94,10 +101,37 @@ __PACKAGE__->add_columns(
     is_nullable => 0,
     size => 30,
   },
+  "profile_id",
+  {
+    data_type => "integer",
+    extra => { unsigned => 1 },
+    is_foreign_key => 1,
+    is_nullable => 1,
+  },
 );
 __PACKAGE__->set_primary_key("channel_id");
 
 =head1 RELATIONS
+
+=head2 profile
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Profile>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "profile",
+  "Schema::Result::Profile",
+  { profile_id => "profile_id" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "CASCADE",
+    on_update     => "CASCADE",
+  },
+);
 
 =head2 clips
 
@@ -130,8 +164,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-07-11 17:31:56
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NedQHMnt23sPAZbmqI1KyA
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-09-09 11:27:20
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OP4mFIOrkqQGB1nEfqZh0g
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

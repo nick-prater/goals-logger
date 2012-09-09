@@ -204,4 +204,51 @@
 		
 	}
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	table#channel_list {
+		width: 100%;
+		table-layout: fixed;		
+	}
+	
+	table#channel_list tr.channel_row:nth-child(even) { 
+		background: #e3E3E3;		
+	}
+		
+	.channel_row {
+		
+	}
+	
+	.channel_list_edit {
+		width: 4em;
+		text-align: center;
+	}
+	
+	.channel_list_source {
+		width: 8em;
+		text-align: left;		
+	}
+	
+	.channel_list_profile {
+		width: 8em;
+		text-align: left;		
+	}	
+	
+	.channel_list_match {
+		width: 15em;
+		text-align: left;		
+	}
+	
+	.channel_list_commentator {
+		text-align: left;		
+	}
+	
 </style>
