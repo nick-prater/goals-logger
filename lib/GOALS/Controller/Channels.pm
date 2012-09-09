@@ -141,7 +141,7 @@ sub show : Chained('base_channel') : PathPart('') : Args(0) {
 		cancel_uri => $cancel_uri,
 	);
 
-	$c->log->debug("setting update uri: $update_uri");
+	$c->forward('/ui/get_available_profiles');
 }
 
 
@@ -163,6 +163,7 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 #			source       => $params->{source},
 			match_title  => $params->{match_title},
 			commentator  => $params->{commentator},
+			profile_id   => $params->{profile_id},
 		});
 
 		# Update ini file used by studio player

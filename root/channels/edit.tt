@@ -1,6 +1,4 @@
-[% # Template to display a list of Audio Inputs -%]
-
-[% META title = "Recording Channel channel.channel_id" -%]
+<!DOCTYPE html>
 
 <!--
     This file is part of GOALS-logger, a broadcast audio logging system by:
@@ -24,59 +22,83 @@
     along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
+[% USE HTML %]
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>talkSPORT GOALS Recording Channel [% channel.channel_id %]</title>
+		[% INSERT goals.css %]
+	</head>
+	<body>
 
 
-<form
-	action="[% update_uri %]"
-	method="post"
->
+		<form
+			action="[% update_uri %]"
+			method="post"
+			id="channel_metadata"
+		>
 
-	<fieldset>
-		<legend>Edit Recording Channel Details</legend>
-	
-		<ol>
-			<li>
-				<label for="source_label">source label</label>
-				<input 
-					type="text"
-					name="source_label"
-					value="[% channel.source_label %]"
-					required
-					size="60"
-				/>
-			</li>
+			<fieldset>
+				<legend>Edit Recording Channel Details</legend>
+			
+				<ol>
+					<li>
+						<label for="source_label">source label</label>
+						<input 
+							type="text"
+							name="source_label"
+							value="[% channel.source_label %]"
+							required
+							size="60"
+						/>
+					</li>
 
-			<li>
-				<label for="match_title">match title</label>
-				<input 
-					type="text"
-					name="match_title"
-					value="[% channel.match_title %]"
-					placeholder="Team 1 v Team 2"
-					size="40"
-				/>
-			</li>
-			<li>
-				<label for="commentator">commentator</label>
-				<input
-					type="text"
-					name="commentator"
-					value="[% channel.commentator %]"
-					placeholder="Name of the Commentator"
-					size="40"
-				/>
-			</li>
+					<li>
+						<label for="match_title">match title</label>
+						<input 
+							type="text"
+							name="match_title"
+							value="[% channel.match_title %]"
+							placeholder="Team 1 v Team 2"
+							size="40"
+						/>
+					</li>
+					<li>
+						<label for="commentator">commentator</label>
+						<input
+							type="text"
+							name="commentator"
+							value="[% channel.commentator %]"
+							placeholder="Name of the Commentator"
+							size="40"
+						/>
+					</li>
+					<li>
+						<label for="profile">profile</label>
+						<select name="profile_id" id="channel_profile">
+							[% FOREACH value IN profiles.keys %]
+								<option value="[% value %]" 
+									[%- IF channel.profile_id == value -%]
+										selected
+									[%- END -%]
+								>[% HTML.escape(profiles.$value) %]</option>
+							[% END %]
+						</select>
+					</li>
+					
+					
+				</ol>
 
-		</ol>
+			</fieldset>
 
-	</fieldset>
+			<input type="submit" value="Update" />
+		</form>
 
-	<input type="submit" value="Update" />
-</form>
+		<input type="button" name="Cancel" value="Cancel" onclick="window.location='[% cancel_uri %]'" />
 
-<input type="button" name="Cancel" value="Cancel" onclick="window.location='[% cancel_uri %]'" />
-
-
+	</body>
+</html>
 
 
 

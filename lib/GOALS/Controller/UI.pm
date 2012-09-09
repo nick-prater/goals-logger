@@ -130,6 +130,27 @@ sub get_buttons : Private {
 }
 
 
+sub get_available_profiles : Private {
+
+	# Grab all channels and put them on the stash
+	# used to populate source selector within player
+	my ( $self, $c ) = @_;
+	my $rs = $c->model('DB::Profile');
+	my @results = $rs->all;
+	
+	# Explicitly dereference into a hash
+	my %profiles;
+	foreach my $result(@results) {
+		$profiles{ $result->profile_id } = $result->display_name;
+	}
+		
+	$c->stash(
+		profiles => \%profiles,
+	);
+}
+
+
+
 sub get_available_channels : Private {
 
 	# Grab all channels and put them on the stash

@@ -208,7 +208,15 @@
 	
 	
 	
-	
+	form#channel_metadata label {
+		float: left;
+		font-size: 14px;
+		width: 110px;
+	}
+
+	form#channel_metadata ol li {
+		list-style: none;
+	}
 	
 	
 	
