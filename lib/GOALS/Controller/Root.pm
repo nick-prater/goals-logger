@@ -27,11 +27,18 @@ The root page (/)
 =cut
 
 sub index :Path :Args(0) {
-    my ( $self, $c ) = @_;
-
-    return $c->response->redirect('/ui/player');
+	my ( $self, $c ) = @_;
+	$c->log->debug('no language profile specified');	
+	return $c->response->redirect('/ui/player');
 }
 
+
+sub profile_index :Path :Args(1) {
+	my ( $self, $c, $profile_code ) = @_;
+	$c->log->debug('language profile ' . $profile_code);
+    
+	return $c->response->redirect("/ui/player/$profile_code");
+}
 
 
 

@@ -31,8 +31,17 @@ sub index :Path :Args(0) {
 
 
 sub player : Local {
-	my ( $self, $c ) = @_;
-	$c->forward('get_available_channels');
+	my $self = shift;
+	my $c = shift;
+	my $profile_code = shift;
+	
+	# Lookup profile_id based on code
+	my $profile_id = $c->forward(
+		'profile_id_from_code',
+		[ $profile_code ]
+	);
+		
+	$c->forward('get_available_channels',  [ $profile_id ] );
 	$c->forward('get_available_start_dates');
 	$c->forward('get_available_categories');
 }
@@ -155,9 +164,19 @@ sub get_available_channels : Private {
 
 	# Grab all channels and put them on the stash
 	# used to populate source selector within player
-	my ( $self, $c ) = @_;
+	my $self = shift;
+	my $c = shift;
+	my $profile_id = shift;
+
 	my $rs = $c->model('DB::Channel');
-	my @channels = $rs->all;
+	my $where = {};
+	
+	if($profile_id) {
+		$where->{profile_id} = $profile_id;
+	}
+	
+	my @channels = $rs->search($where);
+	
 	$c->stash(
 		channels => \@channels
 	);
@@ -223,6 +242,39 @@ sub get_available_languages : Private {
 		default_language => $default,
 	);
 }
+
+
+sub profile_id_from_code : Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $profile_code = shift;
+	
+	# Must have a profile code
+	$profile_code or return undef;
+
+	$c->log->debug("looking up profile_code: $profile_code");
+	my $rs = $c->model('DB::Profile');
+	my $profile = $rs->find({
+		profile_code => $profile_code
+	}) or do {
+		$c->log->error("ERROR: no such profile");
+		return undef;
+	};
+	
+	$c->log->debug("profile_id: " . $profile->profile_id);
+	$c->log->debug("display_name: " . $profile->display_name);
+	
+	# Populate stash, and hence form, with current values
+	$c->stash(
+		profile_code => $profile->profile_code,
+		profile_id   => $profile->profile_id,
+		profile_name => $profile->display_name,
+	);
+
+	return $profile->profile_id;
+}
+
 
 =head1 AUTHOR
 
