@@ -57,13 +57,16 @@ sub delete : Path('delete') : Args(1) {
 		die "No such event";
 	};
 	
+	my $profile_code = $clip->profile->profile_code;
+	$c->log->debug("clip has profile code: $profile_code");
+	
 	$clip->delete or do {
 		$c->error("problem deleting clip_id=$clip_id from database");
 		die;
 	};
 	
 	# Remove wav file
-	my $clip_dir = $c->config->{clips_path};
+	my $clip_dir = $c->config->{clips_path} . "/$profile_code";
 	unless( $clip_dir && -d $clip_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;
