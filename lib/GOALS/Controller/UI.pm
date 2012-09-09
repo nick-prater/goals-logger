@@ -34,6 +34,7 @@ sub player : Local {
 	my ( $self, $c ) = @_;
 	$c->forward('get_available_channels');
 	$c->forward('get_available_start_dates');
+	$c->forward('get_available_categories');
 }
 
 
@@ -48,6 +49,7 @@ sub assign_clips : Local {
 	my $c = shift;
 	$c->forward('get_available_channels');
 	$c->forward('get_buttons');
+	$c->forward('get_available_categories');
 	
 	# Setting this on the stash configures the hotkey page
 	# to assign a single clip, then return.

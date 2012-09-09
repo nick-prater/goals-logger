@@ -23,6 +23,7 @@
 -->
 
 [% USE Date %]
+[% USE HTML %]
 
 <html lang="en">
 	<head>
@@ -90,12 +91,15 @@
 			
 				<fieldset id="category_to_show_fieldset">
 					<legend>category</legend>
-					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="goal" />goal<br />
-					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="half_time_report" />half-time<br />
-					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="full_time_report" />full-time<br />
-					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="interview" />interview<br />
-					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="commercial" />commerc<br />
-					<input type="checkbox" name="clip_category_to_show" checked="true" onchange="update_clip_list()" value="other" />other<br />
+					[% FOREACH value IN categories.keys %]
+						<input
+							type="checkbox"
+							name="clip_category_to_show" 
+							checked="true" 
+							onchange="update_clip_list()" 
+							value="[%- value -%]" 
+						/>[%- HTML.escape(categories.$value) -%]<br />
+					[% END %]
 				</fieldset>
 				
 			</div>
