@@ -349,7 +349,7 @@
 				}
 			
 				/* Send request */
-				var url = "/button_box/buttons_json";
+				var url = "/button_box/buttons_json/[% profile_name %]";
 				request.open("GET", url, true);
 				request.send();
 			}

@@ -259,9 +259,14 @@ sub get_hotkeys : Private {
 
 	my $self = shift;
 	my $c = shift;
+	my $profile_code = shift;
+	
+	my $profile_id = $c->forward(	'/ui/profile_id_from_code', [ $profile_code ] );
 
 	my @records = $c->model('DB::Button')->search(
-		{ },
+		{
+			profile_id => $profile_id,
+		},
 		{
 			order_by => { -asc => 'button_id'},
 			join => 'clip',

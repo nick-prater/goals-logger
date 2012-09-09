@@ -69,7 +69,7 @@ sub assign_clips : Local {
 	my $profile_id = $c->forward(	'profile_id_from_code', [ $profile_code ] );
 	
 	$c->forward('get_available_channels',  [ $profile_id ] );
-	$c->forward('get_buttons');
+	$c->forward('get_buttons', [ $profile_id ] );
 	$c->forward('get_available_categories');
 	
 	# Setting this on the stash configures the hotkey page
@@ -116,10 +116,12 @@ sub rename_clip : Local : Args(1) {
 
 sub get_buttons : Private {
 
-	my ( $self, $c ) = @_;
+	my ( $self, $c, $profile_id ) = @_;
 	
 	my @records = $c->model('DB::Button')->search(
-		{ },
+		{
+			profile_id => $profile_id,
+		},
 		{
 			order_by => { -asc => 'button_id'},
 			join => 'clip'
