@@ -909,7 +909,8 @@
 					/* Free Up HTTP request object */
 					delete request;
 
-					update_buttons();											
+					update_buttons();
+					set_user_message("");
 					//set_user_message("OK : clip assigned to button");
 					
 					/* Set timeout to clear user message */
@@ -919,7 +920,7 @@
 							* means we are only assigning a single clip, so return to player */
 							if([% assign_clip_id %]) {
 								assign_clip_id = 0;
-								window.location.href = "/ui/player";
+								window.location.href = "/ui/assign_clips";
 							}
 							
 							assign_clip_id = 0;
