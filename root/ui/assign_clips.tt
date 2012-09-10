@@ -37,7 +37,7 @@
 
 		<div id="source_list_container">
 
-			<div class="profile_name">[% profile_name %]</div>
+			<div class="profile_name">[% c.session.profile_name %]</div>
 			<p />
 		
 			<div [% IF assign_clip_id %] style="display: none" [% END %]>
@@ -108,9 +108,9 @@
 			<hr />
 			
 			<span class="menu_links">
-				<a href="/channels" class="menu_links">channel names</a><br />
-				<a href="/ui/upload_clip/[% profile_code %]">upload clip</a><br />
-				<a href="/ui/player/[% profile_code %]">audio editor</a>
+				<a href="/channels/list" class="menu_links">channel names</a><br />
+				<a href="/ui/upload_clip">upload clip</a><br />
+				<a href="/ui/player">audio editor</a>
 			</span>
 			<hr />
 
@@ -349,7 +349,7 @@
 				}
 			
 				/* Send request */
-				var url = "/button_box/buttons_json/[% profile_code %]";
+				var url = "/button_box/buttons_json";
 				request.open("GET", url, true);
 				request.send();
 			}
@@ -430,8 +430,7 @@
 					"/clips/all?category=" +
 					get_clip_list_category_filters() + 
 					"&channel_id=" + 
-					get_clip_list_source_filters() +
-					"&profile_id=[% profile_id %]"
+					get_clip_list_source_filters()
 				);
 				
 				/* If page is loaded with assign_clip_id defined, that
@@ -839,7 +838,7 @@
 				}
 			
 				/* Send request */
-				var url = "/button_box/clear_button/[% profile_code %]/" + button_id;
+				var url = "/button_box/clear_button/" + button_id;
 				request.open("GET", url, true);
 				request.send();			
 			}
@@ -920,7 +919,7 @@
 							* means we are only assigning a single clip, so return to player */
 							if([% assign_clip_id %]) {
 								assign_clip_id = 0;
-								window.location.href = "/ui/player/[% profile_code %]";
+								window.location.href = "/ui/player";
 							}
 							
 							assign_clip_id = 0;
@@ -966,7 +965,7 @@
 				
 				var audio_url = (
 					"[% clip_url_prefix %]" +
-					"/clip/[% profile_code %]/" +
+					"/clip/[% c.session.profile_code %]/" +
 					clip_id +
 					".wav"
 				)
@@ -981,7 +980,7 @@
 			
 				var audio_url = (
 					"[% clip_url_prefix %]" +
-					"/clip/" +
+					"/clip/[% c.session.profile_code %]/" +
 					clip_id +
 					".wav"
 				)

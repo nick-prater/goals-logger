@@ -261,9 +261,9 @@ sub all : Path('all') : Args(0) {
 	$where->{button_id} = undef;
 	
 	# Restrict results by profile_id, if parameter is supplied
-	if( $c->request->param('profile_id') ) {
-		$c->log->debug("searching for clips with profile_id: " . $c->request->param('profile_id'));
-		$where->{'me.profile_id'} = $c->request->param('profile_id');
+	if( $c->session->{profile_id} ) {
+		$c->log->debug("searching for clips with profile_id: " . $c->session->{profile_id} );
+		$where->{'me.profile_id'} = $c->session->{profile_id};
 	}
 	
 	# Restrict results by status, if parameter is supplied
@@ -351,6 +351,11 @@ sub upload : Path : Local {
 	my $self = shift;
 	my $c = shift;
 	
+	unless( $c->session->{profile_id} ) {
+		$c->error("upload called without a session profile_id");
+		die;
+	}
+	
 	# Check we have an audio file to process
 	my $upload = $c->request->upload('clip_file') or do {
 		$c->error("ERROR: no upload file specified");
@@ -379,17 +384,6 @@ sub upload : Path : Local {
 		$c->log->debug("$_ :: $params->{$_}");
 	}
 
-	# Validate profile_code
-	# As we use the submitted profile code to determine a
-	# filesystem directory name, this is necessary to prevent
-	# malicious behabviour
-	my $profile_code = $params->{profile_code};
-	my $profile_id = $c->forward(	'/ui/profile_id_from_code', [ $profile_code ] );
-	unless($profile_id) {
-		$c->error("ERROR: profile_code parameter is missing or invalid");
-		die;
-	}
-	
 	# Create a clip row - set to processing until we're ready with audio
 	my $rs = $c->model('DB::Clip');
 	my $clip = $rs->create({
@@ -402,7 +396,7 @@ sub upload : Path : Local {
 		category => $params->{category},
 		language => $params->{language},
 		duration_seconds => $duration_seconds,
-		profile_id => $params->{profile_id},
+		profile_id => $c->session->{profile_id},
 	}) or do {
 		$c->error("ERROR inserting clip row in database");
 		die;

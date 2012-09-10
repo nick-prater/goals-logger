@@ -163,12 +163,12 @@
 				
 						<li>
 							<button type="button" onclick="send_form()">OK</button>
-							<button type="button" onclick='window.location.href = "/ui/player/[% profile_code %]"'>Cancel</button>
+							<button type="button" onclick='window.location.href = "/ui/player"'>Cancel</button>
 						</li>
 					</ol>
 					
-					<input type="hidden" name="profile_id" value="[% profile_id %]" />
-					<input type="hidden" name="profile_code" value="[% profile_code %]" />
+					<input type="hidden" name="profile_id" value="[% c.session.profile_id %]" />
+					<input type="hidden" name="profile_code" value="[% c.session.profile_code %]" />
 				</form>
 				
 			</div>
@@ -211,7 +211,7 @@
 					
 					if(response.clip_id) {
 						/* Clip created OK - forward to hotkey assignment */
-						window.location.href = "/ui/assign_clips/[% profile_code %]?clip_id=" + response.clip_id;
+						window.location.href = "/ui/assign_clips?clip_id=" + response.clip_id;
 					}
 					else {
 						/* Process the payload */

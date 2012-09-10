@@ -49,26 +49,20 @@ sub player : Local {
 sub upload_clip : Local {
 	my $self = shift;
 	my $c = shift;
-	my $profile_code = shift;
-	
-	# Lookup profile_id based on code - adds to stash
-	my $profile_id = $c->forward(
-		'profile_id_from_code',
-		[ $profile_code ]
-	);
 }
 
 
 sub assign_clips : Local {
 	my $self = shift;
 	my $c = shift;
-	my $profile_code = shift;
+
+	unless( $c->session->{profile_id} ) {
+		$c->error("assign_clips called without a valid session profile_id");
+		die;
+	};	
 	
-	# Lookup profile_id based on code
-	my $profile_id = $c->forward(	'profile_id_from_code', [ $profile_code ] );
-	
-	$c->forward('get_available_channels',  [ $profile_id ] );
-	$c->forward('get_buttons', [ $profile_id ] );
+	$c->forward('get_available_channels');
+	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
 	
 	# Setting this on the stash configures the hotkey page
@@ -115,11 +109,11 @@ sub rename_clip : Local : Args(1) {
 
 sub get_buttons : Private {
 
-	my ( $self, $c, $profile_id ) = @_;
+	my ( $self, $c ) = @_;
 	
 	my @records = $c->model('DB::Button')->search(
 		{
-			profile_id => $profile_id,
+			profile_id => $c->session->{profile_id},
 		},
 		{
 			order_by => { -asc => 'button_id'},
