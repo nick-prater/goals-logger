@@ -223,6 +223,14 @@ sub refresh_sources_ini : Private {
 	my $c = shift;
 	my $ini = '';
 
+	$c->log->debug('refresh_sources_ini called');
+	
+	# We need a profile_code to filter out irrelevant channels
+	unless($c->session->{profile_id} && $c->session->{profile_code}) {
+		$c->error("refresh_sources_ini() called without a session profile_id");
+		die;
+	}	
+	
 	$c->forward('get_sources');
 	
 	# Output ini file in the form:
@@ -231,15 +239,27 @@ sub refresh_sources_ini : Private {
 	#
 	#[Button 2]
 	#Text=Tony Incenzo QPR
-
+	my $button_id = 0;
 	foreach my $channel( @{$c->stash->{channels}} ) {
-		my $label = sprintf(
-			"%s %s",
-			 $channel->commentator || '',
-			 $channel->match_title || '',
-		);
-		$ini .= "[Button " . $channel->channel_id . "]\r\n";
-		$ini .= "Text=$label\r\n";	
+		
+		$button_id ++;
+		
+		if($channel->profile_id != $c->session->{profile_id}) {
+			# Insert an empty button if this channel isn't in
+			# our profile
+			$ini .= "[Button $button_id]\r\n";
+			$ini .= "Text=\r\n";
+		}
+		else {
+			# Insert the button		
+			my $label = sprintf(
+				"%s %s",
+				$channel->commentator || '',
+				$channel->match_title || '',
+			);
+			$ini .= "[Button " . $channel->channel_id . "]\r\n";
+			$ini .= "Text=$label\r\n";
+		}
 	}
 
 	$c->stash(
@@ -247,15 +267,17 @@ sub refresh_sources_ini : Private {
 	);
 	
 	# Write ini configuration data to file
-	if( my $dest_path = $c->config->{playout_labels_ini_path} ) {
-		$c->forward(
-			'write_ini',
-			[ $c->config->{playout_labels_ini_path} ]
-		);
-	}
-	else {
-		$c->log->warn("not writing ini file to disk as playout_labels_ini_path is not defined in global configuration");
-	}
+	my $dest_path = sprintf(
+		"%s/%s/labels.ini",
+		$c->config->{clips_path},
+		$c->session->{profile_code},
+	);
+	
+	$c->forward(
+		'write_ini',
+		[ $dest_path ]
+	);
+	
 }
 
 

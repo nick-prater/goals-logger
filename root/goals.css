@@ -236,8 +236,8 @@
 		background: #e3E3E3;		
 	}
 		
-	.channel_row {
-		
+	.channel_row_greyed {
+		color: #666;
 	}
 	
 	.channel_list_edit {

@@ -92,13 +92,11 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 
 
 
-sub list : Chained('base') : PathPart('') : Args(0) {
+sub list : Chained('base') : PathPart('list') : Args(0) {
 
 	my $self = shift;
 	my $c = shift;
-
-	$c->log->debug('running list_all method');
-
+	
 	my @channels = $c->stash->{rs}->all;
 
 	# Configure link to edit values
@@ -133,7 +131,7 @@ sub show : Chained('base_channel') : PathPart('') : Args(0) {
 	);
 
 	my $cancel_uri = $c->uri_for(
-		$c->controller('channels')->action_for(''),
+		$c->controller('channels')->action_for('list'),
 	);
 
 	$c->stash(
@@ -172,7 +170,7 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 		# Send user back to channel list
 		return $c->res->redirect(
 			$c->uri_for(
-				$c->controller('Channels')->action_for(''),
+				$c->controller('Channels')->action_for('list'),
 
 			)
 		);

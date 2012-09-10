@@ -45,7 +45,11 @@
 			[% # Display each input in a table row %]
 			[% FOREACH channel IN channels -%]
 
+			[% IF channel.profile_id == c.session.profile_id %]
 			<tr class="channel_row">
+			[% ELSE %]
+			<tr class="channel_row_greyed">
+			[% END %]
 				<td class="channel_list_edit"> <a href="[% channel.edit_uri -%]">edit</a> </td>
 				<td class="channel_list_source">[% channel.source_label         -%]</td>
 				<td class="channel_list_profile">[% channel.profile.display_name %]</td>
@@ -57,7 +61,7 @@
 
 		<p />
 
-		<a href="/ui/player">DONE</a>
+		<a href="/ui/player/[% profile_code %]">DONE</a>
 		
 	</body>
 </html>
