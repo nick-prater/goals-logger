@@ -32,7 +32,7 @@
 			#source_list_container {
 				position: absolute;
 				left:0%;
-				top:5%;
+				top:2%;
 				width:10%;
 			}
 
@@ -60,6 +60,12 @@
 				overflow: auto;
 			}
 			
+			.profile_name {
+				text-align: center;
+				background: #222;
+				color: #fff;
+			}
+				
 			#clip_list {
 				width: 100%;
 			}
@@ -172,7 +178,9 @@
 	
 		<div id="source_list_container">
 
-			<hr />
+			<div class="profile_name">[% c.session.profile_name %]</div>
+			<p />
+			
 			<div align="center"><b>event filter</b></div>
 			<form>
 				<fieldset>
@@ -211,7 +219,7 @@
 				</fieldset>
 			</form>
 			<hr />
-			<a href="/channels">channel names</a>
+			<a href="/channels/list/[% profile_code %]">channel names</a>
 			<br />
 			<a href="/ui/upload_clip/[% profile_code %]">upload clip</a>
 			<br />

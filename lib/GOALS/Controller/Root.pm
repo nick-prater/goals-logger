@@ -37,6 +37,20 @@ sub profile_index :Path :Args(1) {
 	my ( $self, $c, $profile_code ) = @_;
 	$c->log->debug('language profile ' . $profile_code);
     
+	# Validate profile id, populate stash and session with result
+	my $profile_id = $c->forward('/ui/profile_id_from_code', [$profile_code]);
+	unless($profile_id) {
+		$c->error("invalid profile_code supplied");
+		die;
+	}
+	
+	$c->session(
+		profile_code => $profile_code,
+		profile_id   => $profile_id,
+		profile_name => $c->stash->{profile_name},
+	);
+	$c->session->{njp} = 'NJP';
+	
 	return $c->response->redirect("/ui/player/$profile_code");
 }
 
