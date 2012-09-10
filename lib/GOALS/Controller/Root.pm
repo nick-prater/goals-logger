@@ -28,8 +28,11 @@ The root page (/)
 
 sub index :Path :Args(0) {
 	my ( $self, $c ) = @_;
-	$c->log->debug('no language profile specified');	
-	return $c->response->redirect('/ui/player');
+	$c->log->debug('no language profile specified');
+	$c->forward('/ui/get_available_profile_codes');
+	
+	
+	
 }
 
 

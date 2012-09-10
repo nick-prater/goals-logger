@@ -22,6 +22,12 @@
 
 <style type="text/css">
 
+	#profile_choice_container {
+		margin: auto;
+		width:30em;
+	}
+
+
 	#source_list_container {
 		position: absolute;
 		left:0%;
