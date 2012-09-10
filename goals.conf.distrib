@@ -21,8 +21,6 @@ keep_audio_days 61
 buttons_per_row 5
 
 playout_buttons_ini_path  /tmp/buttons.ini
-playout_labels_ini_path   /tmp/labels.ini
-
 
 rotjoin     /usr/local/bin/rotjoin
 audiograph  /usr/bin/audiograph
