@@ -151,6 +151,8 @@ sub refresh_buttons_config : Private {
 	my $c = shift;
 	my $ini = '';
 	
+	$c->log->debug("refresh_buttons_config called");
+	
 	$c->forward('get_hotkeys');
 	
 	# Create output in the form:
@@ -161,11 +163,13 @@ sub refresh_buttons_config : Private {
 	#[Button 2]
 	#File=
 	#Text=
-	
+	my $button_id = 0;
 	foreach my $button( @{$c->stash->{hotkey_buttons}} ) {
 	
+		$button_id ++;
+	
 		my $path = $button->clip ? sprintf("%s.wav", $button->clip_id) : '';
-		$ini .= "[Button " . $button->button_id . "]\r\n";
+		$ini .= "[Button $button_id]\r\n";
 		$ini .= "File=$path\r\n";
 		$ini .= "Text=" . ($button->clip ? $button->clip->title : '') . "\r\n";
 		$ini .= "\r\n";
@@ -176,15 +180,16 @@ sub refresh_buttons_config : Private {
 	);
 	
 	# Write ini configuration data to file
-	if( my $dest_path = $c->config->{playout_buttons_ini_path} ) {
-		$c->forward(
-			'write_ini',
-			[ $c->config->{playout_buttons_ini_path} ]
-		);
-	}
-	else {
-		$c->log->warn("not writing ini file to disk as playout_buttons_ini_path is not defined in global configuration");
-	}
+	my $dest_path = sprintf(
+		"%s/%s/buttons.ini",
+		$c->config->{clips_path},
+		$c->session->{profile_code},
+	);
+	
+	$c->forward(
+		'write_ini',
+		[ $dest_path ]
+	);
 }
 
 
