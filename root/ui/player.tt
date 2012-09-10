@@ -219,11 +219,11 @@
 				</fieldset>
 			</form>
 			<hr />
-			<a href="/channels/list/[% profile_code %]">channel names</a>
+			<a href="/channels/list">channel names</a>
 			<br />
-			<a href="/ui/upload_clip/[% profile_code %]">upload clip</a>
+			<a href="/ui/upload_clip">upload clip</a>
 			<br />
-			<a href="/ui/assign_clips/[% profile_code %]">hotkeys</a>
+			<a href="/ui/assign_clips">hotkeys</a>
 			<hr />
 
 		</div>
@@ -1804,8 +1804,8 @@
  				spec.category = document.getElementById("clip_category").value;
  				spec.language = document.getElementById("clip_language").value;
  				spec.event_id = audio_event_id;
- 				spec.profile_id = "[% profile_id %]";
- 				spec.profile_code = "[% profile_code %]";
+ 				spec.profile_id = "[% c.session.profile_id %]";
+ 				spec.profile_code = "[% c.session.profile_code %]";
 			
 				var request = new XMLHttpRequest();
 				var progress_container = document.getElementById('progress_message_container');

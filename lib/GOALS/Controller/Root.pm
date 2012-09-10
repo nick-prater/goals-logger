@@ -49,9 +49,8 @@ sub profile_index :Path :Args(1) {
 		profile_id   => $profile_id,
 		profile_name => $c->stash->{profile_name},
 	);
-	$c->session->{njp} = 'NJP';
 	
-	return $c->response->redirect("/ui/player/$profile_code");
+	return $c->response->redirect("/ui/player");
 }
 
 

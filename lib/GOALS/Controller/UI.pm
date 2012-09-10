@@ -33,15 +33,14 @@ sub index :Path :Args(0) {
 sub player : Local {
 	my $self = shift;
 	my $c = shift;
-	my $profile_code = shift;
 	
-	# Lookup profile_id based on code
-	my $profile_id = $c->forward(
-		'profile_id_from_code',
-		[ $profile_code ]
-	);
-		
-	$c->forward('get_available_channels',  [ $profile_id ] );
+	# It is now mandatory to have session data to define our profile
+	unless( $c->session->{profile_code} ) {
+		$c->error("ERROR: profile not defined in session data");
+		die;
+	}	
+	
+	$c->forward('get_available_channels');
 	$c->forward('get_available_start_dates');
 	$c->forward('get_available_categories');
 }
@@ -180,14 +179,11 @@ sub get_available_channels : Private {
 	# used to populate source selector within player
 	my $self = shift;
 	my $c = shift;
-	my $profile_id = shift;
 
 	my $rs = $c->model('DB::Channel');
 	my $where = {};
-	
-	if($profile_id) {
-		$where->{profile_id} = $profile_id;
-	}
+
+	$where->{profile_id} = $c->session->{profile_id};
 	
 	my @channels = $rs->search($where);
 	
