@@ -324,7 +324,7 @@
 						<div class="side_buttons_label">&mdash; 10s &mdash;</div>
 						<div>
 							<button class="side_button_left" type="button" onclick="trim_end(-10)">&larr;</button>
-							<button class="side_button_right" type="button" onclick=trim_end(10)">&rarr;</button>
+							<button class="side_button_right" type="button" onclick="trim_end(10)">&rarr;</button>
 						</div>
 						<div class="side_buttons_label">&mdash; 30s &mdash;</div>
 						<div>
