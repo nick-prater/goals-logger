@@ -51,6 +51,10 @@ sub all :Path('all') :Args(0) {
 	my $where = {};
 	my $search_params = {};
 
+	# The player page calls this repeatedly in the background
+	# Keep the session refreshed every time we are called
+	$c->change_session_expires( 4000 );
+	
 	# Only show events for which we have audio
 	my $audio_days = $c->config->{keep_audio_days} - 1;
 	my $dt = DateTime->today->subtract(DateTime::Duration->new( days => $audio_days ));
