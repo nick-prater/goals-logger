@@ -466,14 +466,33 @@ sub create : Path : Local {
 	}
 
 	# Validate profile_code
-	# As we use the submitted profile code to determine a
-	# filesystem directory name, this is necessary to prevent
-	# malicious behabviour
 	unless($c->session->{profile_id} && $c->session->{profile_code}) {
 		$c->error("create() called without a session profile_id");
 		die;
 	}	
-		
+	
+        # As we use the submitted profile code to determine a
+        # filesystem directory name, verify it is valid, by translating
+        # into a an id. This is necessary to prevent
+        # malicious behabviour 
+	my $profile_id = $c->forward(  '/ui/profile_id_from_code', [ $session->{profile_code} ] );
+	unless($profile_id) {
+		$c->error("ERROR: profile_code parameter is missing or invalid");
+		die;
+	}
+ 
+	# Look up relevant channel data;
+	my $channel;
+	if( $params->{channel_id} ) {
+		my $channel_rs = $c->model('DB::Channel');
+		$channel = $channel_rs->find({
+			channel_id => $params->{channel_id}
+		});
+	};
+	unless ($channel) {
+		$c->error("unable to find channel record associated with this clip, populating channel fields with nulls");
+	}
+	
 	# TODO:
 	# Look up relevant event data to check timestamp for sanity
 	# It's possible for a user to start editing a given audio event, but then navigate
