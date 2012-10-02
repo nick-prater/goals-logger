@@ -36,8 +36,8 @@ sub player : Local {
 	
 	# It is now mandatory to have session data to define our profile
 	unless( $c->session->{profile_code} ) {
-		$c->error("ERROR: profile not defined in session data");
-		die;
+		$c->log->warn("ERROR: profile not defined in session data");
+		$c->response->redirect('/');
 	}	
 	
 	$c->forward('get_available_channels');
@@ -57,8 +57,8 @@ sub assign_clips : Local {
 	my $c = shift;
 
 	unless( $c->session->{profile_id} ) {
-		$c->error("assign_clips called without a valid session profile_id");
-		die;
+		$c->log->warn("assign_clips called without a valid session profile_id");
+		$c->response->redirect('/');
 	};	
 	
 	$c->forward('get_available_channels');
