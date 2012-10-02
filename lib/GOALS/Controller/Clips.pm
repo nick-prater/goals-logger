@@ -475,7 +475,7 @@ sub create : Path : Local {
         # filesystem directory name, verify it is valid, by translating
         # into a an id. This is necessary to prevent
         # malicious behabviour 
-	my $profile_id = $c->forward(  '/ui/profile_id_from_code', [ $session->{profile_code} ] );
+	my $profile_id = $c->forward(  '/ui/profile_id_from_code', [ $c->session->{profile_code} ] );
 	unless($profile_id) {
 		$c->error("ERROR: profile_code parameter is missing or invalid");
 		die;
@@ -552,7 +552,7 @@ sub create : Path : Local {
 	};
 	
 	# Destination of clips is specified in global configuration file
-	my $dest_dir = $c->config->{clips_path} . '/' . $profile_code;
+	my $dest_dir = $c->config->{clips_path} . '/' . $c->session->{profile_code};
 	unless( $dest_dir && -d $dest_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;
