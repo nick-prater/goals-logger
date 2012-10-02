@@ -80,6 +80,19 @@ Attempt to render a view, if needed.
 sub end : ActionClass('RenderView') {}
 
 
+sub auto :Private {
+
+	my $self = shift;
+	my $c = shift;
+	
+	$c->log->debug('root::auto method called');
+	my $t = $c->session_expires(1);
+	$c->log->debug("session expires: $t");
+	
+	return 1;
+}
+
+
 
 =head1 AUTHOR
 
