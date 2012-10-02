@@ -352,8 +352,8 @@ sub upload : Path : Local {
 	my $c = shift;
 	
 	unless( $c->session->{profile_id} ) {
-		$c->error("upload called without a session profile_id");
-		die;
+		$c->log->warn("upload called without a session profile_id");
+		$c->response->redirect('/');
 	}
 	
 	# Check we have an audio file to process
@@ -469,26 +469,11 @@ sub create : Path : Local {
 	# As we use the submitted profile code to determine a
 	# filesystem directory name, this is necessary to prevent
 	# malicious behabviour
-	my $profile_code = $params->{profile_code};
-	my $profile_id = $c->forward(	'/ui/profile_id_from_code', [ $profile_code ] );
-	unless($profile_id) {
-		$c->error("ERROR: profile_code parameter is missing or invalid");
+	unless($c->session->{profile_id} && $c->session->{profile_code}) {
+		$c->error("create() called without a session profile_id");
 		die;
-	}
-	
-	# Look up relevant channel data;
-	my $channel;
-	if( $params->{channel_id} ) {
-		my $channel_rs = $c->model('DB::Channel');
-		$channel = $channel_rs->find({
-			channel_id => $params->{channel_id}
-		});
-	};
-	unless ($channel) {
-		$c->error("unable to find channel record associated with this clip, populating channel fields with nulls");
-		die;
-	}
-	
+	}	
+		
 	# TODO:
 	# Look up relevant event data to check timestamp for sanity
 	# It's possible for a user to start editing a given audio event, but then navigate
@@ -530,7 +515,7 @@ sub create : Path : Local {
 		event_id => $params->{event_id},
 		clip_start_timestamp => $start_dt,
 		clip_end_timestamp => $end_dt,
-		profile_id => $params->{profile_id},
+		profile_id => $c->session->{profile_id},
 	}) or do {
 		$c->error("ERROR inserting clip row in database");
 		die;
