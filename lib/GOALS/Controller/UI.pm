@@ -211,14 +211,17 @@ sub get_available_start_dates : Private {
 	my ( $self, $c ) = @_;
 	my $days = $c->config->{keep_audio_days};
 	my @dates = ();
-	
+
 	my $dt = DateTime->today;
-	$dt->set_time_zone('Europe/London');
-	
 	my $one_day_dt = DateTime::Duration->new( days => 1 );
 		
 	while( $days ) {
-		push(@dates, $dt->clone);		
+		my $dt_clone = $dt->clone;
+		$dt_clone->set_time_zone('Europe/London');
+		$dt_clone->truncate(to => 'day');
+
+		push(@dates, $dt_clone);
+
 		$dt -= $one_day_dt;
 		$days --
 	}
