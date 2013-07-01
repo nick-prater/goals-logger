@@ -776,7 +776,7 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = seconds_to_hours_mins_secs(duration_seconds);
 				
 				/* Show clip_details div */
 				clip_metadata.style.display = "block";
@@ -1579,6 +1579,10 @@
 				clear_mark();
 				audio_start_dt = spec.start_dt;
 				audio_end_dt   = spec.end_dt;
+				set_audio_times_from_local_epoch_ms(
+					spec.start_epoch_ms,
+					spec.end_epoch_ms
+				);
 			}
 			
 			/* We set the select boxes to the appropriate local time,
