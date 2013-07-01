@@ -1,0 +1,259 @@
+#!/usr/bin/perl
+
+=head1 flush_rot_archive
+
+This script is part of the NP Broadcast GOALS logging/production system, as
+developed for use at talkSPORT.
+
+It looks to a master configuration file, the path to which is either specified as a
+command-line argument, or by default /etc/npb.conf
+
+This scans audio rot archive directories, deleting for audio files older than the 
+number of days specified in the master configuration file.
+
+=head1 AUTHOR
+
+Nick Prater
+
+=head1 LICENCE
+
+This file is part of GOALS-logger, a broadcast audio logging system.
+
+Copyright (C) 2012 NP Broadcast Limited.
+
+GOALS-logger is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+GOALS-logger is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
+
+use warnings;
+use strict;
+use NPB::Log;
+use POSIX;
+use Config::ApacheFormat;
+use File::Pid;
+use File::Path 'remove_tree';
+use DateTime;
+
+our $VERSION = 1.0;
+my $SKIP_DAEMONISE = 0;
+
+# Config file can be specified as a command line argument
+my $config = read_config();
+
+# Daemonise...
+unless( $SKIP_DAEMONISE ) {
+	my $daemon = fork;
+	if ($daemon) {
+		print "started $0 with process id: $daemon\n";
+		print "log file being written as $config->{log_file}\n";
+		exit;
+	}
+
+	defined($daemon) or die "Failed to daemonise - couldn't fork: $!";
+	POSIX::setsid()  or die "Failed to daemonise - couldn't start a new session: $!";
+}
+
+# Ininitialise logging
+my $log = NPB::Log::configure_logging($config->{log_file});
+$log->info("$0 starting");
+
+my $pid = write_pid();
+
+$log->info("deleting audio logs older than $config->{keep_audio_days} days");
+process_channel_dirs(
+	$config->{keep_audio_days}
+);
+
+
+$pid->remove;
+exit;
+
+
+
+sub process_channel_dirs {
+
+	my $keep_audio_days = shift;
+	my $channel_dirs = {};
+
+	opendir DIR, $config->{audio_log_path} or do {
+		$log->error("unable to open audio log directory $!");
+		exit;
+	};
+	
+	while( my $channel_id = readdir DIR ) {
+
+		my $channel = {};
+
+		# Channel IDs are always a decimal number
+		# Anything else is not a channel dir
+		# Dates/times on file names are always UTC
+		$channel_id =~ m/^\d+$/ or next;
+
+		$log->debug("reading audio log directory for channel_id $channel_id");
+		my $channel_dir = sprintf(
+			"%s/%u",
+			$config->{audio_log_path},
+			$channel_id
+		);
+
+		$channel->{id} = $channel_id;
+		$channel->{dir} = $channel_dir;
+		$channel_dirs->{$channel_id} = $channel;
+
+		process_channel_dir($channel, $keep_audio_days);
+	}
+
+	closedir DIR;
+	return $channel_dirs;
+}
+
+
+sub process_channel_dir {
+
+	my $channel = shift;
+	my $keep_audio_days = shift;
+	my $epoch_now = time();
+
+	opendir DATE_DIR, $channel->{dir} or do {
+		$log->error("unable to open channel directory $channel->{dir}: $!");
+		return undef;
+	};
+
+	while( my $date = readdir DATE_DIR ) {
+
+		# Date dirs are always in the format YYYY-MM-DD
+		# anything else is not an audio archive 
+		my ($year, $month, $day) = $date =~ m/^(\d\d\d\d)-(\d\d)-(\d\d)$/ or next;
+
+		my $path = $channel->{dir} . "/$date";
+		$log->debug("reading day directory: $path");
+		#$log->debug("   year: $year");
+		#$log->debug("  month: $month");
+		#$log->debug("    day: $day");
+
+		# Convert into DateTime object - wrap in eval to trap fatal errors
+		my $dt_dir;
+		eval {
+			$dt_dir = DateTime->new (
+				year      => $year,
+				month     => $month,
+				day       => $day,
+				time_zone => 'UTC',
+			);
+		};
+		$dt_dir or do {
+			$log->error("unable to translate directory name into DateTime object - perhaps this is not a valid archive directory");
+			next;
+		};
+
+		my $dir_epoch = $dt_dir->epoch;
+		my $dir_age_seconds = $epoch_now - $dir_epoch;
+		my $dir_age_days = $dir_age_seconds / 60 / 60 / 24;
+		$log->debug(sprintf(
+			"directory holds files from %.1f days ago",
+			$dir_age_days
+		));
+
+		# Sanity check - logs should be from the past, not the future
+		if($dir_age_seconds < 0) {
+			$log->error("directory appears to be from the future - ignoring");
+			next;
+		};
+
+		if($dir_age_days > $keep_audio_days) {
+			$log->info(sprintf(
+				"deleting %s aged %.1f days",
+				$path,
+				$dir_age_days,
+			));
+
+			remove_tree($path) or do {
+				$log->error("ERROR removing directory tree $path : $!");
+			};
+		}
+
+	}
+
+	close DATE_DIR;
+}
+
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	
+	my $config_file = $ARGV[0] || '/etc/npb.conf';
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		warn "ERROR reading configuration file $config_file : $!\n";
+		die  "aborting\n";
+	};
+
+	$rv->{log_file} = $c->block('flush_rot_archive')->get('log_file') or do {
+		warn "ERROR: flush_rot_arcive/log_file is not defined in the configuration file, using /dev/stdout\n";
+		$rv->{log_file} = '/dev/stdout';
+	};
+	
+
+	$rv->{audio_log_path} = $c->get('audio_log_path') or do {
+		die "ERROR: audio_log_path is not defined or invalid in the configuration_file\n";
+	};
+	-d $rv->{audio_log_path} or do {
+		die "ERROR: audio_log_path is missing or invalid: $rv->{audio_log_path}\n";
+	};
+
+
+	$rv->{keep_audio_days} = $c->get('keep_audio_days') or do {
+		die "ERROR: keep_audio_days is not defined or invalid in the configuration_file\n";
+	};
+	$rv->{keep_audio_days} =~ m/^\d+$/ or do {
+		die "ERROR: keep_audio_days is missing or invalid: $rv->{keep_audio_days}\n";
+	};
+
+
+	$rv->{pid_file_path} = $c->block('flush_rot_archive')->get('pid_file') or do {
+		die "ERROR: pid_file is not defined or invalid in the configuration_file\n";
+	};
+
+
+	return $rv;	
+}
+
+
+sub write_pid {
+
+	$log->debug("writing pid file: $config->{pid_file_path}");
+
+	my $pid = File::Pid->new({
+		file => $config->{pid_file_path}
+	}) or do {
+		$log->error("ERROR creating pid object $!");
+	};
+
+	if( $_ = $pid->running ) {
+		$log->fatal("ERROR - a conflicting process is already running with pid $_");
+		exit;
+	};
+
+	$pid->write;
+
+	return $pid;
+};
+
+
+
