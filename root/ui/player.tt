@@ -1125,6 +1125,13 @@
 
 			function load_waveform(event) {
 
+				/* Waveform takes time to generate on server
+				 * so load the default image to blank the old waveform
+				 * until the new waveform is ready
+				 */
+				var image = document.getElementById("waveform_image");
+                                image.setAttribute("xlink:href", "/default_waveform.png");
+
 				/* Extract actual size in pixels of SVG on screen */
 				var bounds = waveform_svg.getBoundingClientRect();
 				
@@ -1147,7 +1154,6 @@
 				waveform_uri += "/" + Math.floor(bounds.height);
 				waveform_uri += "/" + '112233'; // colour in rrggbb html format
 				
-				var image = document.getElementById("waveform_image");
 				image.setAttribute("xlink:href",waveform_uri);
 			}
 			
