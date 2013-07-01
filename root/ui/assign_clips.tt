@@ -382,9 +382,7 @@
 					/* Update Duration */
 					node = document.getElementById('button_box_duration_' + button.button_id);
 					if(button.clip_id) {
-						var minutes = Math.floor(button.duration_seconds / 60);
-						var seconds = Math.floor(button.duration_seconds % 60);
-						node.innerHTML = minutes + ":" + zero_pad(seconds, 2);
+						node.innerHTML = seconds_to_mins_secs(button.duration_seconds);
 					}
 					else {
 						node.innerHTML = "";
