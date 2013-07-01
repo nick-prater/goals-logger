@@ -241,11 +241,19 @@
 			player.addEventListener(
 				"timeupdate",
 				function(event) {
+
+					/* Handle possibility that player hasn't yet initialised
+					 * which can result in NaN being returned as time properties
+					 */
+					var current_seconds = player.currentTime;
+					var duration_seconds = player.duration;
+					if(isNaN(current_seconds) || isNaN(duration_seconds)) {
+						return;
+					}
 				
-					var seconds_remaining = (player.duration - player.currentTime);
+					var seconds_remaining = duration_seconds - current_seconds;
 					var duration_html = seconds_to_mins_secs(seconds_remaining);
-					
-					
+										
 					if(playing_button_id) {
 						var node = document.getElementById("button_box_duration_" + playing_button_id);
 						node.innerHTML = duration_html;
@@ -872,7 +880,7 @@
 				
 				/* Change link from 'play' to 'stop' */
 				var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
-				play_link.innerHTML = 'stop';				
+				play_link.innerHTML = 'stop';
 			}
 			
 			
@@ -994,11 +1002,15 @@
 			function seconds_to_mins_secs(seconds) {
 			
 				/* Given a number of seconds, returns a string in format M:SS */
+
+				/* Return empty string if argument is non-numeric */
+				if(isNaN(seconds)) {
+					return "";
+				}
+
 				var minutes = Math.floor(seconds / 60);
 				seconds = Math.floor(seconds % 60);
-				var rv = "";
-				
-				rv = minutes + ":" + zero_pad(seconds, 2);
+				var rv = minutes + ":" + zero_pad(seconds, 2);
 				return rv;				
 			}
 			
