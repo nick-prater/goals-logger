@@ -65,7 +65,7 @@
 				background: #222;
 				color: #fff;
 			}
-				
+			
 			#clip_list {
 				width: 100%;
 			}
@@ -1571,8 +1571,15 @@
 					spec.end_iso
 				)
 				
-				//alert("DEBUG: loading audio_url: " + audio_url);
-				
+				if( isNaN(spec.channel_id) || spec.channel_id == 0 ) {
+					alert("Please select an audio source");
+					return;
+				}
+
+				/* If end time is earlier than start time, it is interpreted
+				 * as being the following day
+				 */
+
 				/* Stop player and reset flags */
 				player.pause;
 				player.src = audio_url;
