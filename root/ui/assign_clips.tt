@@ -139,18 +139,21 @@
 								<div class="button_box_title" id="button_box_title_[% button.button_id %]"></div>
 								<div class="button_box_duration" id="button_box_duration_[% button.button_id %]"></div>
 
-								<div class="button_box_clear_link">
-									<a href="javascript:clear_button([% button.button_id %])">clear</a>
-								</div>
-								<div class="button_box_download_link">
-									<a href="javascript:download_button([% button.button_id %])">download</a>
-								</div>
-								<div class="button_box_play_link">
-									<a
-										href="javascript:play_button([% button.button_id %])"
-										id="button_box_play_link_[% button.button_id %]"
-									>play</a>
-								</div>
+
+								<span hidden="hidden" id="button_box_links_[% button.button_id %]">
+									<div class="button_box_clear_link">
+										<a href="javascript:clear_button([% button.button_id %])">clear</a>
+									</div>
+									<div class="button_box_download_link">
+										<a href="javascript:download_button([% button.button_id %])">download</a>
+									</div>
+									<div class="button_box_play_link">
+										<a
+											href="javascript:play_button([% button.button_id %])"
+											id="button_box_play_link_[% button.button_id %]"
+										>play</a>
+									</div>
+								</span>
 
 							</div>
 						</td>
@@ -392,6 +395,15 @@
 					if(assigning_clip_id != button.clip_id) {
 						node = document.getElementById("button_box_button_" + button.button_id);
 						node.setAttribute("class", "button_box_button");
+					}
+
+					/* Hide links if no clip is assigned, un-hide if clip is assigned to this button */
+					node = document.getElementById("button_box_links_" + button.button_id);
+					if(button.clip_id) {
+						node.removeAttribute("hidden");
+					}
+					else {
+						node.setAttribute("hidden");
 					}
 				}
 			}
