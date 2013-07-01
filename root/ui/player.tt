@@ -621,7 +621,7 @@
 			var poll_ajax_timer;
 			refresh_event_list();
 			
-			
+
 			function play_pause() {
 
 				/* If we are playing, then pause.
@@ -776,7 +776,7 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 				
 				/* Show clip_details div */
 				clip_metadata.style.display = "block";
@@ -824,7 +824,7 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 			}
 			
 			
@@ -847,7 +847,7 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 			}
 			
 			
@@ -1224,26 +1224,34 @@
 			}
 			
 
-			function seconds_to_mins_secs(seconds) {
+			function seconds_to_hours_mins_secs(seconds) {
 			
-				/* Given a number of seconds, returns a string in format M:SS */
-				var minutes = Math.floor(seconds / 60);
+				/* Given a number of seconds, returns a string in format "H hours M minutes S seconds" */
+				var hours = Math.floor(seconds / 3600);
+				var minutes = Math.floor((seconds % 3600 / 60));
 				seconds = Math.floor(seconds % 60);
 				var rv = "";
-				
+			
+				/* Only output hours if duration is >= 1 hour */
+				if(hours > 0) {
+					rv = hours + " hour";
+					if(hours != 1) { rv += "s" }; // plural-ise if required
+					rv += "  ";
+				}
+
+	
 				/* Only output minutes if duration is >= 1 minute */
-				if( minutes > 0 ) {
-					rv = minutes + " minute";
-					if(minutes > 1) { rv += "s" }; // plural-ise if required
+				if( minutes > 0 || hours > 0) {
+					rv += minutes + " minute";
+					if(minutes != 1) { rv += "s" }; // plural-ise if required
 					rv += "  ";
 				}
 				
 				/* Always output seconds */
 				rv += seconds + " second";
-				if(seconds > 1) { rv += "s" }; // plural-ise if required
+				if(seconds != 1) { rv += "s" }; // plural-ise if required
 				
 				return rv;
-				
 			}
 
 			
