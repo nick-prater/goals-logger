@@ -80,25 +80,30 @@
 
 	td.button_box, tr.button_box {
 		border: 3px solid black;
+		height: 6em;
 	}
 		
 	.button_box_button {
 		position: relative;
+		height: 100%;
 		/*background: #ff0000; */
 	}
 	
 	.button_box_button_playing {
 		position: relative;
+		height: 100%;
 		background: #bbffbb;
 	}
 
 	.button_box_button_assigning {
 		position: relative;
+		height: 100%;
 		background: #ffffbb;
 	}
 
 	.button_box_button_clearing {
 		position: relative;
+		height: 100%;
 		background: #ffffbb;
 	}
 	
@@ -108,6 +113,13 @@
 	
 	.button_box_duration {
 		text-align: center;
+		position: absolute;
+		width: 10em;
+		height: 1em;
+		left: 50%;
+		margin-left: -5em;
+		top: 50%;
+		margin-top: -0.5em;
 	}
 	
 	.button_box_play_link {
