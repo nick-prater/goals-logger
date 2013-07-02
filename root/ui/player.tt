@@ -810,9 +810,18 @@
 			
 			function trim_start(seconds) {
 			
+				/* Trimming is based on the duration of audio in the player
+				 * if there is no audio loaded, perhaps because we are still waiting for
+				 * a clip to load, trimming is invalid, so do nohing
+				 */	
+				var current_duration_seconds = player.duration;
+				if(isNaN(current_duration_seconds)) {
+					return;
+				}
+	
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf() + (seconds * 1000);
-				var out_point_ms = audio_start_dt.valueOf() + (player.duration * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + (current_duration_seconds * 1000);
 				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
 				
 				/* This updates the drop down boxes to reflect the given start/end points */
@@ -829,12 +838,19 @@
 			
 			
 			function trim_end(seconds) {
-			
-				//alert("trim end " + seconds);
-			
+		
+				/* Trimming is based on the duration of audio in the player
+				 * if there is no audio loaded, perhaps because we are still waiting for
+				 * a clip to load, trimming is invalid, so do nohing
+				 */	
+				var current_duration_seconds = player.duration;
+				if(isNaN(current_duration_seconds)) {
+					return;
+				}
+
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf();
-				var out_point_ms = audio_start_dt.valueOf() + ((player.duration + seconds) * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + ((current_duration_seconds + seconds) * 1000);
 				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
 				
 				/* This updates the drop down boxes to reflect the given start/end points */
