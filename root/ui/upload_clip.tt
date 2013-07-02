@@ -200,6 +200,7 @@
 
 					if(request.status != 200) {
 						message_div.innerHTML = "Error " + request.status + " occurred uploading your file.<br \/>";
+						delete request;
 						return;
 					}
 									

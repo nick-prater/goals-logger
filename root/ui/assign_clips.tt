@@ -342,19 +342,19 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var json_data = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						/* Extract and parse payload */
+						var json_data = JSON.parse(request.responseText);
+						populate_button_box_from_json(json_data);
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					populate_button_box_from_json(json_data);
 				}
 			
 				/* Send request */
@@ -419,26 +419,25 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var json_data = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						var json_data = JSON.parse(request.responseText);
+						populate_clip_list_from_json(json_data);
+
+						/* If page is loaded with assign_clip_id defined, that
+						 * means we should select that clip for assignment
+						 */
+						if( [% assign_clip_id %] ) {
+							assign_clip( [% assign_clip_id %], assign_clip_title );
+						}
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					populate_clip_list_from_json(json_data);
-
-					/* If page is loaded with assign_clip_id defined, that
-					 * means we should select that clip for assignment
-					 */
-					if( [% assign_clip_id %] ) {
-						assign_clip( [% assign_clip_id %], assign_clip_title );
-					}
 				}
 			
 				/* Send request */
@@ -718,19 +717,18 @@
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						/* Success */
+						update_clip_list();
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					update_clip_list();
 				}
 			
 				/* Send request */
@@ -837,20 +835,19 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var json_data = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						var json_data = JSON.parse(request.responseText);
+						populate_button_box_from_json(json_data);
+						update_clip_list();
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					populate_button_box_from_json(json_data);
-					update_clip_list();
 				}
 			
 				/* Send request */
@@ -914,38 +911,39 @@
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request not yet complete */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
+					if(request.status == 200) {
+						/* success */
+						update_buttons();
+						set_user_message("");
 					
-					/* Free Up HTTP request object */
-					delete request;
-
-					update_buttons();
-					set_user_message("");
-					//set_user_message("OK : clip assigned to button");
-					
-					/* Set timeout to clear user message */
-					message_timeout = setTimeout(
-						function() {
-							/* If page is loaded with assign_clip_id defined, that
-							* means we are only assigning a single clip, so return to player */
-							if([% assign_clip_id %]) {
+						/* Set timeout to clear user message */
+						message_timeout = setTimeout(
+							function() {
+								/* If page is loaded with assign_clip_id defined, that
+								* means we are only assigning a single clip, so return to player */
+								if([% assign_clip_id %]) {
+									assign_clip_id = 0;
+									window.location.href = "/ui/assign_clips";
+								}
+							
 								assign_clip_id = 0;
-								window.location.href = "/ui/assign_clips";
-							}
-							
-							assign_clip_id = 0;
-							
-						},
-						500
-					);
+							},
+							500
+						);
 					
-					update_clip_list(); // has side-effect of clearing user message
+						update_clip_list(); // has side-effect of clearing user message
+					}
+					else {
+						/* some kind of error occurred */
+						set_user_message("error saving clip to button");
+					}
+					
+					delete request;
 				}
 
 				set_user_message("saving clip to button, please wait...");

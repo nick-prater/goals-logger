@@ -1425,7 +1425,6 @@
 			}
 
 	
-	
 			function refresh_event_list() {
 			
 				var request = new XMLHttpRequest();
@@ -1433,20 +1432,23 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if(request.readyState != 4) {
+						/* request has not yet completed */
 						return;
 					}
-				
-					/* Extract and parse payload */
-					var response = JSON.parse(request.responseText);
+
+					if(request.status == 200) { 
+			
+						/* Extract and parse payload */
+						var response = JSON.parse(request.responseText);
+		
+						/* Process the payload */
+						process_event_json(response);
+					}
 					
 					/* Free Up HTTP request object */
 					delete request;
 				
-					/* Process the payload */
-					process_event_json(response);
-					
 					/* Schedule next update timer if we're running it */
 					if(poll_ajax_timer_period_ms) {
 						polL_ajax_timer = setTimeout("refresh_event_list()", poll_ajax_timer_period_ms);
@@ -1622,102 +1624,52 @@
 				load_audio();
 			}
 		
-		
-			function delete_event(event_id) {
+	
+			function call_event_action(cmd, event_id) {
 			
-				var row_id = "event_row_" + event_id;
-				//remove_table_row("clip_list", row_id);
-							
-				/* And fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
 				
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+			
+					if(request.readyState != 4) {
+						/* request has not yet completed */
 						return;
 					}
-				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
+	
+					if (request.status == 200) {
+						refresh_event_list();
+					}
 					
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					refresh_event_list();
 				}
 			
 				/* Send request */
-				var url = "/events/delete/" + event_id;
+				var url = "/events/" + cmd + "/" + event_id;
 				request.open("GET", url, true);
 				request.send();				
 			}
 		
 		
+			function delete_event(event_id) {
+
+				call_event_action('delete', event_id);
+			}
+
+
 			function undelete_event(event_id) {
-										
-				/* Fire off asynchronous request to server */
-				var request = new XMLHttpRequest();
-				
-				/* Define handler to deal with response */
-				request.onreadystatechange = function() {
-				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
-						return;
-					}
-				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
-					
-					/* Free Up HTTP request object */
-					delete request;
-				
-					/* Process the payload */
-					refresh_event_list();
-				}
-			
-				/* Send request */
-				var url = "/events/undelete/" + event_id;
-				request.open("GET", url, true);
-				request.send();				
+
+				call_event_action('undelete', event_id);
 			}
 
 			
 			function open_event(event_id) {
+
+				call_event_action('open', event_id);
+			}
+
 	
-				/* Set it's status to opened, asynchronously */
-										
-				/* And fire off asynchronous request to server */
-				var request = new XMLHttpRequest();
-				
-				/* Define handler to deal with response */
-				request.onreadystatechange = function() {
-				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
-						return;
-					}
-				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
-					
-					/* Free Up HTTP request object */
-					delete request;
-				
-					/* Process the payload */
-					refresh_event_list();
-				}
-			
-				/* Send request */
-				var url = "/events/open/" + event_id;
-				request.open("GET", url, true);
-				request.send();				
-			}			
-			
-		
 			function remove_table_row(table_id, row_id) {
 
 				/* Not presently using this function - just refreshing whole list */
@@ -1857,25 +1809,27 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if(request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var response = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+
+						/* Success - extract and parse payload */
+						var response = JSON.parse(request.responseText);
+		
+						if(response.clip_id) {
+							/* Clip created OK - forward to hotkey assignment */
+							window.location.href = "assign_clips?clip_id=" + response.clip_id;
+						}
+						else {
+							progress_container.innerHTML = "ERROR creating clip";
+						}
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-
-					if(response.clip_id) {
-						/* Clip created OK - forward to hotkey assignment */
-						window.location.href = "assign_clips?clip_id=" + response.clip_id;
-					}
-					else {
-						/* Process the payload */
-						progress_container.innerHTML = "ERROR creating clip";
-					}
 				}
 				
 				/* Show progress message - hide metadata */
