@@ -142,7 +142,21 @@
 		text-align: center;
 		bottom: 0%;
 	}
+
+	#clip_list_container {
+		position: relative;
+	}
+
+	.clip_list_div {
+		position: absolute;
+	}
 	
+	.clip_list_heading_links {
+		position: absolute;
+		top: 0.1em;
+		left: 1.8em;
+	}
+
 		
 	table#clip_list {
 		width: 100%;
@@ -167,6 +181,10 @@
 	
 	.play_row {
 		background: #bbffbb;
+	}
+
+	.clip_list_link_heading {
+		width: 18.2em;
 	}
 
 	.clip_list_checkbox {
@@ -284,6 +302,11 @@
 	
 	.channel_list_commentator {
 		text-align: left;		
+	}
+
+	.channel_list_recording {
+		width: 5em;
+		text-align: center;
 	}
 	
 </style>
