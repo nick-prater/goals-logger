@@ -39,54 +39,62 @@ sub delete : Path('delete') : Args(1) {
 
 	my $self = shift;
 	my $c = shift;
-	my $clip_id = shift;
+	my $clip_list = shift;
+
+	# Clip list is a comma separated list of clips to delete
+	my @clips = split(/,/, $clip_list);
+
+	foreach my $clip_id(@clips) {
+
+		# Deleting a clip really does delete it. Maybe in future we should
+		# have a grace period and an undelete feature? Like we do for events.
+		# The clips table already has a 'deleted' value for status. We would need
+		# to add an update_timestamp field.
+	
+		$clip_id && $clip_id =~ m/^\d+$/ or next;
+	
+		$c->log->debug("deleting clip $clip_id");
 		
-	# Deleting a clip really does delete it. Maybe in future we should
-	# have a grace period and an undelete feature? Like we do for events.
-	# The clips table already has a 'deleted' value for status. We would need
-	# to add an update_timestamp field.
-	
-	$c->log->debug("deleting clip $clip_id");
-	
-	# Remove database record
-	$c->log->debug("removing database record for clip $clip_id");
-	my $rs = $c->model('DB::Clip');
-	my $clip = $rs->find({
-		clip_id => $clip_id
-	}) or do {
-		die "No such event";
-	};
-	
-	my $profile_code = $clip->profile->profile_code;
-	$c->log->debug("clip has profile code: $profile_code");
-	
-	$clip->delete or do {
-		$c->error("problem deleting clip_id=$clip_id from database");
-		die;
-	};
-	
-	# Remove wav file
-	my $clip_dir = $c->config->{clips_path} . "/$profile_code";
-	unless( $clip_dir && -d $clip_dir ) {
-		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
-		die;
-	}
-	
-	my $clip_path = sprintf(
-		"%s/%u.wav",
-		$clip_dir,
-		$clip_id
-	);
-	
-	$c->log->debug("deleting file $clip_path");
-	unlink($clip_path) or do {
-		$c->error("ERROR deleting file $clip_path: $!");
-		die;	
-	};
+		# Remove database record
+		$c->log->debug("removing database record for clip $clip_id");
+		my $rs = $c->model('DB::Clip');
+		my $clip = $rs->find({
+			clip_id => $clip_id
+		}) or do {
+			die "No such event";
+		};
+		
+		my $profile_code = $clip->profile->profile_code;
+		$c->log->debug("clip has profile code: $profile_code");
+		
+		$clip->delete or do {
+			$c->error("problem deleting clip_id=$clip_id from database");
+			die;
+		};
+		
+		# Remove wav file
+		my $clip_dir = $c->config->{clips_path} . "/$profile_code";
+		unless( $clip_dir && -d $clip_dir ) {
+			$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
+			die;
+		}
+		
+		my $clip_path = sprintf(
+			"%s/%u.wav",
+			$clip_dir,
+			$clip_id
+		);
+		
+		$c->log->debug("deleting file $clip_path");
+		unlink($clip_path) or do {
+			$c->error("ERROR deleting file $clip_path: $!");
+			die;	
+		};
+	}	
 	
 	# We should return something more meaningful, but for now OK is fine
 	$c->response->content_type('text/plain');
-	$c->response->body("OK\nevent_id=" . $clip->clip_id);	
+	$c->response->body("OK");	
 }
 
 

@@ -193,26 +193,33 @@
 			
 			<!-- This div contains the list of marked clips, which can be selected for editing.
 			-->
-			<div id="clip_list_container" align="center">
+			<div class="clip_list_container" id="clip_list_container" align="center">
 
-				<table id="clip_list" class="clip_list">
-				
-					<tr class="title_row">
-						<th class="clip_list_assign"></th>
-						<th class="clip_list_delete"></th>
-						<th class="clip_list_play"></th>
-						<th class="clip_list_download"></th>
-						<th class="clip_list_rename"></th>
-						<th class="clip_list_title">title</th>
-						<th class="clip_list_source">source</th>
-						<th class="clip_list_category">category</th>
-						<th class="clip_list_date">date</th>
-						<th class="clip_list_time">time</th>
-						<th class="clip_list_duration">duration</th>
-					</tr>
+				<div class="clip_list_heading_links">
+					<a href="javascript:delete_selected_clips()">delete selected</a>
+				</div>
 
-					<!-- data rows will be populated dynamically -->
-				</table>
+				<div class="clip_list_div">
+					<table id="clip_list" class="clip_list">
+					
+						<tr class="title_row">
+							<th class="clip_list_checkbox"></th>
+							<th class="clip_list_assign"></th>
+							<th class="clip_list_delete"></th>
+							<th class="clip_list_play"></th>
+							<th class="clip_list_download"></th>
+							<th class="clip_list_rename"></th>
+							<th class="clip_list_title">title</th>
+							<th class="clip_list_source">source</th>
+							<th class="clip_list_category">category</th>
+							<th class="clip_list_date">date</th>
+							<th class="clip_list_time">time</th>
+							<th class="clip_list_duration">duration</th>
+						</tr>
+
+						<!-- data rows will be populated dynamically -->
+					</table>
+				</div>
 			<div>
 			
 		</div>
@@ -558,7 +565,7 @@
 					row.id = row_id;
 					
 					/* The table has 11 cells/fields */
-					for( var i = 0; i < 11; i ++  ) {
+					for( var i = 0; i < 12; i ++  ) {
 						row.insertCell(-1);
 					}
 					
@@ -568,6 +575,9 @@
 				
 				/* Update/populate the fields */
 				var i = 0;
+				row.cells.item(i).innerHTML = '<input type="checkbox" name="clip_row_selected" value="' + clip_row.clip_id + '" id="clip_row_selected_' + clip_row.clip_id + '">';   // checkbox
+				row.cells.item(i).setAttribute("class", "clip_list_checkbox");
+				i++;	
 				row.cells.item(i).appendChild( generate_assign_link(clip_row) );   // Assign
 				row.cells.item(i).setAttribute("class", "clip_list_assign");
 				i++;
@@ -703,16 +713,26 @@
  				return a;
 			}			
 
-			function delete_clip(clip_id) {
-			
-				if(clip_id == playing_clip_id) {
-					clear_player();
-				}
+
+			function delete_clip(clip_list) {
+		
+				/* This accepts either a single clip_id, or a
+				 * comma-separated list of clips.
+				 */			
+				var clips = clip_list.split(",", clip_list);
+				for(var i = 0; i < clips.length; i++) {
 				
-				if(clip_id == assigning_clip_id) {
-					cancel_assign_clip();
-				}			
-			
+					alert(clips[i]);
+	
+					if(clips[i] == playing_clip_id) {
+						clear_player();
+					}
+					
+					if(clips[i] == assigning_clip_id) {
+						cancel_assign_clip();
+					}			
+				}
+
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
@@ -732,7 +752,7 @@
 				}
 			
 				/* Send request */
-				var url = "/clips/delete/" + clip_id;
+				var url = "/clips/delete/" + clip_list;
 				request.open("GET", url, true);
 				request.send();				
 			}
@@ -1002,9 +1022,23 @@
 
 				window.open(audio_url, "_self");
 			}
+		
 			
-			
-			
+			function delete_selected_clips() {
+
+				/* Build comma-separated list of selected clips */
+				var clip_list = "";
+				var checkboxes = document.getElementsByName("clip_row_selected");
+				for(var i = 0; i < checkboxes.length; i++) {
+					if(checkboxes[i].checked) {
+						clip_list += checkboxes[i].value + ',';
+					}
+				}
+
+				delete_clip(clip_list);
+			}
+
+
 			function seconds_to_mins_secs(seconds) {
 			
 				/* Given a number of seconds, returns a string in format M:SS */

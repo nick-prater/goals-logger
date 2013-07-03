@@ -168,6 +168,10 @@
 	.play_row {
 		background: #bbffbb;
 	}
+
+	.clip_list_checkbox {
+		width: 1.2em;
+	}
 	
 	.clip_list_assign {
 		width: 3em;
