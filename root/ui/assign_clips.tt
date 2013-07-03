@@ -205,7 +205,7 @@
 						<tr class="title_row">
 							<th class="clip_list_checkbox"></th>
 							<th class="clip_list_assign"></th>
-							<th class="clip_list_delete"></th>
+							<!-- <th class="clip_list_delete"></th> -->
 							<th class="clip_list_play"></th>
 							<th class="clip_list_download"></th>
 							<th class="clip_list_rename"></th>
@@ -565,7 +565,7 @@
 					row.id = row_id;
 					
 					/* The table has 11 cells/fields */
-					for( var i = 0; i < 12; i ++  ) {
+					for( var i = 0; i < 11; i ++  ) {
 						row.insertCell(-1);
 					}
 					
@@ -581,9 +581,9 @@
 				row.cells.item(i).appendChild( generate_assign_link(clip_row) );   // Assign
 				row.cells.item(i).setAttribute("class", "clip_list_assign");
 				i++;
-				row.cells.item(i).appendChild( generate_delete_link(clip_row) );   // Delete
-				row.cells.item(i).setAttribute("class", "clip_list_delete");
-				i++;
+				//row.cells.item(i).appendChild( generate_delete_link(clip_row) );   // Delete
+				//row.cells.item(i).setAttribute("class", "clip_list_delete");
+				//i++;
 				row.cells.item(i).appendChild( generate_play_link(clip_row) );     // Play
 				row.cells.item(i).setAttribute("class", "clip_list_play");
 				i++;
