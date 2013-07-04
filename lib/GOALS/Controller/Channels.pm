@@ -2,6 +2,8 @@ package GOALS::Controller::Channels;
  
 use Moose;
 use namespace::autoclean;
+use File::Temp;
+use File::Copy;
 
 BEGIN {extends 'Catalyst::Controller'; }
 
@@ -50,7 +52,8 @@ sub base_channel : Chained('base') : PathPart('') : CaptureArgs(1) {
 }
 
 
-sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
+
+sub generate_channel_xml : Private {
 
 	my $self = shift;
 	my $c = shift;
@@ -58,7 +61,7 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 	my @channels = $c->stash->{rs}->all;
 
 	use XML::LibXML;
-	
+
 	my $xml = XML::LibXML::Document->createDocument();
         my $root = $xml->createElement('channels');
         $xml->setDocumentElement($root);
@@ -83,12 +86,23 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 		
 		$root->appendChild($channel_xml);
         }
-	
-	
-	$c->response->content_type('application/xml');
-	$c->response->body($xml->toString(2));
-	
+
+	$c->stash(
+		channel_xml => $xml->toString(2)
+	);
 }
+
+
+
+sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
+
+	my $self = shift;
+	my $c = shift;
+        $c->forward('generate_channel_xml');
+	$c->response->content_type('application/xml');
+	$c->response->body($c->stash->{channel_xml});
+}	
+
 
 
 sub list : Chained('base') : PathPart('list') : Args(0) {
@@ -150,6 +164,9 @@ sub record : Chained('base') : PathPart('record') : Args(2) {
 			recording => $recording{$start_stop}
 		});
 	}
+
+	# Update XML file used by rot_manager
+        $c->forward('write_channel_config');
 
 	# Send user back to channel list
 	return $c->res->redirect(
@@ -223,6 +240,57 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 		$c->log->error("edit method called without POST");
 	}
 }
+
+
+
+sub write_channel_config : Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $dest_path = $c->config->{rot_manager}->{channel_config_file};
+		
+        $c->forward('generate_channel_xml');
+
+	# Write initially to a temporary file, then do an
+	# atomic rename to the desired filename to avoid
+	# race confitions
+	my $fh = File::Temp->new(
+	) or do {
+		$c->error("ERROR creating temporary file for ini file: $!");
+		die;
+	};
+	my $temp_path = $fh->filename;
+	$c->log->debug("writing ini to temporary file " . $temp_path);
+	
+	# Output data to file
+	print $fh $c->stash->{channel_xml} or do {
+		$c->error("ERROR writing ini data to temporary file: $!");
+		die;
+	};
+	
+	# Close file to flush buffer
+	close $fh or do {
+		$c->error("ERROR closing temporary file: $!");
+		die;
+	};
+	
+	# Set permissions so all can read
+	chmod( 0664, $temp_path ) or do {
+		$c->error("ERROR setting permissions on temporary file");
+	};
+	
+	$c->log->debug("renaming temporary file $temp_path -> $dest_path");
+
+	move($temp_path, $dest_path) or do {
+		$c->error("ERROR renaming temporary file: $!");
+		die;
+	};
+	
+	return 1;
+}
+
+
+
 
 
 
