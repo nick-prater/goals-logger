@@ -91,7 +91,6 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 }
 
 
-
 sub list : Chained('base') : PathPart('list') : Args(0) {
 
 	my $self = shift;
@@ -113,6 +112,51 @@ sub list : Chained('base') : PathPart('list') : Args(0) {
 	);
 
 	# uses default template /root/channels/list.tt
+}
+
+
+
+sub record : Chained('base') : PathPart('record') : Args(2) {
+
+	my $self = shift;
+	my $c = shift;
+	my $start_stop = shift;
+	my $channel_list = shift;
+
+	# /record/start/1,2,3,4
+	# /record/stop/5,6
+
+	my %recording = (
+		'start' => 'yes',
+		'stop'  => 'no',
+	);
+
+	unless($recording{$start_stop}) {
+		return $c->log->error("record method called without valid start/stop parameter");
+	}
+
+	my @channels = split(/,/, $channel_list);
+
+	foreach my $channel_id(@channels) {
+
+		my $channel = $c->stash->{rs}->find({
+			channel_id => $channel_id
+		}) or do {
+			warn "No such channel";
+			next;
+		};
+
+		$channel->update({
+			recording => $recording{$start_stop}
+		});
+	}
+
+	# Send user back to channel list
+	return $c->res->redirect(
+		$c->uri_for(
+			$c->controller('Channels')->action_for('list'),
+		)
+	);
 }
 
 

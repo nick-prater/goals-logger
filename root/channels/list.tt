@@ -28,6 +28,23 @@
 		<meta charset="utf-8">
 		<title>talkSPORT GOALS</title>
 		[% INSERT goals.css %]
+
+		<script type="text/javascript">
+
+			function change_record_status(channel_id) {
+
+				var start_stop = 'stop'; // default
+
+				var checkbox = document.getElementById('channel_recording_checkbox_' + channel_id);
+				if(checkbox.checked) {
+					start_stop = 'start';
+				}
+				
+				window.location = '/channels/record/' + start_stop + '/' + channel_id;
+			}
+
+		</script>
+
 	</head>
 	<body>
 
@@ -56,7 +73,19 @@
 				<td class="channel_list_profile">[% channel.profile.display_name %]</td>
 				<td class="channel_list_match">[% channel.match_title %]</td>
 				<td class="channel_list_commentator">[% channel.commentator          -%]</td>
-				<td class="channel_list_recording"><input type="checkbox" name="channel_recording_checkbox" value="[% channel.channel_id -%]" />
+				<td class="channel_list_recording">
+				[% IF channel.profile_id == c.session.profile_id %]
+					<input type="checkbox"
+					       name="channel_recording_checkbox"
+					       value="[% channel.channel_id -%]"
+					       id="channel_recording_checkbox_[% channel.channel_id -%]"
+					[% IF channel.recording == 'yes' %]
+					       checked="true"
+					[% END %]
+					       onchange="change_record_status([% channel.channel_id -%])"
+					/>
+				[% END %]
+				</td>
 			</tr>
 			[% END -%]
 		</table>
