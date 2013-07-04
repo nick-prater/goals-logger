@@ -69,11 +69,13 @@ sub start {
 
 	my @command = (
 		$self->{jackd_path},
+		'--realtime-priority', '80',
 		'-d', 'firewire',
-		'-r', '44100',
-		'-p', '4096',
+		'--period', '2048',
+		'--nperiods', '5',
+		'--rate', '44100',
 	);
-	
+
 	$log->debug("starting jackd with following arguments: ", join(' ', @command));
 	
 	$self->{proc}->start(@command) or do {
