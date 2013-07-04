@@ -344,7 +344,7 @@ sub write_ini : Private {
 	
 	# Output data to file
 	print $fh $c->stash->{ini_data} or do {
-		$c->error("ERROR writing ini data to temporart file: $!");
+		$c->error("ERROR writing ini data to temporary file: $!");
 		die;
 	};
 	
