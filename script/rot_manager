@@ -42,6 +42,7 @@ use warnings;
 use strict;
 use NPB::Log;
 use NPB::Audio::Rotter;
+use NPB::jackd::Connection;
 use XML::LibXML;
 use POSIX;
 use Config::ApacheFormat;
@@ -72,7 +73,7 @@ my $log = NPB::Log::configure_logging($config->{log_file});
 $log->info("$0 starting");
 
 my $pid = write_pid();
-
+my $jack = NPB::jackd::Connection->new;
 
 # Trap SIGINT so that child recorder processes can be gracefully shut-down
 $SIG{INT}  = \&handle_SIGINT_TERM;
@@ -101,15 +102,17 @@ while (1) {
 		$log->info("checking channel_id $channel_id");
 		
 		my $source = $channel->findvalue('source') or do {
-			$log->warn("channel does not have a source defined - skipping");
-			next;
+			$log->warn("channel does not have a source defined");
 		};
 
 		if( $recorders{$channel_id} ) {
 		
 			if($recorders{$channel_id}->is_alive) {
 				$log->info("OK - recorder is running");
-				next;
+				connect_jack_ports(
+					$recorders{$channel_id}->jack_client_port,
+					$source
+				);
 			}
 			else {
 				$log->error("PROBLEM: recorder seems to have stopped");
@@ -120,7 +123,7 @@ while (1) {
 				$recorders{$channel_id} = start_recorder($channel) or do {
 					$log->error("unable to start recorder");
 				};
-			}	
+			}
 		}
 		else {
 			$log->info("starting new recorder");
@@ -129,7 +132,7 @@ while (1) {
 				$log->error("unable to start recorder");
 			};
 		}
-		
+
 	}
 
 	$log->info("sleeping for $LOOP_DELAY_SECONDS seconds, or until interrupted by a signal");
@@ -138,6 +141,9 @@ while (1) {
 
 
 exit;
+
+
+
 
 
 sub start_recorder {
@@ -178,6 +184,25 @@ sub start_recorder {
 	return $rotter;
 }
 
+
+sub connect_jack_ports {
+
+	my $x = shift;
+	my $y = shift;
+
+	$x or return; # nothing to do
+
+	if($y) {
+		$jack->query;
+		$jack->is_connected($x, $y) and return; # OK
+		$jack->disconnect_all($x);
+		$jack->connect($x, $y);
+	}
+	else {
+		# No connection specified
+		$jack->disconnect_all($x);
+	}
+}
 
 
 sub read_channel_config {

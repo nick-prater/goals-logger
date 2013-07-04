@@ -73,7 +73,7 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 		$channel_xml->appendTextChild( 'channel_id' => $channel->channel_id );
 		
 		# Handle situation that source has not yet been defined
-		if(defined $channel->source) {
+		if(defined $channel->source && $channel->recording eq 'yes') {
 			$channel_xml->appendTextChild( 'source' => $channel->source );
 		}
 		
