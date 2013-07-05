@@ -306,13 +306,13 @@
 						<div class="side_buttons_heading">trim start</div>
 						
 						<div>
-							<div class="side_buttons_label">&mdash; 10s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;10s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-10)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(10)">&rarr;</button>
 						</div>
 						<br />
 						<div>
-							<div class="side_buttons_label">&mdash; 30s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;30s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-30)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(30)">&rarr;</button>
 						</div>
@@ -322,13 +322,13 @@
 					<div id="buttons_right_of_player">
 						<div class="side_buttons_heading">trim end</div>
 						<div>
-							<div class="side_buttons_label">&mdash; 10s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;10s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-10)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(10)">&rarr;</button>
 						</div>
 						<br />
 						<div>
-							<div class="side_buttons_label">&mdash; 30s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;30s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-30)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(30)">&rarr;</button>
 						</div>
@@ -343,13 +343,13 @@
 						<div class="side_buttons_heading">trim start</div>
 						
 						<div>
-							<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;0.1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-0.1)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(0.1)">&rarr;</button>
 						</div>
 						<br />	
 						<div>
-							<div class="side_buttons_label">&mdash; 1s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-1.0)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(1.0)">&rarr;</button>
 						</div>
@@ -359,13 +359,13 @@
 					<div id="buttons_right_of_player">
 						<div class="side_buttons_heading">trim end</div>
 						<div>
-							<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;0.1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-0.1)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(0.1)" >&rarr;</button>
 						</div>
 						<br />
 						<div>
-							<div class="side_buttons_label">&mdash; 1s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-1.0)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(1.0)">&rarr;</button>
 						</div>
