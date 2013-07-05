@@ -75,7 +75,7 @@ process_channel_dirs(
 	$config->{keep_audio_days}
 );
 
-
+$log->info("flush_rot_archive run finished");
 $pid->remove;
 exit;
 

@@ -240,8 +240,8 @@ sub get_available_categories : Private {
 	$c->stash(
 		categories => {
 			'goal'             => 'Goal',
-			'half_time_report' => 'Half-time Report',
-			'full_time_report' => 'Full-time Report',
+			'half_time_report' => 'Half-time',
+			'full_time_report' => 'Full-time',
 			'interview'        => 'Interview',
 			'commercial'       => 'Commercial',
 			'other'            => 'Other',
