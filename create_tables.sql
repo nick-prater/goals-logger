@@ -25,8 +25,12 @@ CREATE TABLE channels(
   source_label VARCHAR(50),            /* short label, e.g. COMM-1 */
   match_title VARCHAR(50),             /* e.g. Man U v Liverpool   */
   commentator VARCHAR(50),             /* e.g. Jim Proudfoot       */
-  record_threshold_dBFS DECIMAL(6,3),
-  timezone VARCHAR(30) DEFAULT 'Europe/London' NOT NULL
+  record_threshold_dBFS DECIMAL(6,3),  /* not used                 */
+  timezone VARCHAR(30) DEFAULT 'Europe/London' NOT NULL,
+  profile_id INT UNSIGNED,
+  CONSTRAINT channels_fk1
+    FOREIGN KEY (profile_id)
+    REFERENCES profiles(profile_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -82,12 +86,16 @@ CREATE TABLE clips(
   event_id INT UNSIGNED,
   clip_start_timestamp TIMESTAMP NOT NULL DEFAULT 0,
   clip_end_timestamp TIMESTAMP NOT NULL DEFAULT 0,
+  profile_id INT UNSIGNED,
   CONSTRAINT `clips_fk1` 
     FOREIGN KEY (`channel_id`) 
     REFERENCES `channels` (`channel_id`),
   CONSTRAINT `clips_fk2` 
     FOREIGN KEY (`event_id`) 
-    REFERENCES `events` (`event_id`)  
+    REFERENCES `events` (`event_id`),
+  CONSTRAINT `clips_fk3`
+    FOREIGN KEY (profile_id)
+    REFERENCES profiles(profile_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -95,25 +103,54 @@ CREATE TABLE clips(
 CREATE TABLE buttons(
   button_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   clip_id INT UNSIGNED,
+  profile_id INT UNSIGNED
   CONSTRAINT `buttons_fk1` 
     FOREIGN KEY (`clip_id`) 
-    REFERENCES `clips` (`clip_id`)
+    REFERENCES `clips` (`clip_id`),
+  CONSTRAINT `buttons_fk2` 
+    FOREIGN KEY (`profile_id`) 
+    REFERENCES `profiles` (`profile_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+
+
+
+CREATE TABLE profiles(
+  profile_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  profile_code CHAR(30) NOT NULL UNIQUE KEY,
+  display_name VARCHAR(50) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/* At present this table is simply used to keep track of the 
+ * database schema version we're at */
+CREATE TABLE config(
+  parameter_key VARCHAR(100) NOT NULL PRIMARY KEY,
+  parameter_value VARCHAR(1023)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO config VALUES ('schema_version', '2');
+
+
+
+
+
 /* Populate some test data */
-INSERT INTO channels VALUES (1, NULL, 'C1', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (2, NULL, 'C2', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (3, NULL, 'C3', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (4, NULL, 'C4', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (5, NULL, 'C5', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (6, NULL, 'C6', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (7, NULL, 'spare1', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (8, NULL, 'spare2', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (9, NULL, 'spare3', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (10, NULL, 'spare4', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (11, NULL, 'spare5', NULL, NULL, NULL, 'Europe/London');
-INSERT INTO channels VALUES (12, NULL, 'spare6', NULL, NULL, NULL, 'Europe/London');
+INSERT INTO profiles VALUES(1, 'english', 'English');
+INSERT INTO profiles VALUES(2, 'malay', 'Malay');
+INSERT INTO profiles VALUES(3, 'french', 'French');
+
+INSERT INTO channels VALUES (1, NULL, 'C1', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (2, NULL, 'C2', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (3, NULL, 'C3', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (4, NULL, 'C4', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (5, NULL, 'C5', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (6, NULL, 'C6', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (7, NULL, 'spare1', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (8, NULL, 'spare2', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (9, NULL, 'spare3', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (10, NULL, 'spare4', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (11, NULL, 'spare5', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (12, NULL, 'spare6', NULL, NULL, NULL, 'Europe/London', 1);
 
 INSERT INTO event_inputs VALUES (1, 'Marker Button 1', 'hardware_gpi', 'audio_marker', 1);
 INSERT INTO event_inputs VALUES (2, 'Marker Button 2', 'hardware_gpi', 'audio_marker', 2);
@@ -129,25 +166,45 @@ INSERT INTO event_inputs VALUES (11, 'Marker Button 11', 'hardware_gpi', 'audio_
 INSERT INTO event_inputs VALUES (12, 'Marker Button 12', 'hardware_gpi', 'audio_marker', 12);
 
 /* start with 20 blank buttons */
-INSERT INTO buttons VALUES(1,NULL);
-INSERT INTO buttons VALUES(2,NULL);
-INSERT INTO buttons VALUES(3,NULL);
-INSERT INTO buttons VALUES(4,NULL);
-INSERT INTO buttons VALUES(5,NULL);
-INSERT INTO buttons VALUES(6,NULL);
-INSERT INTO buttons VALUES(7,NULL);
-INSERT INTO buttons VALUES(8,NULL);
-INSERT INTO buttons VALUES(9,NULL);
-INSERT INTO buttons VALUES(10,NULL);
-INSERT INTO buttons VALUES(11,NULL);
-INSERT INTO buttons VALUES(12,NULL);
-INSERT INTO buttons VALUES(13,NULL);
-INSERT INTO buttons VALUES(14,NULL);
-INSERT INTO buttons VALUES(15,NULL);
-INSERT INTO buttons VALUES(16,NULL);
-INSERT INTO buttons VALUES(17,NULL);
-INSERT INTO buttons VALUES(18,NULL);
-INSERT INTO buttons VALUES(19,NULL);
-INSERT INTO buttons VALUES(20,NULL);
+INSERT INTO buttons VALUES(1,NULL,1);
+INSERT INTO buttons VALUES(2,NULL,1);
+INSERT INTO buttons VALUES(3,NULL,1);
+INSERT INTO buttons VALUES(4,NULL,1);
+INSERT INTO buttons VALUES(5,NULL,1);
+INSERT INTO buttons VALUES(6,NULL,1);
+INSERT INTO buttons VALUES(7,NULL,1);
+INSERT INTO buttons VALUES(8,NULL,1);
+INSERT INTO buttons VALUES(9,NULL,1);
+INSERT INTO buttons VALUES(10,NULL,1);
+INSERT INTO buttons VALUES(11,NULL,1);
+INSERT INTO buttons VALUES(12,NULL,1);
+INSERT INTO buttons VALUES(13,NULL,1);
+INSERT INTO buttons VALUES(14,NULL,1);
+INSERT INTO buttons VALUES(15,NULL,1);
+INSERT INTO buttons VALUES(16,NULL,1);
+INSERT INTO buttons VALUES(17,NULL,1);
+INSERT INTO buttons VALUES(18,NULL,1);
+INSERT INTO buttons VALUES(19,NULL,1);
+INSERT INTO buttons VALUES(20,NULL,1);
 
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
+INSERT INTO buttons VALUES(NULL,NULL,3);
 

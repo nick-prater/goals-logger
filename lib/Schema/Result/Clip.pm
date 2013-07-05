@@ -132,6 +132,13 @@ __PACKAGE__->table("clips");
   default_value: '0000-00-00 00:00:00'
   is_nullable: 0
 
+=head2 profile_id
+
+  data_type: 'integer'
+  extra: {unsigned => 1}
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -221,6 +228,13 @@ __PACKAGE__->add_columns(
     default_value => "0000-00-00 00:00:00",
     is_nullable => 0,
   },
+  "profile_id",
+  {
+    data_type => "integer",
+    extra => { unsigned => 1 },
+    is_foreign_key => 1,
+    is_nullable => 1,
+  },
 );
 __PACKAGE__->set_primary_key("clip_id");
 
@@ -239,6 +253,26 @@ __PACKAGE__->has_many(
   "Schema::Result::Button",
   { "foreign.clip_id" => "self.clip_id" },
   { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 profile
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Profile>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "profile",
+  "Schema::Result::Profile",
+  { profile_id => "profile_id" },
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "CASCADE",
+    on_update     => "CASCADE",
+  },
 );
 
 =head2 channel
@@ -282,8 +316,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-07-12 15:00:54
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:xsu1xEvpmcc8zvFi6lWN+A
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-09-09 13:51:50
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gyvigr9SKh9kOC7a8pl2Yg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

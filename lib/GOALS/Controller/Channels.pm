@@ -2,6 +2,8 @@ package GOALS::Controller::Channels;
  
 use Moose;
 use namespace::autoclean;
+use File::Temp;
+use File::Copy;
 
 BEGIN {extends 'Catalyst::Controller'; }
 
@@ -50,7 +52,8 @@ sub base_channel : Chained('base') : PathPart('') : CaptureArgs(1) {
 }
 
 
-sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
+
+sub generate_channel_xml : Private {
 
 	my $self = shift;
 	my $c = shift;
@@ -58,7 +61,7 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 	my @channels = $c->stash->{rs}->all;
 
 	use XML::LibXML;
-	
+
 	my $xml = XML::LibXML::Document->createDocument();
         my $root = $xml->createElement('channels');
         $xml->setDocumentElement($root);
@@ -73,7 +76,7 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 		$channel_xml->appendTextChild( 'channel_id' => $channel->channel_id );
 		
 		# Handle situation that source has not yet been defined
-		if(defined $channel->source) {
+		if(defined $channel->source && $channel->recording eq 'yes') {
 			$channel_xml->appendTextChild( 'source' => $channel->source );
 		}
 		
@@ -83,22 +86,30 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 		
 		$root->appendChild($channel_xml);
         }
-	
-	
-	$c->response->content_type('application/xml');
-	$c->response->body($xml->toString(2));
-	
+
+	$c->stash(
+		channel_xml => $xml->toString(2)
+	);
 }
 
 
 
-sub list : Chained('base') : PathPart('') : Args(0) {
+sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 
 	my $self = shift;
 	my $c = shift;
+        $c->forward('generate_channel_xml');
+	$c->response->content_type('application/xml');
+	$c->response->body($c->stash->{channel_xml});
+}	
 
-	$c->log->debug('running list_all method');
 
+
+sub list : Chained('base') : PathPart('list') : Args(0) {
+
+	my $self = shift;
+	my $c = shift;
+	
 	my @channels = $c->stash->{rs}->all;
 
 	# Configure link to edit values
@@ -118,6 +129,54 @@ sub list : Chained('base') : PathPart('') : Args(0) {
 }
 
 
+
+sub record : Chained('base') : PathPart('record') : Args(2) {
+
+	my $self = shift;
+	my $c = shift;
+	my $start_stop = shift;
+	my $channel_list = shift;
+
+	# /record/start/1,2,3,4
+	# /record/stop/5,6
+
+	my %recording = (
+		'start' => 'yes',
+		'stop'  => 'no',
+	);
+
+	unless($recording{$start_stop}) {
+		return $c->log->error("record method called without valid start/stop parameter");
+	}
+
+	my @channels = split(/,/, $channel_list);
+
+	foreach my $channel_id(@channels) {
+
+		my $channel = $c->stash->{rs}->find({
+			channel_id => $channel_id
+		}) or do {
+			warn "No such channel";
+			next;
+		};
+
+		$channel->update({
+			recording => $recording{$start_stop}
+		});
+	}
+
+	# Update XML file used by rot_manager
+        $c->forward('write_channel_config');
+
+	# Send user back to channel list
+	return $c->res->redirect(
+		$c->uri_for(
+			$c->controller('Channels')->action_for('list'),
+		)
+	);
+}
+
+
 sub show : Chained('base_channel') : PathPart('') : Args(0) {
 
 	my $self = shift;
@@ -133,7 +192,7 @@ sub show : Chained('base_channel') : PathPart('') : Args(0) {
 	);
 
 	my $cancel_uri = $c->uri_for(
-		$c->controller('channels')->action_for(''),
+		$c->controller('channels')->action_for('list'),
 	);
 
 	$c->stash(
@@ -141,7 +200,7 @@ sub show : Chained('base_channel') : PathPart('') : Args(0) {
 		cancel_uri => $cancel_uri,
 	);
 
-	$c->log->debug("setting update uri: $update_uri");
+	$c->forward('/ui/get_available_profiles');
 }
 
 
@@ -163,6 +222,7 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 #			source       => $params->{source},
 			match_title  => $params->{match_title},
 			commentator  => $params->{commentator},
+			profile_id   => $params->{profile_id},
 		});
 
 		# Update ini file used by studio player
@@ -171,7 +231,7 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 		# Send user back to channel list
 		return $c->res->redirect(
 			$c->uri_for(
-				$c->controller('Channels')->action_for(''),
+				$c->controller('Channels')->action_for('list'),
 
 			)
 		);
@@ -180,6 +240,57 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 		$c->log->error("edit method called without POST");
 	}
 }
+
+
+
+sub write_channel_config : Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $dest_path = $c->config->{rot_manager}->{channel_config_file};
+		
+        $c->forward('generate_channel_xml');
+
+	# Write initially to a temporary file, then do an
+	# atomic rename to the desired filename to avoid
+	# race confitions
+	my $fh = File::Temp->new(
+	) or do {
+		$c->error("ERROR creating temporary file for ini file: $!");
+		die;
+	};
+	my $temp_path = $fh->filename;
+	$c->log->debug("writing ini to temporary file " . $temp_path);
+	
+	# Output data to file
+	print $fh $c->stash->{channel_xml} or do {
+		$c->error("ERROR writing ini data to temporary file: $!");
+		die;
+	};
+	
+	# Close file to flush buffer
+	close $fh or do {
+		$c->error("ERROR closing temporary file: $!");
+		die;
+	};
+	
+	# Set permissions so all can read
+	chmod( 0664, $temp_path ) or do {
+		$c->error("ERROR setting permissions on temporary file");
+	};
+	
+	$c->log->debug("renaming temporary file $temp_path -> $dest_path");
+
+	move($temp_path, $dest_path) or do {
+		$c->error("ERROR renaming temporary file: $!");
+		die;
+	};
+	
+	return 1;
+}
+
+
+
 
 
 

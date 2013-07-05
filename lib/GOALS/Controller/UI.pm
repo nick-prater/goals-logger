@@ -31,7 +31,15 @@ sub index :Path :Args(0) {
 
 
 sub player : Local {
-	my ( $self, $c ) = @_;
+	my $self = shift;
+	my $c = shift;
+	
+	# It is now mandatory to have session data to define our profile
+	unless( $c->session->{profile_code} ) {
+		$c->log->warn("ERROR: profile not defined in session data");
+		$c->response->redirect('/');
+	}	
+	
 	$c->forward('get_available_channels');
 	$c->forward('get_available_start_dates');
 	$c->forward('get_available_categories');
@@ -47,6 +55,12 @@ sub upload_clip : Local {
 sub assign_clips : Local {
 	my $self = shift;
 	my $c = shift;
+
+	unless( $c->session->{profile_id} ) {
+		$c->log->warn("assign_clips called without a valid session profile_id");
+		$c->response->redirect('/');
+	};	
+	
 	$c->forward('get_available_channels');
 	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
@@ -98,7 +112,9 @@ sub get_buttons : Private {
 	my ( $self, $c ) = @_;
 	
 	my @records = $c->model('DB::Button')->search(
-		{ },
+		{
+			profile_id => $c->session->{profile_id},
+		},
 		{
 			order_by => { -asc => 'button_id'},
 			join => 'clip'
@@ -130,13 +146,60 @@ sub get_buttons : Private {
 }
 
 
-sub get_available_channels : Private {
+sub get_available_profiles : Private {
 
 	# Grab all channels and put them on the stash
 	# used to populate source selector within player
 	my ( $self, $c ) = @_;
+	my $rs = $c->model('DB::Profile');
+	my @results = $rs->all;
+	
+	# Explicitly dereference into a hash
+	my %profiles;
+	foreach my $result(@results) {
+		$profiles{ $result->profile_id } = $result->display_name;
+	}
+		
+	$c->stash(
+		profiles => \%profiles,
+	);
+}
+
+
+sub get_available_profile_codes : Private {
+
+	# Grab all channels and put them on the stash
+	# used to populate source selector within player
+	my ( $self, $c ) = @_;
+	my $rs = $c->model('DB::Profile');
+	my @results = $rs->all;
+	
+	# Explicitly dereference into a hash
+	my %profiles;
+	foreach my $result(@results) {
+		$profiles{ $result->profile_code } = $result->display_name;
+	}
+		
+	$c->stash(
+		profile_codes => \%profiles,
+	);
+}
+
+
+sub get_available_channels : Private {
+
+	# Grab all channels and put them on the stash
+	# used to populate source selector within player
+	my $self = shift;
+	my $c = shift;
+
 	my $rs = $c->model('DB::Channel');
-	my @channels = $rs->all;
+	my $where = {};
+
+	$where->{profile_id} = $c->session->{profile_id};
+	
+	my @channels = $rs->search($where);
+	
 	$c->stash(
 		channels => \@channels
 	);
@@ -148,14 +211,17 @@ sub get_available_start_dates : Private {
 	my ( $self, $c ) = @_;
 	my $days = $c->config->{keep_audio_days};
 	my @dates = ();
-	
+
 	my $dt = DateTime->today;
-	$dt->set_time_zone('Europe/London');
-	
 	my $one_day_dt = DateTime::Duration->new( days => 1 );
 		
 	while( $days ) {
-		push(@dates, $dt->clone);		
+		my $dt_clone = $dt->clone;
+		$dt_clone->set_time_zone('Europe/London');
+		$dt_clone->truncate(to => 'day');
+
+		push(@dates, $dt_clone);
+
 		$dt -= $one_day_dt;
 		$days --
 	}
@@ -202,6 +268,71 @@ sub get_available_languages : Private {
 		default_language => $default,
 	);
 }
+
+
+sub profile_id_from_code : Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $profile_code = shift;
+	
+	# Must have a profile code
+	$profile_code or return undef;
+
+	$c->log->debug("looking up profile_code: $profile_code");
+	my $rs = $c->model('DB::Profile');
+	my $profile = $rs->find({
+		profile_code => $profile_code
+	}) or do {
+		$c->log->error("ERROR: no such profile");
+		return undef;
+	};
+	
+	$c->log->debug("profile_id: " . $profile->profile_id);
+	$c->log->debug("display_name: " . $profile->display_name);
+	
+	# Populate stash, and hence form, with current values
+	$c->stash(
+		profile_code => $profile->profile_code,
+		profile_id   => $profile->profile_id,
+		profile_name => $profile->display_name,
+	);
+
+	return $profile->profile_id;
+}
+
+
+sub profile_code_from_id : Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $profile_id = shift;
+	
+	# Must have a profile code
+	$profile_id or return undef;
+
+	$c->log->debug("looking up profile_id: $profile_id");
+	my $rs = $c->model('DB::Profile');
+	my $profile = $rs->find({
+		profile_id => $profile_id
+	}) or do {
+		$c->log->error("ERROR: no such profile");
+		return undef;
+	};
+	
+	$c->log->debug("profile_id: " . $profile->profile_id);
+	$c->log->debug("display_name: " . $profile->display_name);
+	
+	# Populate stash, and hence form, with current values
+	$c->stash(
+		profile_code => $profile->profile_code,
+		profile_id   => $profile->profile_id,
+		profile_name => $profile->display_name,
+	);
+
+	return $profile->profile_code;
+}
+
 
 =head1 AUTHOR
 

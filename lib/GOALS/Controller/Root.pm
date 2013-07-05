@@ -27,11 +27,34 @@ The root page (/)
 =cut
 
 sub index :Path :Args(0) {
-    my ( $self, $c ) = @_;
-
-    return $c->response->redirect('/ui/player');
+	my ( $self, $c ) = @_;
+	$c->log->debug('no language profile specified');
+	$c->forward('/ui/get_available_profile_codes');
+	
+	
+	
 }
 
+
+sub profile_index :Path :Args(1) {
+	my ( $self, $c, $profile_code ) = @_;
+	$c->log->debug('language profile ' . $profile_code);
+    
+	# Validate profile id, populate stash and session with result
+	my $profile_id = $c->forward('/ui/profile_id_from_code', [$profile_code]);
+	unless($profile_id) {
+		$c->error("invalid profile_code supplied");
+		die;
+	}
+	
+	$c->session(
+		profile_code => $profile_code,
+		profile_id   => $profile_id,
+		profile_name => $c->stash->{profile_name},
+	);
+	
+	return $c->response->redirect("/ui/player");
+}
 
 
 
@@ -55,6 +78,19 @@ Attempt to render a view, if needed.
 =cut
 
 sub end : ActionClass('RenderView') {}
+
+
+sub auto :Private {
+
+	my $self = shift;
+	my $c = shift;
+	
+	$c->log->debug('root::auto method called');
+	my $t = $c->session_expires(1);
+	$c->log->debug("session expires: $t");
+	
+	return 1;
+}
 
 
 

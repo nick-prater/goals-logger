@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+
+<!--
+    This file is part of GOALS-logger, a broadcast audio logging system by:
+       Nick Prater
+       Andrew White
+       Paul Kelly
+
+    Copyright (C) 2012 NP Broadcast Limited.
+
+    GOALS-logger is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    GOALS-logger is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>talkSPORT GOALS</title>
+		[% INSERT goals.css %]
+	</head>
+	<body>
+
+		<div id="profile_choice_container">
+	
+			<h1>GOALS-logger system</h1>
+		
+			<h2>Please select a profile to use:</h2>
+		
+			<ul>
+			
+				[% FOREACH key IN profile_codes.keys %]
+				<li>
+					<a href="/[% key %]">[% profile_codes.$key %]</a>
+				</li>
+				[% END %]
+			</ul>
+			
+		</div>
+	
+	</body>
+
+</html>

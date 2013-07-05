@@ -76,7 +76,6 @@ process_channel_dirs(
 );
 
 
-$log->info("flush_rot_archive run finished");
 $pid->remove;
 exit;
 

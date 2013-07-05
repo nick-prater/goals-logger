@@ -48,8 +48,7 @@ sub new {
 	# Set and validate number of channels
 	$self->{ports} = $args{ports};
 	unless($self->{ports}) {
-		$log->error("tried to create a new NPB::Audio::Rotter instance without specifying JACK ports to use");
-		return undef;
+		$log->warn("creating a new NPB::Audio::Rotter instance without specifying JACK ports to use");
 	}
 	
 	$self->{channel_count} = scalar( @{$self->{ports}} );
@@ -91,13 +90,17 @@ sub start {
 	my @command = (
 		$self->{rotter_path},
 		'-f', $self->{format},
-		'-c', $self->{channel_count},
+		'-c', ($self->{channel_count} || 1),
 		'-L', $self->{layout},
 		'-j',        # Don't automatically start jackd
 		'-p', 60,    # create files of 1 minute duration
 		'-u',        # use UTC times for file names
-		'-l', $self->{ports}[0],
 	);
+
+	# Add first recording channel if specified
+	if( $self->{channel_count} > 0 ) {
+		push(@command, '-l', $self->{ports}[0]);
+	}
 	
 	# Add second channel if recording stereo
 	if( $self->{channel_count} > 1 ) {
@@ -162,6 +165,14 @@ sub is_alive {
 	my $alive = $self->{proc} && $self->{proc}->poll;
 	return $alive;
 };
+
+
+
+sub jack_client_port {
+
+	my $self = shift;
+	return $self->{jack_client_name} . ':mono';
+}
 
 
 

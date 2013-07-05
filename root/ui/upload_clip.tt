@@ -166,6 +166,9 @@
 							<button type="button" onclick='window.location.href = "/ui/player"'>Cancel</button>
 						</li>
 					</ol>
+					
+					<input type="hidden" name="profile_id" value="[% c.session.profile_id %]" />
+					<input type="hidden" name="profile_code" value="[% c.session.profile_code %]" />
 				</form>
 				
 			</div>
@@ -197,6 +200,7 @@
 
 					if(request.status != 200) {
 						message_div.innerHTML = "Error " + request.status + " occurred uploading your file.<br \/>";
+						delete request;
 						return;
 					}
 									
@@ -208,7 +212,7 @@
 					
 					if(response.clip_id) {
 						/* Clip created OK - forward to hotkey assignment */
-						window.location.href = "assign_clips?clip_id=" + response.clip_id;
+						window.location.href = "/ui/assign_clips?clip_id=" + response.clip_id;
 					}
 					else {
 						/* Process the payload */

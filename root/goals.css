@@ -22,10 +22,16 @@
 
 <style type="text/css">
 
+	#profile_choice_container {
+		margin: auto;
+		width:30em;
+	}
+
+
 	#source_list_container {
 		position: absolute;
 		left:0%;
-		top:5%;
+		top:0%;
 		width:10%;
 	}
 
@@ -59,6 +65,11 @@
 		font-size: 90%;
 	}
 	
+	.profile_name {
+		text-align: center;
+		background: #222;
+		color: #fff;
+	}
 	
 	/* Styling for studio player 'Button Box' */
 	table.button_box {
@@ -69,25 +80,30 @@
 
 	td.button_box, tr.button_box {
 		border: 3px solid black;
+		height: 6em;
 	}
 		
 	.button_box_button {
 		position: relative;
+		height: 100%;
 		/*background: #ff0000; */
 	}
 	
 	.button_box_button_playing {
 		position: relative;
+		height: 100%;
 		background: #bbffbb;
 	}
 
 	.button_box_button_assigning {
 		position: relative;
+		height: 100%;
 		background: #ffffbb;
 	}
 
 	.button_box_button_clearing {
 		position: relative;
+		height: 100%;
 		background: #ffffbb;
 	}
 	
@@ -97,6 +113,13 @@
 	
 	.button_box_duration {
 		text-align: center;
+		position: absolute;
+		width: 10em;
+		height: 1em;
+		left: 50%;
+		margin-left: -5em;
+		top: 50%;
+		margin-top: -0.5em;
 	}
 	
 	.button_box_play_link {
@@ -119,7 +142,21 @@
 		text-align: center;
 		bottom: 0%;
 	}
+
+	#clip_list_container {
+		position: relative;
+	}
+
+	.clip_list_div {
+		position: absolute;
+	}
 	
+	.clip_list_heading_links {
+		position: absolute;
+		top: 0.1em;
+		left: 1.8em;
+	}
+
 		
 	table#clip_list {
 		width: 100%;
@@ -144,6 +181,14 @@
 	
 	.play_row {
 		background: #bbffbb;
+	}
+
+	.clip_list_link_heading {
+		width: 18.2em;
+	}
+
+	.clip_list_checkbox {
+		width: 1.2em;
 	}
 	
 	.clip_list_assign {
@@ -202,6 +247,66 @@
 		text-align: center;
 		height: 12pt;
 		
+	}
+	
+	
+	
+	
+	
+	form#channel_metadata label {
+		float: left;
+		font-size: 14px;
+		width: 110px;
+	}
+
+	form#channel_metadata ol li {
+		list-style: none;
+	}
+	
+	
+	
+	
+	
+	table#channel_list {
+		width: 100%;
+		table-layout: fixed;		
+	}
+	
+	table#channel_list tr.channel_row:nth-child(even) { 
+		background: #e3E3E3;		
+	}
+		
+	.channel_row_greyed {
+		color: #666;
+	}
+	
+	.channel_list_edit {
+		width: 4em;
+		text-align: center;
+	}
+	
+	.channel_list_source {
+		width: 8em;
+		text-align: left;		
+	}
+	
+	.channel_list_profile {
+		width: 8em;
+		text-align: left;		
+	}	
+	
+	.channel_list_match {
+		width: 15em;
+		text-align: left;		
+	}
+	
+	.channel_list_commentator {
+		text-align: left;		
+	}
+
+	.channel_list_recording {
+		width: 5em;
+		text-align: center;
 	}
 	
 </style>

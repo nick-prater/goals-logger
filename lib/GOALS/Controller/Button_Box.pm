@@ -47,11 +47,14 @@ sub audio : Local : Args(1) {
 	};
 	
 	my $clip_id = $rs->clip_id;
+	my $profile_code = $rs->profile->profile_code;
+	
+	$c->log->debug("clip has profile_code: $profile_code");
 	
 	# Respond according to whether a button has a clip assigned or not
 	if($clip_id) {
 		my $prefix = $c->config->{clip_url_prefix} || '';
-		my $url = "$prefix/clip/$clip_id.wav";
+		my $url = "$prefix/clip/$profile_code/$clip_id.wav";
 		$c->log->debug("button $button_id maps to clip_id $clip_id");
 		$c->log->debug("redirecting to $url");
 		$c->response->redirect($url);		
@@ -67,7 +70,7 @@ sub clear_button : Local : Args(1) {
 
 	my $self = shift;
 	my $c = shift;
-	my $button_id = shift;
+	my $button_id = shift;	
 
 	$c->log->debug("clearing button_id $button_id");
 	
@@ -148,6 +151,8 @@ sub refresh_buttons_config : Private {
 	my $c = shift;
 	my $ini = '';
 	
+	$c->log->debug("refresh_buttons_config called");
+	
 	$c->forward('get_hotkeys');
 	
 	# Create output in the form:
@@ -158,11 +163,13 @@ sub refresh_buttons_config : Private {
 	#[Button 2]
 	#File=
 	#Text=
-	
+	my $button_id = 0;
 	foreach my $button( @{$c->stash->{hotkey_buttons}} ) {
 	
+		$button_id ++;
+	
 		my $path = $button->clip ? sprintf("%s.wav", $button->clip_id) : '';
-		$ini .= "[Button " . $button->button_id . "]\r\n";
+		$ini .= "[Button $button_id]\r\n";
 		$ini .= "File=$path\r\n";
 		$ini .= "Text=" . ($button->clip ? $button->clip->title : '') . "\r\n";
 		$ini .= "\r\n";
@@ -173,15 +180,16 @@ sub refresh_buttons_config : Private {
 	);
 	
 	# Write ini configuration data to file
-	if( my $dest_path = $c->config->{playout_buttons_ini_path} ) {
-		$c->forward(
-			'write_ini',
-			[ $c->config->{playout_buttons_ini_path} ]
-		);
-	}
-	else {
-		$c->log->warn("not writing ini file to disk as playout_buttons_ini_path is not defined in global configuration");
-	}
+	my $dest_path = sprintf(
+		"%s/%s/buttons.ini",
+		$c->config->{clips_path},
+		$c->session->{profile_code},
+	);
+	
+	$c->forward(
+		'write_ini',
+		[ $dest_path ]
+	);
 }
 
 
@@ -219,6 +227,14 @@ sub refresh_sources_ini : Private {
 	my $c = shift;
 	my $ini = '';
 
+	$c->log->debug('refresh_sources_ini called');
+	
+	# We need a profile_code to filter out irrelevant channels
+	unless($c->session->{profile_id} && $c->session->{profile_code}) {
+		$c->error("refresh_sources_ini() called without a session profile_id");
+		die;
+	}	
+	
 	$c->forward('get_sources');
 	
 	# Output ini file in the form:
@@ -227,15 +243,27 @@ sub refresh_sources_ini : Private {
 	#
 	#[Button 2]
 	#Text=Tony Incenzo QPR
-
+	my $button_id = 0;
 	foreach my $channel( @{$c->stash->{channels}} ) {
-		my $label = sprintf(
-			"%s %s",
-			 $channel->commentator || '',
-			 $channel->match_title || '',
-		);
-		$ini .= "[Button " . $channel->channel_id . "]\r\n";
-		$ini .= "Text=$label\r\n";	
+		
+		$button_id ++;
+		
+		if($channel->profile_id != $c->session->{profile_id}) {
+			# Insert an empty button if this channel isn't in
+			# our profile
+			$ini .= "[Button $button_id]\r\n";
+			$ini .= "Text=\r\n";
+		}
+		else {
+			# Insert the button		
+			my $label = sprintf(
+				"%s %s",
+				$channel->commentator || '',
+				$channel->match_title || '',
+			);
+			$ini .= "[Button " . $channel->channel_id . "]\r\n";
+			$ini .= "Text=$label\r\n";
+		}
 	}
 
 	$c->stash(
@@ -243,15 +271,17 @@ sub refresh_sources_ini : Private {
 	);
 	
 	# Write ini configuration data to file
-	if( my $dest_path = $c->config->{playout_labels_ini_path} ) {
-		$c->forward(
-			'write_ini',
-			[ $c->config->{playout_labels_ini_path} ]
-		);
-	}
-	else {
-		$c->log->warn("not writing ini file to disk as playout_labels_ini_path is not defined in global configuration");
-	}
+	my $dest_path = sprintf(
+		"%s/%s/labels.ini",
+		$c->config->{clips_path},
+		$c->session->{profile_code},
+	);
+	
+	$c->forward(
+		'write_ini',
+		[ $dest_path ]
+	);
+	
 }
 
 
@@ -261,7 +291,9 @@ sub get_hotkeys : Private {
 	my $c = shift;
 
 	my @records = $c->model('DB::Button')->search(
-		{ },
+		{
+			profile_id => $c->session->{profile_id},
+		},
 		{
 			order_by => { -asc => 'button_id'},
 			join => 'clip',
@@ -312,7 +344,7 @@ sub write_ini : Private {
 	
 	# Output data to file
 	print $fh $c->stash->{ini_data} or do {
-		$c->error("ERROR writing ini data to temporart file: $!");
+		$c->error("ERROR writing ini data to temporary file: $!");
 		die;
 	};
 	

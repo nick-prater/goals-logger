@@ -39,51 +39,62 @@ sub delete : Path('delete') : Args(1) {
 
 	my $self = shift;
 	my $c = shift;
-	my $clip_id = shift;
+	my $clip_list = shift;
+
+	# Clip list is a comma separated list of clips to delete
+	my @clips = split(/,/, $clip_list);
+
+	foreach my $clip_id(@clips) {
+
+		# Deleting a clip really does delete it. Maybe in future we should
+		# have a grace period and an undelete feature? Like we do for events.
+		# The clips table already has a 'deleted' value for status. We would need
+		# to add an update_timestamp field.
+	
+		$clip_id && $clip_id =~ m/^\d+$/ or next;
+	
+		$c->log->debug("deleting clip $clip_id");
 		
-	# Deleting a clip really does delete it. Maybe in future we should
-	# have a grace period and an undelete feature? Like we do for events.
-	# The clips table already has a 'deleted' value for status. We would need
-	# to add an update_timestamp field.
-	
-	$c->log->debug("deleting clip $clip_id");
-	
-	# Remove database record
-	$c->log->debug("removing database record for clip $clip_id");
-	my $rs = $c->model('DB::Clip');
-	my $clip = $rs->find({
-		clip_id => $clip_id
-	}) or do {
-		die "No such event";
-	};
-	
-	$clip->delete or do {
-		$c->error("problem deleting clip_id=$clip_id from database");
-		die;
-	};
-	
-	# Remove wav file
-	my $clip_dir = $c->config->{clips_path};
-	unless( $clip_dir && -d $clip_dir ) {
-		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
-		die;
-	}
-	
-	my $clip_path = sprintf(
-		"%s/%u.wav",
-		$clip_dir,
-		$clip_id
-	);
-	
-	$c->log->debug("deleting file $clip_path");
-	unlink($clip_path) or do {
-		$c->error("ERROR deleting file $clip_path: $!");
-		die;	
-	};
+		# Remove database record
+		$c->log->debug("removing database record for clip $clip_id");
+		my $rs = $c->model('DB::Clip');
+		my $clip = $rs->find({
+			clip_id => $clip_id
+		}) or do {
+			die "No such event";
+		};
+		
+		my $profile_code = $clip->profile->profile_code;
+		$c->log->debug("clip has profile code: $profile_code");
+		
+		$clip->delete or do {
+			$c->error("problem deleting clip_id=$clip_id from database");
+			die;
+		};
+		
+		# Remove wav file
+		my $clip_dir = $c->config->{clips_path} . "/$profile_code";
+		unless( $clip_dir && -d $clip_dir ) {
+			$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
+			die;
+		}
+		
+		my $clip_path = sprintf(
+			"%s/%u.wav",
+			$clip_dir,
+			$clip_id
+		);
+		
+		$c->log->debug("deleting file $clip_path");
+		unlink($clip_path) or do {
+			$c->error("ERROR deleting file $clip_path: $!");
+			die;	
+		};
+	}	
 	
 	# We should return something more meaningful, but for now OK is fine
 	$c->response->content_type('text/plain');
-	$c->response->body("OK\nevent_id=" . $clip->clip_id);	
+	$c->response->body("OK");	
 }
 
 
@@ -257,6 +268,12 @@ sub all : Path('all') : Args(0) {
 	$search_params->{join} = 'buttons';
 	$where->{button_id} = undef;
 	
+	# Restrict results by profile_id, if parameter is supplied
+	if( $c->session->{profile_id} ) {
+		$c->log->debug("searching for clips with profile_id: " . $c->session->{profile_id} );
+		$where->{'me.profile_id'} = $c->session->{profile_id};
+	}
+	
 	# Restrict results by status, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('status') ) {
@@ -342,6 +359,11 @@ sub upload : Path : Local {
 	my $self = shift;
 	my $c = shift;
 	
+	unless( $c->session->{profile_id} ) {
+		$c->log->warn("upload called without a session profile_id");
+		$c->response->redirect('/');
+	}
+	
 	# Check we have an audio file to process
 	my $upload = $c->request->upload('clip_file') or do {
 		$c->error("ERROR: no upload file specified");
@@ -382,6 +404,7 @@ sub upload : Path : Local {
 		category => $params->{category},
 		language => $params->{language},
 		duration_seconds => $duration_seconds,
+		profile_id => $c->session->{profile_id},
 	}) or do {
 		$c->error("ERROR inserting clip row in database");
 		die;
@@ -391,7 +414,12 @@ sub upload : Path : Local {
 	
 	# Move uploaded file to clips directory
 	# Destination of clips is specified in global configuration file
-	my $dest_dir = $c->config->{clips_path};
+	# combined with supplied profile code (which has been validated above)
+	my $dest_dir = sprintf(
+		"%s/%s",
+		$c->config->{clips_path},
+		$params->{profile_code},
+	);
 	unless( $dest_dir && -d $dest_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;
@@ -445,6 +473,22 @@ sub create : Path : Local {
 		$c->log->debug("$_ :: $params->{$_}");
 	}
 
+	# Validate profile_code
+	unless($c->session->{profile_id} && $c->session->{profile_code}) {
+		$c->error("create() called without a session profile_id");
+		die;
+	}	
+	
+        # As we use the submitted profile code to determine a
+        # filesystem directory name, verify it is valid, by translating
+        # into a an id. This is necessary to prevent
+        # malicious behabviour 
+	my $profile_id = $c->forward(  '/ui/profile_id_from_code', [ $c->session->{profile_code} ] );
+	unless($profile_id) {
+		$c->error("ERROR: profile_code parameter is missing or invalid");
+		die;
+	}
+ 
 	# Look up relevant channel data;
 	my $channel;
 	if( $params->{channel_id} ) {
@@ -455,7 +499,6 @@ sub create : Path : Local {
 	};
 	unless ($channel) {
 		$c->error("unable to find channel record associated with this clip, populating channel fields with nulls");
-		die;
 	}
 	
 	# TODO:
@@ -499,6 +542,7 @@ sub create : Path : Local {
 		event_id => $params->{event_id},
 		clip_start_timestamp => $start_dt,
 		clip_end_timestamp => $end_dt,
+		profile_id => $c->session->{profile_id},
 	}) or do {
 		$c->error("ERROR inserting clip row in database");
 		die;
@@ -516,7 +560,7 @@ sub create : Path : Local {
 	};
 	
 	# Destination of clips is specified in global configuration file
-	my $dest_dir = $c->config->{clips_path};
+	my $dest_dir = $c->config->{clips_path} . '/' . $c->session->{profile_code};
 	unless( $dest_dir && -d $dest_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;

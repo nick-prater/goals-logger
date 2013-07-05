@@ -32,7 +32,7 @@
 			#source_list_container {
 				position: absolute;
 				left:0%;
-				top:5%;
+				top:2%;
 				width:10%;
 			}
 
@@ -58,6 +58,12 @@
 			#clip_list_container {
 				height: 60%;
 				overflow: auto;
+			}
+			
+			.profile_name {
+				text-align: center;
+				background: #222;
+				color: #fff;
 			}
 			
 			#clip_list {
@@ -172,7 +178,9 @@
 	
 		<div id="source_list_container">
 
-			<hr />
+			<div class="profile_name">[% c.session.profile_name %]</div>
+			<p />
+			
 			<div align="center"><b>event filter</b></div>
 			<form>
 				<fieldset>
@@ -211,11 +219,11 @@
 				</fieldset>
 			</form>
 			<hr />
-			<a href="/channels">channel names</a>
+			<a href="/channels/list">channels</a>
 			<br />
-			<a href="upload_clip">upload clip</a>
+			<a href="/ui/upload_clip">upload clip</a>
 			<br />
-			<a href="assign_clips">hotkeys</a>
+			<a href="/ui/assign_clips">hotkeys</a>
 			<hr />
 
 		</div>
@@ -298,13 +306,13 @@
 						<div class="side_buttons_heading">trim start</div>
 						
 						<div>
-							<div class="side_buttons_label">&mdash; 10s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;10s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-10)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(10)">&rarr;</button>
 						</div>
-						
+						<br />
 						<div>
-							<div class="side_buttons_label">&mdash; 30s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;30s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-30)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(30)">&rarr;</button>
 						</div>
@@ -313,13 +321,14 @@
 					
 					<div id="buttons_right_of_player">
 						<div class="side_buttons_heading">trim end</div>
-						<div class="side_buttons_label">&mdash; 10s &mdash;</div>
 						<div>
+							<div class="side_buttons_label">&mdash;&nbsp;10s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-10)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(10)">&rarr;</button>
 						</div>
-						<div class="side_buttons_label">&mdash; 30s &mdash;</div>
+						<br />
 						<div>
+							<div class="side_buttons_label">&mdash;&nbsp;30s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-30)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(30)">&rarr;</button>
 						</div>
@@ -334,13 +343,13 @@
 						<div class="side_buttons_heading">trim start</div>
 						
 						<div>
-							<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;0.1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-0.1)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(0.1)">&rarr;</button>
 						</div>
-						
+						<br />	
 						<div>
-							<div class="side_buttons_label">&mdash; 1s &mdash;</div>
+							<div class="side_buttons_label">&mdash;&nbsp;1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-1.0)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(1.0)">&rarr;</button>
 						</div>
@@ -349,13 +358,14 @@
 					
 					<div id="buttons_right_of_player">
 						<div class="side_buttons_heading">trim end</div>
-						<div class="side_buttons_label">&mdash; 0.1s &mdash;</div>
 						<div>
+							<div class="side_buttons_label">&mdash;&nbsp;0.1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-0.1)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(0.1)" >&rarr;</button>
 						</div>
-						<div class="side_buttons_label">&mdash; 1s &mdash;</div>
+						<br />
 						<div>
+							<div class="side_buttons_label">&mdash;&nbsp;1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_end(-1.0)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_end(1.0)">&rarr;</button>
 						</div>
@@ -611,7 +621,7 @@
 			var poll_ajax_timer;
 			refresh_event_list();
 			
-			
+
 			function play_pause() {
 
 				/* If we are playing, then pause.
@@ -766,7 +776,7 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = seconds_to_hours_mins_secs(duration_seconds);
 				
 				/* Show clip_details div */
 				clip_metadata.style.display = "block";
@@ -800,9 +810,18 @@
 			
 			function trim_start(seconds) {
 			
+				/* Trimming is based on the duration of audio in the player
+				 * if there is no audio loaded, perhaps because we are still waiting for
+				 * a clip to load, trimming is invalid, so do nohing
+				 */	
+				var current_duration_seconds = player.duration;
+				if(isNaN(current_duration_seconds)) {
+					return;
+				}
+	
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf() + (seconds * 1000);
-				var out_point_ms = audio_start_dt.valueOf() + (player.duration * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + (current_duration_seconds * 1000);
 				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
 				
 				/* This updates the drop down boxes to reflect the given start/end points */
@@ -814,17 +833,24 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 			}
 			
 			
 			function trim_end(seconds) {
-			
-				//alert("trim end " + seconds);
-			
+		
+				/* Trimming is based on the duration of audio in the player
+				 * if there is no audio loaded, perhaps because we are still waiting for
+				 * a clip to load, trimming is invalid, so do nohing
+				 */	
+				var current_duration_seconds = player.duration;
+				if(isNaN(current_duration_seconds)) {
+					return;
+				}
+
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf();
-				var out_point_ms = audio_start_dt.valueOf() + ((player.duration + seconds) * 1000);
+				var out_point_ms = audio_start_dt.valueOf() + ((current_duration_seconds + seconds) * 1000);
 				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
 				
 				/* This updates the drop down boxes to reflect the given start/end points */
@@ -837,7 +863,7 @@
 				
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = ( seconds_to_mins_secs(duration_seconds) );
+				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 			}
 			
 			
@@ -1115,6 +1141,13 @@
 
 			function load_waveform(event) {
 
+				/* Waveform takes time to generate on server
+				 * so load the default image to blank the old waveform
+				 * until the new waveform is ready
+				 */
+				var image = document.getElementById("waveform_image");
+                                image.setAttribute("xlink:href", "/default_waveform.png");
+
 				/* Extract actual size in pixels of SVG on screen */
 				var bounds = waveform_svg.getBoundingClientRect();
 				
@@ -1137,7 +1170,6 @@
 				waveform_uri += "/" + Math.floor(bounds.height);
 				waveform_uri += "/" + '112233'; // colour in rrggbb html format
 				
-				var image = document.getElementById("waveform_image");
 				image.setAttribute("xlink:href",waveform_uri);
 			}
 			
@@ -1208,26 +1240,34 @@
 			}
 			
 
-			function seconds_to_mins_secs(seconds) {
+			function seconds_to_hours_mins_secs(seconds) {
 			
-				/* Given a number of seconds, returns a string in format M:SS */
-				var minutes = Math.floor(seconds / 60);
+				/* Given a number of seconds, returns a string in format "H hours M minutes S seconds" */
+				var hours = Math.floor(seconds / 3600);
+				var minutes = Math.floor((seconds % 3600 / 60));
 				seconds = Math.floor(seconds % 60);
 				var rv = "";
-				
+			
+				/* Only output hours if duration is >= 1 hour */
+				if(hours > 0) {
+					rv = hours + " hour";
+					if(hours != 1) { rv += "s" }; // plural-ise if required
+					rv += "  ";
+				}
+
+	
 				/* Only output minutes if duration is >= 1 minute */
-				if( minutes > 0 ) {
-					rv = minutes + " minute";
-					if(minutes > 1) { rv += "s" }; // plural-ise if required
+				if( minutes > 0 || hours > 0) {
+					rv += minutes + " minute";
+					if(minutes != 1) { rv += "s" }; // plural-ise if required
 					rv += "  ";
 				}
 				
 				/* Always output seconds */
 				rv += seconds + " second";
-				if(seconds > 1) { rv += "s" }; // plural-ise if required
+				if(seconds != 1) { rv += "s" }; // plural-ise if required
 				
 				return rv;
-				
 			}
 
 			
@@ -1385,7 +1425,6 @@
 			}
 
 	
-	
 			function refresh_event_list() {
 			
 				var request = new XMLHttpRequest();
@@ -1393,20 +1432,23 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if(request.readyState != 4) {
+						/* request has not yet completed */
 						return;
 					}
-				
-					/* Extract and parse payload */
-					var response = JSON.parse(request.responseText);
+
+					if(request.status == 200) { 
+			
+						/* Extract and parse payload */
+						var response = JSON.parse(request.responseText);
+		
+						/* Process the payload */
+						process_event_json(response);
+					}
 					
 					/* Free Up HTTP request object */
 					delete request;
 				
-					/* Process the payload */
-					process_event_json(response);
-					
 					/* Schedule next update timer if we're running it */
 					if(poll_ajax_timer_period_ms) {
 						polL_ajax_timer = setTimeout("refresh_event_list()", poll_ajax_timer_period_ms);
@@ -1547,14 +1589,25 @@
 					spec.end_iso
 				)
 				
-				//alert("DEBUG: loading audio_url: " + audio_url);
-				
+				if( isNaN(spec.channel_id) || spec.channel_id == 0 ) {
+					alert("Please select an audio source");
+					return;
+				}
+
+				/* If end time is earlier than start time, it is interpreted
+				 * as being the following day
+				 */
+
 				/* Stop player and reset flags */
 				player.pause;
 				player.src = audio_url;
 				clear_mark();
 				audio_start_dt = spec.start_dt;
 				audio_end_dt   = spec.end_dt;
+				set_audio_times_from_local_epoch_ms(
+					spec.start_epoch_ms,
+					spec.end_epoch_ms
+				);
 			}
 			
 			/* We set the select boxes to the appropriate local time,
@@ -1571,102 +1624,52 @@
 				load_audio();
 			}
 		
-		
-			function delete_event(event_id) {
+	
+			function call_event_action(cmd, event_id) {
 			
-				var row_id = "event_row_" + event_id;
-				//remove_table_row("clip_list", row_id);
-							
-				/* And fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
 				
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+			
+					if(request.readyState != 4) {
+						/* request has not yet completed */
 						return;
 					}
-				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
+	
+					if (request.status == 200) {
+						refresh_event_list();
+					}
 					
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					refresh_event_list();
 				}
 			
 				/* Send request */
-				var url = "/events/delete/" + event_id;
+				var url = "/events/" + cmd + "/" + event_id;
 				request.open("GET", url, true);
 				request.send();				
 			}
 		
 		
+			function delete_event(event_id) {
+
+				call_event_action('delete', event_id);
+			}
+
+
 			function undelete_event(event_id) {
-										
-				/* Fire off asynchronous request to server */
-				var request = new XMLHttpRequest();
-				
-				/* Define handler to deal with response */
-				request.onreadystatechange = function() {
-				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
-						return;
-					}
-				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
-					
-					/* Free Up HTTP request object */
-					delete request;
-				
-					/* Process the payload */
-					refresh_event_list();
-				}
-			
-				/* Send request */
-				var url = "/events/undelete/" + event_id;
-				request.open("GET", url, true);
-				request.send();				
+
+				call_event_action('undelete', event_id);
 			}
 
 			
 			function open_event(event_id) {
+
+				call_event_action('open', event_id);
+			}
+
 	
-				/* Set it's status to opened, asynchronously */
-										
-				/* And fire off asynchronous request to server */
-				var request = new XMLHttpRequest();
-				
-				/* Define handler to deal with response */
-				request.onreadystatechange = function() {
-				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
-						return;
-					}
-				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
-					
-					/* Free Up HTTP request object */
-					delete request;
-				
-					/* Process the payload */
-					refresh_event_list();
-				}
-			
-				/* Send request */
-				var url = "/events/open/" + event_id;
-				request.open("GET", url, true);
-				request.send();				
-			}			
-			
-		
 			function remove_table_row(table_id, row_id) {
 
 				/* Not presently using this function - just refreshing whole list */
@@ -1796,6 +1799,8 @@
  				spec.category = document.getElementById("clip_category").value;
  				spec.language = document.getElementById("clip_language").value;
  				spec.event_id = audio_event_id;
+ 				spec.profile_id = "[% c.session.profile_id %]";
+ 				spec.profile_code = "[% c.session.profile_code %]";
 			
 				var request = new XMLHttpRequest();
 				var progress_container = document.getElementById('progress_message_container');
@@ -1804,25 +1809,27 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if(request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var response = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+
+						/* Success - extract and parse payload */
+						var response = JSON.parse(request.responseText);
+		
+						if(response.clip_id) {
+							/* Clip created OK - forward to hotkey assignment */
+							window.location.href = "assign_clips?clip_id=" + response.clip_id;
+						}
+						else {
+							progress_container.innerHTML = "ERROR creating clip";
+						}
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-
-					if(response.clip_id) {
-						/* Clip created OK - forward to hotkey assignment */
-						window.location.href = "assign_clips?clip_id=" + response.clip_id;
-					}
-					else {
-						/* Process the payload */
-						progress_container.innerHTML = "ERROR creating clip";
-					}
 				}
 				
 				/* Show progress message - hide metadata */

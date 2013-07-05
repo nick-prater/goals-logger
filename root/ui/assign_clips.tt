@@ -37,8 +37,9 @@
 
 		<div id="source_list_container">
 
-			<hr />
-						
+			<div class="profile_name">[% c.session.profile_name %]</div>
+			<p />
+		
 			<div [% IF assign_clip_id %] style="display: none" [% END %]>
 			
 				<div align="center">
@@ -107,9 +108,9 @@
 			<hr />
 			
 			<span class="menu_links">
-				<a href="/channels" class="menu_links">channel names</a><br />
-				<a href="upload_clip">upload clip</a><br />
-				<a href="player">audio editor</a>
+				<a href="/channels/list" class="menu_links">channels</a><br />
+				<a href="/ui/upload_clip">upload clip</a><br />
+				<a href="/ui/player">audio editor</a>
 			</span>
 			<hr />
 
@@ -134,25 +135,26 @@
 								id="button_box_button_[% button.button_id %]"
 								onclick="click_button([% button.button_id %])"
 							>
-							
-								<span class="button_box_title" id="button_box_title_[% button.button_id %]"></span>
-								<br />
-								<br />
-								<span class="button_box_duration" id="button_box_duration_[% button.button_id %]"></span>
-								<br />
-								<br />
-								<span class="button_box_clear_link">
-									<a href="javascript:clear_button([% button.button_id %])">clear</a>
+						
+								<div class="button_box_title" id="button_box_title_[% button.button_id %]"></div>
+								<div class="button_box_duration" id="button_box_duration_[% button.button_id %]"></div>
+
+
+								<span hidden="hidden" id="button_box_links_[% button.button_id %]">
+									<div class="button_box_clear_link">
+										<a href="javascript:clear_button([% button.button_id %])">clear</a>
+									</div>
+									<div class="button_box_download_link">
+										<a href="javascript:download_button([% button.button_id %])">download</a>
+									</div>
+									<div class="button_box_play_link">
+										<a
+											href="javascript:play_button([% button.button_id %])"
+											id="button_box_play_link_[% button.button_id %]"
+										>play</a>
+									</div>
 								</span>
-								<span class="button_box_download_link">
-									<a href="javascript:download_button([% button.button_id %])">download</a>
-								</span>
-								<span class="button_box_play_link">
-									<a
-										href="javascript:play_button([% button.button_id %])"
-										id="button_box_play_link_[% button.button_id %]"
-									>play</a>
-								</span>
+
 							</div>
 						</td>
 						[% END %]
@@ -191,26 +193,33 @@
 			
 			<!-- This div contains the list of marked clips, which can be selected for editing.
 			-->
-			<div id="clip_list_container" align="center">
+			<div class="clip_list_container" id="clip_list_container" align="center">
 
-				<table id="clip_list" class="clip_list">
-				
-					<tr class="title_row">
-						<th class="clip_list_assign"></th>
-						<th class="clip_list_delete"></th>
-						<th class="clip_list_play"></th>
-						<th class="clip_list_download"></th>
-						<th class="clip_list_rename"></th>
-						<th class="clip_list_title">title</th>
-						<th class="clip_list_source">source</th>
-						<th class="clip_list_category">category</th>
-						<th class="clip_list_date">date</th>
-						<th class="clip_list_time">time</th>
-						<th class="clip_list_duration">duration</th>
-					</tr>
+				<div class="clip_list_heading_links">
+					<a href="javascript:delete_selected_clips()">delete selected</a>
+				</div>
 
-					<!-- data rows will be populated dynamically -->
-				</table>
+				<div class="clip_list_div">
+					<table id="clip_list" class="clip_list">
+					
+						<tr class="title_row">
+							<th class="clip_list_checkbox"></th>
+							<th class="clip_list_assign"></th>
+							<!-- <th class="clip_list_delete"></th> -->
+							<th class="clip_list_play"></th>
+							<th class="clip_list_download"></th>
+							<th class="clip_list_rename"></th>
+							<th class="clip_list_title">title</th>
+							<th class="clip_list_source">source</th>
+							<th class="clip_list_category">category</th>
+							<th class="clip_list_date">date</th>
+							<th class="clip_list_time">time</th>
+							<th class="clip_list_duration">duration</th>
+						</tr>
+
+						<!-- data rows will be populated dynamically -->
+					</table>
+				</div>
 			<div>
 			
 		</div>
@@ -240,11 +249,19 @@
 			player.addEventListener(
 				"timeupdate",
 				function(event) {
+
+					/* Handle possibility that player hasn't yet initialised
+					 * which can result in NaN being returned as time properties
+					 */
+					var current_seconds = player.currentTime;
+					var duration_seconds = player.duration;
+					if(isNaN(current_seconds) || isNaN(duration_seconds)) {
+						return;
+					}
 				
-					var seconds_remaining = (player.duration - player.currentTime);
+					var seconds_remaining = duration_seconds - current_seconds;
 					var duration_html = seconds_to_mins_secs(seconds_remaining);
-					
-					
+										
 					if(playing_button_id) {
 						var node = document.getElementById("button_box_duration_" + playing_button_id);
 						node.innerHTML = duration_html;
@@ -332,19 +349,19 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var json_data = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						/* Extract and parse payload */
+						var json_data = JSON.parse(request.responseText);
+						populate_button_box_from_json(json_data);
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					populate_button_box_from_json(json_data);
 				}
 			
 				/* Send request */
@@ -373,9 +390,7 @@
 					/* Update Duration */
 					node = document.getElementById('button_box_duration_' + button.button_id);
 					if(button.clip_id) {
-						var minutes = Math.floor(button.duration_seconds / 60);
-						var seconds = Math.floor(button.duration_seconds % 60);
-						node.innerHTML = minutes + ":" + zero_pad(seconds, 2);
+						node.innerHTML = seconds_to_mins_secs(button.duration_seconds);
 					}
 					else {
 						node.innerHTML = "";
@@ -387,6 +402,15 @@
 					if(assigning_clip_id != button.clip_id) {
 						node = document.getElementById("button_box_button_" + button.button_id);
 						node.setAttribute("class", "button_box_button");
+					}
+
+					/* Hide links if no clip is assigned, un-hide if clip is assigned to this button */
+					node = document.getElementById("button_box_links_" + button.button_id);
+					if(button.clip_id) {
+						node.removeAttribute("hidden");
+					}
+					else {
+						node.setAttribute("hidden", "hidden");
 					}
 				}
 			}
@@ -402,26 +426,25 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var json_data = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						var json_data = JSON.parse(request.responseText);
+						populate_clip_list_from_json(json_data);
+
+						/* If page is loaded with assign_clip_id defined, that
+						 * means we should select that clip for assignment
+						 */
+						if( [% assign_clip_id %] ) {
+							assign_clip( [% assign_clip_id %], assign_clip_title );
+						}
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					populate_clip_list_from_json(json_data);
-
-					/* If page is loaded with assign_clip_id defined, that
-					 * means we should select that clip for assignment
-					 */
-					if( [% assign_clip_id %] ) {
-						assign_clip( [% assign_clip_id %], assign_clip_title );
-					}
 				}
 			
 				/* Send request */
@@ -552,12 +575,15 @@
 				
 				/* Update/populate the fields */
 				var i = 0;
+				row.cells.item(i).innerHTML = '<input type="checkbox" name="clip_row_selected" value="' + clip_row.clip_id + '" id="clip_row_selected_' + clip_row.clip_id + '">';   // checkbox
+				row.cells.item(i).setAttribute("class", "clip_list_checkbox");
+				i++;	
 				row.cells.item(i).appendChild( generate_assign_link(clip_row) );   // Assign
 				row.cells.item(i).setAttribute("class", "clip_list_assign");
 				i++;
-				row.cells.item(i).appendChild( generate_delete_link(clip_row) );   // Delete
-				row.cells.item(i).setAttribute("class", "clip_list_delete");
-				i++;
+				//row.cells.item(i).appendChild( generate_delete_link(clip_row) );   // Delete
+				//row.cells.item(i).setAttribute("class", "clip_list_delete");
+				//i++;
 				row.cells.item(i).appendChild( generate_play_link(clip_row) );     // Play
 				row.cells.item(i).setAttribute("class", "clip_list_play");
 				i++;
@@ -687,37 +713,46 @@
  				return a;
 			}			
 
-			function delete_clip(clip_id) {
-			
-				if(clip_id == playing_clip_id) {
-					clear_player();
-				}
+
+			function delete_clip(clip_list) {
+		
+				/* This accepts either a single clip_id, or a
+				 * comma-separated list of clips.
+				 */			
+				var clips = clip_list.split(",", clip_list);
+				for(var i = 0; i < clips.length; i++) {
 				
-				if(clip_id == assigning_clip_id) {
-					cancel_assign_clip();
-				}			
-			
+					alert(clips[i]);
+	
+					if(clips[i] == playing_clip_id) {
+						clear_player();
+					}
+					
+					if(clips[i] == assigning_clip_id) {
+						cancel_assign_clip();
+					}			
+				}
+
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						/* Success */
+						update_clip_list();
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					update_clip_list();
 				}
 			
 				/* Send request */
-				var url = "/clips/delete/" + clip_id;
+				var url = "/clips/delete/" + clip_list;
 				request.open("GET", url, true);
 				request.send();				
 			}
@@ -820,20 +855,19 @@
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					var json_data = JSON.parse(request.responseText);
-					
+					if(request.status == 200) {
+						var json_data = JSON.parse(request.responseText);
+						populate_button_box_from_json(json_data);
+						update_clip_list();
+					}
+
 					/* Free Up HTTP request object */
 					delete request;
-				
-					/* Process the payload */
-					populate_button_box_from_json(json_data);
-					update_clip_list();
 				}
 			
 				/* Send request */
@@ -871,7 +905,7 @@
 				
 				/* Change link from 'play' to 'stop' */
 				var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
-				play_link.innerHTML = 'stop';				
+				play_link.innerHTML = 'stop';
 			}
 			
 			
@@ -897,37 +931,39 @@
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
 				
-					/* Only respond to successful completion */
-					if (request.readyState != 4 || request.status != 200) {
+					if (request.readyState != 4) {
+						/* Request not yet complete */
 						return;
 					}
 				
-					/* Extract and parse payload */
-					//var response = JSON.parse(request.responseText);
+					if(request.status == 200) {
+						/* success */
+						update_buttons();
+						set_user_message("");
 					
-					/* Free Up HTTP request object */
-					delete request;
-
-					update_buttons();											
-					//set_user_message("OK : clip assigned to button");
-					
-					/* Set timeout to clear user message */
-					message_timeout = setTimeout(
-						function() {
-							/* If page is loaded with assign_clip_id defined, that
-							* means we are only assigning a single clip, so return to player */
-							if([% assign_clip_id %]) {
+						/* Set timeout to clear user message */
+						message_timeout = setTimeout(
+							function() {
+								/* If page is loaded with assign_clip_id defined, that
+								* means we are only assigning a single clip, so return to player */
+								if([% assign_clip_id %]) {
+									assign_clip_id = 0;
+									window.location.href = "/ui/assign_clips";
+								}
+							
 								assign_clip_id = 0;
-								window.location.href = "player";
-							}
-							
-							assign_clip_id = 0;
-							
-						},
-						500
-					);
+							},
+							500
+						);
 					
-					update_clip_list(); // has side-effect of clearing user message
+						update_clip_list(); // has side-effect of clearing user message
+					}
+					else {
+						/* some kind of error occurred */
+						set_user_message("error saving clip to button");
+					}
+					
+					delete request;
 				}
 
 				set_user_message("saving clip to button, please wait...");
@@ -964,7 +1000,7 @@
 				
 				var audio_url = (
 					"[% clip_url_prefix %]" +
-					"/clip/" +
+					"/clip/[% c.session.profile_code %]/" +
 					clip_id +
 					".wav"
 				)
@@ -979,24 +1015,42 @@
 			
 				var audio_url = (
 					"[% clip_url_prefix %]" +
-					"/clip/" +
+					"/clip/[% c.session.profile_code %]/" +
 					clip_id +
 					".wav"
 				)
 
 				window.open(audio_url, "_self");
 			}
+		
 			
-			
-			
+			function delete_selected_clips() {
+
+				/* Build comma-separated list of selected clips */
+				var clip_list = "";
+				var checkboxes = document.getElementsByName("clip_row_selected");
+				for(var i = 0; i < checkboxes.length; i++) {
+					if(checkboxes[i].checked) {
+						clip_list += checkboxes[i].value + ',';
+					}
+				}
+
+				delete_clip(clip_list);
+			}
+
+
 			function seconds_to_mins_secs(seconds) {
 			
 				/* Given a number of seconds, returns a string in format M:SS */
+
+				/* Return empty string if argument is non-numeric */
+				if(isNaN(seconds)) {
+					return "";
+				}
+
 				var minutes = Math.floor(seconds / 60);
 				seconds = Math.floor(seconds % 60);
-				var rv = "";
-				
-				rv = minutes + ":" + zero_pad(seconds, 2);
+				var rv = minutes + ":" + zero_pad(seconds, 2);
 				return rv;				
 			}
 			
