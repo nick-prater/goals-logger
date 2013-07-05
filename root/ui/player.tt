@@ -219,7 +219,7 @@
 				</fieldset>
 			</form>
 			<hr />
-			<a href="/channels/list">channel names</a>
+			<a href="/channels/list">channels</a>
 			<br />
 			<a href="/ui/upload_clip">upload clip</a>
 			<br />
