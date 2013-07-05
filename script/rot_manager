@@ -49,7 +49,8 @@ use Config::ApacheFormat;
 use File::Pid;
 
 our $VERSION = 1.0;
-my $LOOP_DELAY_SECONDS = 25;
+my $PROCESS_CHECK_DELAY_SECONDS = 25;
+my $CONFIG_CHECK_DELAY_SECONDS = 2;
 my $SKIP_DAEMONISE = 0;
 
 # Config file can be specified as a command line argument
@@ -88,6 +89,8 @@ $log->info("channel configuration loaded with ", scalar(@channels), " channels")
 # Keep track of each child record process, keyed by unique channel_id
 # Global state variable
 my %recorders;
+my $next_process_check_time = 0;
+my $last_channel_config_mtime = 0;
 
 
 while (1) {
@@ -135,8 +138,15 @@ while (1) {
 
 	}
 
-	$log->info("sleeping for $LOOP_DELAY_SECONDS seconds, or until interrupted by a signal");
-	sleep $LOOP_DELAY_SECONDS;	
+
+	$log->info("sleeping for $PROCESS_CHECK_DELAY_SECONDS seconds before checking record processes");
+	$log->info("checking for configuration file changes every $CONFIG_CHECK_DELAY_SECONDS seconds");
+	$next_process_check_time = time + $PROCESS_CHECK_DELAY_SECONDS;
+	
+	while(time < $next_process_check_time) {
+		sleep $CONFIG_CHECK_DELAY_SECONDS;
+		check_channel_config($config->{channel_config_path});
+	}
 }
 
 
@@ -228,6 +238,29 @@ sub read_channel_config {
 }
 
 
+sub check_channel_config {
+
+	# This function updates the following global placeholders:
+	#     $last_channel_config_mtime
+	#     $channel_config
+	#     $next_process_check_time
+	#     @channels
+	my $path = shift;
+	my $m = -M $path;
+
+	if($last_channel_config_mtime != $m) {
+		$log->info("channel configuration has changed");
+
+		$channel_config = read_channel_config( $config->{channel_config_path} ) or return;
+		@channels = $channel_config->findnodes('/channels/channel');
+		$log->info("new channel configuration loaded with ", scalar(@channels), " channels");
+
+		$last_channel_config_mtime = $m;
+		$next_process_check_time = 0;
+	}
+}
+
+
 sub handle_SIGINT_TERM {
 
 	$log->info("received SIGINT or SIGTERM, shutting down...");
@@ -247,7 +280,7 @@ sub handle_SIGINT_TERM {
 sub handle_SIGCHLD {
 
 	$log->debug("received SIGCHLD");
-
+	$next_process_check_time = 0;
 }
 
 
