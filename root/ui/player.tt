@@ -385,12 +385,14 @@
 						height="20%"
 					>
 
-						<rect
-							width="100%"
-							height="100%"
-							stroke="rgb(0,0,0)"
-							fill="rgb(255,255,255)"
-						/>
+						<g id="waveform_background">
+							<rect
+								width="100%"
+								height="100%"
+								stroke="rgb(0,0,0)"
+								fill="rgb(150,150,150)"
+							/>
+						</g>
 					
 						<image
 							x="0%"
@@ -1130,7 +1132,8 @@
 			
 			/* Dynamically load the waveform once the player starts loading data */
 			player.addEventListener("loadstart", load_waveform);
-			
+			player.addEventListener("progress", update_progress);
+	
 			/* Resize event only triggers on outermost container, therfore
 			 * we have to listen to the window.resize event, rather than the
 			 * waveform_svg.resize event.
@@ -1138,6 +1141,110 @@
 			 * for the load event, yet putting an onload(...) into the svg tag itself
 			 * is working fine... hmmmm... */
 			window.addEventListener("resize", load_waveform);
+
+			function update_progress(event) {
+
+				var regions = player.buffered;
+
+				var i;
+				for(i = 0; i < regions.length; i ++) {
+					var t1 = regions.start(i);
+					var t2 = regions.end(i);
+					draw_buffer_region(i, t1, t2);
+				}
+
+				/* Clear any buffer regions with a higher index
+				 * it's possible there are now fewer regions than
+				 * there were before */
+				clear_buffer_regions(i);
+			}
+
+
+			function draw_buffer_region(region_index, in_seconds, out_seconds) {
+
+				var window_start_seconds = 0;
+				var window_end_seconds = player.duration;
+				var window_duration_seconds = window_end_seconds - window_start_seconds;
+
+				/* Limit displayed clip marker to the display boundaries */
+				if(in_seconds < window_start_seconds) {
+					in_seconds = window_start_seconds;
+				}
+
+				if(out_seconds > window_end_seconds) {
+					out_seconds = window_end_seconds;
+				}
+								
+				var in_marker_percent = ((in_seconds / window_duration_seconds) * 100);
+				var out_marker_percent = ((out_seconds / window_duration_seconds) * 100);
+				var width_percent = (out_marker_percent - in_marker_percent);
+				var id = "buffer_region_" + region_index;
+
+				/* Sanity Check */
+				if(isNaN(in_marker_percent) || isNaN(out_marker_percent)) {
+					return;
+				}
+
+				/* Does this region exist yet? */
+				var element = document.getElementById(id);
+				if(!element) {
+					/* create it */
+					var group = document.getElementById("waveform_background");
+					element = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					element.setAttribute("id", id);
+					element.setAttribute("name", "buffer_region");
+					element.setAttribute("y", "0%"); 
+					element.setAttribute("height", "100%"); 
+					element.setAttribute("stroke", "black");
+					element.setAttribute("fill", "white");
+					element.setAttribute("opacity", "1");
+					group.appendChild(element);
+				}
+	
+				/* Update the element */
+				element.setAttribute("x", in_marker_percent + "%"); 
+				element.setAttribute("width", width_percent + "%"); 
+			}
+
+
+			function clear_buffer_regions(region_count) {
+
+				/* Deletes buffer region markers from the waveform SVG container
+				 * leaving only the first [region_count] in place.
+				 */
+				var elements = document.getElementsByTagName("rect");
+				var delete_queue = new Array();
+
+				/* Identify which elements are to be deleted */
+				for(var i = 0; i < elements.length; i ++) {
+
+					var element = elements[i];
+
+					/* Only interested in buffer regions - ignore other rects */
+					var name = element.getAttribute("name");
+					if(element.getAttribute("name") != "buffer_region") {
+						continue;
+					}
+
+					/* Extract buffer region index from element's id */
+					var id = element.id;
+					var index = id.replace("buffer_region_", "");
+					if(isNaN(index)) {
+						continue;
+					}
+					
+					if(index >= region_count) {
+						delete_queue.push(element);
+					}
+				}
+
+				/* And delete the identified elements */
+				for(var i = 0; i < delete_queue.length; i ++) {
+					var element = delete_queue[i];
+					element.parentNode.removeChild(element);
+				}
+			}
+
 
 			function load_waveform(event) {
 
