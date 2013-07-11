@@ -260,7 +260,7 @@
 					}
 				
 					var seconds_remaining = duration_seconds - current_seconds;
-					var duration_html = seconds_to_mins_secs(seconds_remaining);
+					var duration_html = seconds_to_hms(seconds_remaining);
 										
 					if(playing_button_id) {
 						var node = document.getElementById("button_box_duration_" + playing_button_id);
@@ -390,7 +390,7 @@
 					/* Update Duration */
 					node = document.getElementById('button_box_duration_' + button.button_id);
 					if(button.clip_id) {
-						node.innerHTML = seconds_to_mins_secs(button.duration_seconds);
+						node.innerHTML = seconds_to_hms(button.duration_seconds);
 					}
 					else {
 						node.innerHTML = "";
@@ -608,7 +608,7 @@
 				row.cells.item(i).innerHTML = clip_row.display_time; // Time
 				row.cells.item(i).setAttribute("class", "clip_list_time");
 				i++;
-				row.cells.item(i).innerHTML = seconds_to_mins_secs(clip_row.duration_seconds); // Duration
+				row.cells.item(i).innerHTML = seconds_to_hms(clip_row.duration_seconds); // Duration
 				row.cells.item(i).setAttribute("class", "clip_list_duration");
 				row.cells.item(i).setAttribute("id", "clip_duration_" + clip_row.clip_id);
 				
@@ -1039,21 +1039,23 @@
 			}
 
 
-			function seconds_to_mins_secs(seconds) {
-			
-				/* Given a number of seconds, returns a string in format M:SS */
+			function seconds_to_hms(seconds) {
 
 				/* Return empty string if argument is non-numeric */
 				if(isNaN(seconds)) {
 					return "";
 				}
 
-				var minutes = Math.floor(seconds / 60);
-				seconds = Math.floor(seconds % 60);
-				var rv = minutes + ":" + zero_pad(seconds, 2);
-				return rv;				
-			}
+				/* Handle overflow condition if time is greater than 24 hours */
+				if(seconds >= 86400) {
+					return "more than a day";
+				}
 			
+				var t = new Date(seconds * 1000);
+				var text = t.toISOString();
+				return text.substr(11, 8);
+			}
+
 			
 			function set_user_message(message) {
 				/* Set innerHTML of user message div */
