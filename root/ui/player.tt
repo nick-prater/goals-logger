@@ -154,11 +154,12 @@
 			}
 
 			.clip_list_match {
-				
+				text-align: left;
+				width: 20em;
 			}
 
 			.clip_list_commentator {
-				
+				text-align: left;	
 			}
 			
 			.clip_list_edit {
