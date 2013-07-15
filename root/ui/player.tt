@@ -98,12 +98,14 @@
 			.side_button_left {
 				float: left;
 				width: 25px;
-				font-size: 10px;
+				height: 16pt;
+				font-size: 8pt;
 			}
 			.side_button_right {
 				float: right;
 				width: 25px;
-				font-size: 10px;
+				height: 16pt;
+				font-size: 8pt;
 			}
 
 			.play_pause_button {
