@@ -602,6 +602,7 @@
 			var autoplay = true;           // If true, start playing as soon as audio is loaded, via canplay event
 			var load_position_seconds = 0; // If non-zero, autoplay starts from this time position in audio
 			var click_seconds = 0;         // Keeps track of where mouse button was last clicked
+			var max_clip_seconds = [% max_clip_seconds %];
 			
 			/* Keep track of fractional seconds for selected audio:
 			 * When audio is loaded, we get the time-span from drop-down boxes on the form,
@@ -1705,10 +1706,19 @@
 				 * as being the following day
 				 */
 
+				if( ((spec.end_epoch_ms - spec.start_epoch_ms) / 1000) > max_clip_seconds) {
+					alert(
+						"Requested clip duration exceeds maximum of " +
+						seconds_to_hours_mins_secs(max_clip_seconds) +
+						"."
+					);
+					return;
+				}
+
 				/* Stop player and reset flags */
 				player.pause;
-				player.src = audio_url;
 				clear_mark();
+				player.src = audio_url;
 				audio_start_dt = spec.start_dt;
 				audio_end_dt   = spec.end_dt;
 				set_audio_times_from_local_epoch_ms(

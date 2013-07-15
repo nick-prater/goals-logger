@@ -43,6 +43,10 @@ sub player : Local {
 	$c->forward('get_available_channels');
 	$c->forward('get_available_start_dates');
 	$c->forward('get_available_categories');
+
+	$c->stash(
+		max_clip_seconds => $c->config->{max_audio_clip_duration_seconds} || 3600
+	);
 }
 
 
@@ -70,8 +74,7 @@ sub assign_clips : Local {
 	$c->stash(
 		assign_clip_id  => $c->request->param('clip_id') || 0,
 		clip_url_prefix => $c->config->{clip_url_prefix} || '',
-	)		
-
+	);
 }
 
 
