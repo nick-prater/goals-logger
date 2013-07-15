@@ -1561,7 +1561,7 @@
 				
 					/* Schedule next update timer if we're running it */
 					if(poll_ajax_timer_period_ms) {
-						polL_ajax_timer = setTimeout("refresh_event_list()", poll_ajax_timer_period_ms);
+						poll_ajax_timer = setTimeout("refresh_event_list()", poll_ajax_timer_period_ms);
 					}
 				}
 			
@@ -1585,6 +1585,11 @@
 				
 				/* Strip off initial ',' */
 				status_list = status_list.substr(1);
+
+				/* status filters ending in 'new' or 'exported' seem not to get past readyState 2 */
+				/* this adds a dummy last status type, which makes it work ok. Don't understand why */
+				status_list += ',dummy';
+
 				return status_list;
 			}
 			
