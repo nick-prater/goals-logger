@@ -603,6 +603,7 @@
 			var audio_event_id = 0;        // Updated whenever audio from an event is opened
 			var stop_at_clip_end = true;   // if true, play stop at the marked clip end, otherwise continue to end of audio
 			var autoplay = true;           // If true, start playing as soon as audio is loaded, via canplay event
+			var waiting_for_audio_load;    // If true, respond to canplay event
 			var load_position_seconds = 0; // If non-zero, autoplay starts from this time position in audio
 			var click_seconds = 0;         // Keeps track of where mouse button was last clicked
 			var max_clip_seconds = [% max_clip_seconds %];
@@ -1001,9 +1002,16 @@
 				"canplay",
 				function() {
 
+					if(!waiting_for_audio_load) {
+						return;
+					}
+					waiting_for_audio_load = false;
+
 					/* Set default clip in and out points */
-					out_point_seconds = player.duration;
-					in_point_seconds = 0;
+					if(out_point_seconds === undefined && in_point_seconds === undefined) {
+						out_point_seconds = player.duration;
+						in_point_seconds = 0;
+					}
 
 					/* Start running timer to respond to player time changes
 					 * we use our own timer rather than the built-in timeupdate
@@ -1306,7 +1314,7 @@
 				waveform_svg.removeEventListener("mousemove", waveform_mouse_move);
 				document.removeEventListener("mouseup", waveform_mouse_up);
 				
-				/* Pause and eposition player back to where we last clicked/moved */
+				/* Pause and reposition player back to where we last clicked/moved */
 				player.pause();
 				player.currentTime = click_seconds;
 			}
@@ -1726,6 +1734,9 @@
 				/* Stop player and reset flags */
 				player.pause;
 				clear_mark();
+				out_point_seconds = undefined;
+				in_point_seconds = undefined;
+				waiting_for_audio_load = true;
 				player.src = audio_url;
 				audio_start_dt = spec.start_dt;
 				audio_end_dt   = spec.end_dt;
