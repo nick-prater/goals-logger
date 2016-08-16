@@ -522,6 +522,10 @@ sub create : Path : Local {
 		start_dt => $start_dt,
 		end_dt => $end_dt,
 	);
+
+	# Sanitise event_id
+	my $event_id = $params->{event_id};
+	$event_id && $event_id =~ m/^\d+$/ && $event_id > 0 or $event_id = undef;
 	
 	# Create a clip row - set to processing until we're ready with audio
 	my $rs = $c->model('DB::Clip');
@@ -539,7 +543,7 @@ sub create : Path : Local {
 		match_title => $channel->match_title,
 		commentator => $channel->commentator,
 		channel_id => $params->{channel_id},
-		event_id => $params->{event_id},
+		event_id => $event_id,
 		clip_start_timestamp => $start_dt,
 		clip_end_timestamp => $end_dt,
 		profile_id => $c->session->{profile_id},
@@ -588,8 +592,8 @@ sub create : Path : Local {
 	};
 	
 	# Mark event as 'exported' if this clip related to an event
-	if( $params->{event_id} ) {
-		$c->forward ("/events/exported/" . $params->{event_id} );
+	if($event_id) {
+		$c->forward ("/events/exported/$event_id");
 	}
 	
 	# Return status to page

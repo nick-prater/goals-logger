@@ -1953,6 +1953,7 @@
 					if(request.status == 200) {
 
 						/* Success - extract and parse payload */
+						console.log("success: ", request.responseText);
 						var response = JSON.parse(request.responseText);
 		
 						if(response.clip_id) {
