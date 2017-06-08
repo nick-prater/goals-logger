@@ -63,10 +63,10 @@ CREATE TABLE `event_inputs` (
 CREATE TABLE events(
   event_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   event_input_id INT UNSIGNED NOT NULL,
-  event_timestamp TIMESTAMP NOT NULL DEFAULT 0,
+  event_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   event_type ENUM('on', 'off', 'instance') NOT NULL,
   status ENUM('new', 'open', 'exported', 'deleted') NOT NULL DEFAULT 'new',
-  update_timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+  update_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT events_fk1
     FOREIGN KEY (event_input_id)
     REFERENCES event_inputs (event_input_id)
@@ -95,8 +95,8 @@ CREATE TABLE clips(
   commentator VARCHAR(50),             /* e.g. Jim Proudfoot       */
   channel_id INT UNSIGNED,
   event_id INT UNSIGNED,
-  clip_start_timestamp TIMESTAMP NOT NULL DEFAULT 0,
-  clip_end_timestamp TIMESTAMP NOT NULL DEFAULT 0,
+  clip_start_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  clip_end_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   profile_id INT UNSIGNED,
   CONSTRAINT `clips_fk1` 
     FOREIGN KEY (`channel_id`) 
@@ -114,7 +114,7 @@ CREATE TABLE clips(
 CREATE TABLE buttons(
   button_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   clip_id INT UNSIGNED,
-  profile_id INT UNSIGNED
+  profile_id INT UNSIGNED,
   CONSTRAINT `buttons_fk1` 
     FOREIGN KEY (`clip_id`) 
     REFERENCES `clips` (`clip_id`),
@@ -130,7 +130,7 @@ CREATE TABLE config(
   parameter_key VARCHAR(100) NOT NULL PRIMARY KEY,
   parameter_value VARCHAR(1023)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-INSERT INTO config VALUES ('schema_version', '3');
+INSERT INTO config VALUES ('schema_version', '4');
 
 
 /* Populate some test data */
@@ -183,3 +183,15 @@ INSERT INTO buttons VALUES(17,NULL,1);
 INSERT INTO buttons VALUES(18,NULL,1);
 INSERT INTO buttons VALUES(19,NULL,1);
 INSERT INTO buttons VALUES(20,NULL,1);
+
+
+
+/* ---  Changes schema version 3 -> 4 ---
+
+-- From mysql 5.7, default strict config does not allow 0 as timestamp value
+events.event_timestamp DEFAULT value CURRENT_TIMESTAMP - was 0
+clips.clip_start_timestamp made NOT NULL with default CURRENT_TIMESTAMP
+clips.clip_end_timestamp made NOT NULL with default CURRENT_TIMESTAMP
+events.update_timestamp default changed from NOW() TO CURRENT_TIMESTAMP
+
+*/
