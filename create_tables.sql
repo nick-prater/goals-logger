@@ -11,12 +11,20 @@ DROP TABLE IF EXISTS channels;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS clips;
 DROP TABLE IF EXISTS buttons;
+DROP TABLE IF EXISTS profiles;
 
 /*  Using InnoDB tables rather than default MyISAM because they support
  *  automatic foreign key constraints. Catalyst
  *  relies on this to automatically set up the database access class
  *  and to cascade delete across tables.
  */
+
+CREATE TABLE profiles(
+  profile_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  profile_code CHAR(30) NOT NULL UNIQUE KEY,
+  display_name VARCHAR(50) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 /* For the future, allow arbitrary labels via a separate table, with history tracking */
 CREATE TABLE channels(
@@ -112,12 +120,6 @@ CREATE TABLE buttons(
     REFERENCES `profiles` (`profile_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
-CREATE TABLE profiles(
-  profile_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  profile_code CHAR(30) NOT NULL UNIQUE KEY,
-  display_name VARCHAR(50) NOT NULL DEFAULT ''
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /* At present this table is simply used to keep track of the 
  * database schema version we're at */
