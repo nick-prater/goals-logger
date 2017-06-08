@@ -136,18 +136,18 @@ INSERT INTO config VALUES ('schema_version', '4');
 /* Populate some test data */
 INSERT INTO profiles VALUES(1, 'english', 'English');
 
-INSERT INTO channels VALUES (1, NULL, 'C1', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (2, NULL, 'C2', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (3, NULL, 'C3', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (4, NULL, 'C4', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (5, NULL, 'C5', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (6, NULL, 'C6', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (7, NULL, 'spare1', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (8, NULL, 'spare2', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (9, NULL, 'spare3', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (10, NULL, 'spare4', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (11, NULL, 'spare5', NULL, NULL, NULL, 'Europe/London', 1);
-INSERT INTO channels VALUES (12, NULL, 'spare6', NULL, NULL, NULL, 'Europe/London', 1);
+INSERT INTO channels VALUES (1, NULL, 'C1', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (2, NULL, 'C2', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (3, NULL, 'C3', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (4, NULL, 'C4', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (5, NULL, 'C5', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (6, NULL, 'C6', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (7, NULL, 'spare1', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (8, NULL, 'spare2', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (9, NULL, 'spare3', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (10, NULL, 'spare4', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (11, NULL, 'spare5', NULL, NULL, 'Europe/London', 1, 'yes');
+INSERT INTO channels VALUES (12, NULL, 'spare6', NULL, NULL, 'Europe/London', 1, 'yes');
 
 INSERT INTO event_inputs VALUES (1, 'Marker Button 1', 'hardware_gpi', 'audio_marker', 1);
 INSERT INTO event_inputs VALUES (2, 'Marker Button 2', 'hardware_gpi', 'audio_marker', 2);
