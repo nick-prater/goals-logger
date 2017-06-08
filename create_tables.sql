@@ -33,9 +33,9 @@ CREATE TABLE channels(
   source_label VARCHAR(50),            /* short label, e.g. COMM-1 */
   match_title VARCHAR(50),             /* e.g. Man U v Liverpool   */
   commentator VARCHAR(50),             /* e.g. Jim Proudfoot       */
-  record_threshold_dBFS DECIMAL(6,3),  /* not used                 */
   timezone VARCHAR(30) DEFAULT 'Europe/London' NOT NULL,
   profile_id INT UNSIGNED,
+  recording ENUM('yes', 'no') NOT NULL DEFAULT('yes'),
   CONSTRAINT channels_fk1
     FOREIGN KEY (profile_id)
     REFERENCES profiles(profile_id)
@@ -127,7 +127,7 @@ CREATE TABLE config(
   parameter_key VARCHAR(100) NOT NULL PRIMARY KEY,
   parameter_value VARCHAR(1023)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-INSERT INTO config VALUES ('schema_version', '2');
+INSERT INTO config VALUES ('schema_version', '3');
 
 
 /* Populate some test data */
