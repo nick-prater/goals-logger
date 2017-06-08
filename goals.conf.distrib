@@ -1,28 +1,49 @@
-# rename this file to goals.yml and put a ':' after 'name' if
-# you want to use YAML like in old versions of Catalyst
+# goals config
 name GOALS
 default_view HTML
 
 default_language english
-max_audio_clip_duration_seconds 3600
-keep_deleted_events_days        28
-keep_events_days                90
+max_audio_clip_duration_seconds 14400
+event_edit_preroll_seconds      60
+event_edit_postroll_seconds     30
+keep_audio_days                 16
+buttons_per_row                 5
+keep_deleted_events_days        10
+keep_events_days                16
 
-clips_path       /home/nick/projects/html5_audio/GOALS/root/clip 	
-audio_log_path   /home/nick/projects/html5_audio/GOALS/root/audio
-cache_path       /home/nick/projects/html5_audio/GOALS/root/cache
+clips_path       /home/npb-audio/clip
+audio_log_path   /home/npb-audio/audio
+cache_path       /home/npb-audio/cache
 
-
-event_edit_preroll_seconds     60
-event_edit_postroll_seconds    30
-
-
-keep_audio_days 61
-buttons_per_row 5
+playout_buttons_ini_path  /home/npb-audio/clip/buttons.ini
+playout_labels_ini_path   /home/npb-audio/clip/labels.ini
 
 rotjoin     /usr/local/bin/rotjoin
 audiograph  /usr/bin/audiograph
+rotter      /usr/local/bin/rotter
 
 # This is useful if clips are served from a different machine or port
 # leave out for 'standard' installations
 #clip_url_prefix  http://localhost
+
+<rot_manager>
+	pid_file              /var/run/npb/rot_manager.pid
+	log_file              /var/log/npb/rot_manager.log
+	channel_config_file   /home/npb-audio/goals-logger/channels.xml
+</rot_manager>
+
+<read_gpi>
+	pid_file              /var/run/npb/read_gpi.pid
+	log_file              /var/log/npb/read_gpi.log
+	gpi_port              /dev/ttyS0
+</read_gpi>
+
+<jack_manager>
+	pid_file              /var/run/npb/jack_manager.pid
+	log_file              /var/log/npb/jack_manager.log
+</jack_manager>
+
+<flush_rot_archive>
+	pid_file              /var/run/npb/flush_rot_archive.pid
+	log_file              /var/log/npb/flush_rot_archive.log
+</flush_rot_archive>
