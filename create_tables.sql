@@ -1,17 +1,20 @@
 /* Run these SQL commands as mysql root user */
+
+
+/* **************************************** */
+/* *** THIS DELETES ANY EXISTING DATA!! *** */
+/* **************************************** */
+
+DROP DATABASE IF EXISTS goals;
+DROP USER IF EXISTS 'goals'@'localhost';
+
+
 CREATE DATABASE goals;
 CREATE USER 'goals'@'localhost' IDENTIFIED BY 'mysql1625';
 GRANT SELECT, INSERT, UPDATE, DELETE ON goals.* TO 'goals'@'localhost';
 FLUSH PRIVILEGES;
 USE goals;
 
-/* Drop any existing tables - THIS WILL DELETE ANY EXISTING DATA!! */
-DROP TABLE IF EXISTS event_inputs;
-DROP TABLE IF EXISTS channels;
-DROP TABLE IF EXISTS events;
-DROP TABLE IF EXISTS clips;
-DROP TABLE IF EXISTS buttons;
-DROP TABLE IF EXISTS profiles;
 
 /*  Using InnoDB tables rather than default MyISAM because they support
  *  automatic foreign key constraints. Catalyst
