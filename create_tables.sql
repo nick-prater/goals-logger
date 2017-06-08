@@ -35,7 +35,7 @@ CREATE TABLE channels(
   commentator VARCHAR(50),             /* e.g. Jim Proudfoot       */
   timezone VARCHAR(30) DEFAULT 'Europe/London' NOT NULL,
   profile_id INT UNSIGNED,
-  recording ENUM('yes', 'no') NOT NULL DEFAULT('yes'),
+  recording ENUM('yes', 'no') NOT NULL DEFAULT 'yes',
   CONSTRAINT channels_fk1
     FOREIGN KEY (profile_id)
     REFERENCES profiles(profile_id)
