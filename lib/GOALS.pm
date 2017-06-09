@@ -45,12 +45,6 @@ __PACKAGE__->config(
 );
 
 
-# Allow static serving of any file extensions
-# Otherwise html files are banned!
-GOALS->config->{static}->{ignore_extensions} = [
-   
-];
-
 # Start the application
 __PACKAGE__->setup();
 
