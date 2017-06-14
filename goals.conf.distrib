@@ -19,7 +19,7 @@ playout_buttons_ini_path  /home/npb-audio/clip/buttons.ini
 playout_labels_ini_path   /home/npb-audio/clip/labels.ini
 
 rotjoin     /usr/local/bin/rotjoin
-audiograph  /usr/bin/audiograph
+audiograph  /usr/local/bin/audiograph
 rotter      /usr/local/bin/rotter
 
 # This is useful if clips are served from a different machine or port
