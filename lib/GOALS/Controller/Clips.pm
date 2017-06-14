@@ -477,8 +477,18 @@ sub create : Path : Local {
 	unless($c->session->{profile_id} && $c->session->{profile_code}) {
 		$c->error("create() called without a session profile_id");
 		die;
-	}	
-	
+	}
+
+	# Validate reqired clips_path configuration
+	unless($c->config->{clips_path}) {
+		$c->error("ERROR: clips_path is undefined in configuration file");
+		die;
+	}
+	unless(-d $c->config->{clips_path}) {
+		$c->error("ERROR: clips_path does not exist: " . $c->config->{clips_path});
+		die;
+	}
+
         # As we use the submitted profile code to determine a
         # filesystem directory name, verify it is valid, by translating
         # into a an id. This is necessary to prevent
@@ -565,9 +575,12 @@ sub create : Path : Local {
 	
 	# Destination of clips is specified in global configuration file
 	my $dest_dir = $c->config->{clips_path} . '/' . $c->session->{profile_code};
-	unless( $dest_dir && -d $dest_dir ) {
-		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
-		die;
+	unless(-d $dest_dir) {
+		$c->log->info("clip destination $dest_dir does not exist - creating");
+		mkdir($dest_dir) or do {
+			$c->error("ERROR: failed to create directory $dest_dir $!");
+			die;
+		};
 	}
 	
 	my $audio_dest_path = sprintf(
