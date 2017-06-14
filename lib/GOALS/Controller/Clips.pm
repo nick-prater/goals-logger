@@ -384,7 +384,17 @@ sub upload : Path : Local {
 		$c->error("ERROR determining uploaded WAV file duration");
 		die;
 	};
-	
+
+	# Validate reqired clips_path configuration
+	unless($c->config->{clips_path}) {
+		$c->error("ERROR: clips_path is undefined in configuration file");
+		die;
+	}
+	unless(-d $c->config->{clips_path}) {
+		$c->error("ERROR: clips_path does not exist: " . $c->config->{clips_path});
+		die;
+	}
+
 	# Trim whitespace and Log submitted data
 	my $params = $c->request->body_params;
 	foreach (keys %{$params}) {
@@ -420,9 +430,12 @@ sub upload : Path : Local {
 		$c->config->{clips_path},
 		$params->{profile_code},
 	);
-	unless( $dest_dir && -d $dest_dir ) {
-		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
-		die;
+	unless(-d $dest_dir) {
+		$c->log->info("clip destination $dest_dir does not exist - creating");
+		mkdir($dest_dir) or do {
+			$c->error("ERROR: failed to create directory $dest_dir $!");
+			die;
+		};
 	}
 	
 	my $audio_dest_path = sprintf(
