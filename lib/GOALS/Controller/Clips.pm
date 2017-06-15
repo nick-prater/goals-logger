@@ -358,7 +358,7 @@ sub upload : Path : Local {
 
 	my $self = shift;
 	my $c = shift;
-	
+
 	unless( $c->session->{profile_id} ) {
 		$c->log->warn("upload called without a session profile_id");
 		$c->response->redirect('/');
@@ -375,7 +375,6 @@ sub upload : Path : Local {
 	};
 	$c->log->debug("audio clip uploaded to temporary file: $temp_audio_path");
 	
-	
 	# Validate audio. Determine $duration_seconds
 	my $duration_seconds = $c->forward(
 		'validate_wav',
@@ -384,16 +383,6 @@ sub upload : Path : Local {
 		$c->error("ERROR determining uploaded WAV file duration");
 		die;
 	};
-
-	# Validate reqired clips_path configuration
-	unless($c->config->{clips_path}) {
-		$c->error("ERROR: clips_path is undefined in configuration file");
-		die;
-	}
-	unless(-d $c->config->{clips_path}) {
-		$c->error("ERROR: clips_path does not exist: " . $c->config->{clips_path});
-		die;
-	}
 
 	# Trim whitespace and Log submitted data
 	my $params = $c->request->body_params;
@@ -422,28 +411,12 @@ sub upload : Path : Local {
 
 	$c->log->debug("inserted clip_id " . $clip->clip_id);
 	
+
 	# Move uploaded file to clips directory
 	# Destination of clips is specified in global configuration file
 	# combined with supplied profile code (which has been validated above)
-	my $dest_dir = sprintf(
-		"%s/%s",
-		$c->config->{clips_path},
-		$params->{profile_code},
-	);
-	unless(-d $dest_dir) {
-		$c->log->info("clip destination $dest_dir does not exist - creating");
-		mkdir($dest_dir) or do {
-			$c->error("ERROR: failed to create directory $dest_dir $!");
-			die;
-		};
-	}
-	
-	my $audio_dest_path = sprintf(
-		"%s/%u.wav",
-		$dest_dir,
-		$clip->clip_id
-	);
-	
+	my $audio_dest_path = $self->clip_audio_path($c, $clip) or die;
+
 	# Copy cached file to clips directory
 	$c->log->debug("moving $temp_audio_path -> $audio_dest_path");
 	copy($temp_audio_path, $audio_dest_path) or do {
@@ -460,6 +433,7 @@ sub upload : Path : Local {
 	};
 	
 	# Return status to page
+	$c->log->debug("clip marked complete - returning status");
 	$c->stash(
 		current_view => 'JSON',
 		json_data => { clip_id => $clip->clip_id },
@@ -489,16 +463,6 @@ sub create : Path : Local {
 	# Validate profile_code
 	unless($c->session->{profile_id} && $c->session->{profile_code}) {
 		$c->error("create() called without a session profile_id");
-		die;
-	}
-
-	# Validate reqired clips_path configuration
-	unless($c->config->{clips_path}) {
-		$c->error("ERROR: clips_path is undefined in configuration file");
-		die;
-	}
-	unless(-d $c->config->{clips_path}) {
-		$c->error("ERROR: clips_path does not exist: " . $c->config->{clips_path});
 		die;
 	}
 
@@ -585,22 +549,8 @@ sub create : Path : Local {
 		$c->error("unable to prepare requested audio file");
 		die;
 	};
-	
-	# Destination of clips is specified in global configuration file
-	my $dest_dir = $c->config->{clips_path} . '/' . $c->session->{profile_code};
-	unless(-d $dest_dir) {
-		$c->log->info("clip destination $dest_dir does not exist - creating");
-		mkdir($dest_dir) or do {
-			$c->error("ERROR: failed to create directory $dest_dir $!");
-			die;
-		};
-	}
-	
-	my $audio_dest_path = sprintf(
-		"%s/%u.wav",
-		$dest_dir,
-		$clip->clip_id
-	);
+
+	my $audio_dest_path = $self->clip_audio_path($c, $clip) or die;
 	
 	# Copy cached file to clips directory
 	$c->log->debug("copying $audio_cache_path -> $audio_dest_path");
@@ -671,9 +621,8 @@ sub validate_wav : Private {
 	my $c = shift;
 	my $path = shift;
 
-	$c->log->debug("opening $path");
-	
 	my $wav = Audio::Wav->read($path) or do {
+		$c->log->error("ERROR: failed to read wav file");
 		$c->error("ERROR reading WAV file");
 		return undef;
 	};
@@ -683,7 +632,7 @@ sub validate_wav : Private {
 	foreach my $key(keys %{$info}) {
 		$c->log->debug("$key :: $info->{$key}");
 	}
-	
+
 	# Debugging - dump detailsmy $info = $wav->get_info;
 	my $details = $wav->details;
 	foreach my $key(keys %{$details}) {
@@ -697,6 +646,46 @@ sub validate_wav : Private {
 	return $duration_seconds;
 }
 
+
+sub clip_audio_path {
+
+	# Returns a local clip audio path for the given clip
+	# Depends on the session having a profile_code
+	# Returns undef on error
+
+	my $self = shift;
+	my $c = shift;
+	my $clip = shift;
+
+	# Validate reqired clips_path configuration
+	unless($c->config->{clips_path}) {
+		$c->error("ERROR: clips_path is undefined in configuration file");
+		return;
+	}
+	unless(-d $c->config->{clips_path}) {
+		$c->error("ERROR: clips_path does not exist: " . $c->config->{clips_path});
+		return;
+	}
+
+	my $dest_dir = $c->config->{clips_path} . '/' . $c->session->{profile_code};
+
+	# Create the correct profile directory, if it doesn't yet exist
+	unless(-d $dest_dir) {
+		$c->log->info("clip destination $dest_dir does not exist - creating");
+		mkdir($dest_dir) or do {
+			$c->error("ERROR: failed to create directory $dest_dir $!");
+			return;
+		};
+	}
+
+	my $audio_dest_path = sprintf(
+		"%s/%u.wav",
+		$dest_dir,
+		$clip->clip_id
+	);
+
+	return $audio_dest_path;
+}
 
 
 =head1 AUTHOR
