@@ -53,6 +53,11 @@ sub player : Local {
 sub upload_clip : Local {
 	my $self = shift;
 	my $c = shift;
+
+	unless( $c->session->{profile_id} ) {
+		$c->log->warn("upload_clip called without a valid session profile_id");
+		$c->response->redirect('/');
+	};
 }
 
 
