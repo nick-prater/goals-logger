@@ -34,26 +34,26 @@
 	<body>
 
 [% INCLUDE ui/clip_filter.tt %]
-	
+
 		<div id="body_container">
-		
+
 			<div id="button_container" style="display: block">
-			
-			
+
+
 				<table id="button_box" class="button_box">
-				
+
 					[% FOREACH row IN buttons %]
 					<tr>
-					
+
 						[% FOREACH button IN row %]
 						<td id="button_[% button.button_id %]" width="20%" class="button_box">
-						
+
 							<div
 								class="button_box_button"
 								id="button_box_button_[% button.button_id %]"
 								onclick="click_button([% button.button_id %])"
 							>
-						
+
 								<div class="button_box_title" id="button_box_title_[% button.button_id %]"></div>
 								<div class="button_box_duration" id="button_box_duration_[% button.button_id %]"></div>
 
@@ -76,39 +76,38 @@
 							</div>
 						</td>
 						[% END %]
-						
-						
-					</tr>				
+
+
+					</tr>
 					[% END %]
-				<table>
-			
+				</table>
+
 				<!--
 				<button type="button" onclick="update_buttons()">refresh buttons</button>
 				<button type="button" onclick="update_clip_list()">refresh clip list</button>
 				-->
-				
+
 				<!-- This ontains the form used to display status feedback when clips are created.
 				     It is hidden until the create clip button is pressed. Message is populated dynamically
 				-->
-				<div 
+				<div
 					id="progress_message_container"
 					class="assign_clips_user_message"
-				/>
-						
-			</div>
-			
-			<hr />
-			
-			
+				></div>
+
 			</div>
 
-				
+			<hr />
+
+
+
+
 			<!-- Player is not visible - controlled by javascript -->
 			<audio id="player">
 				<!-- source populated dynamically by javascript -->
 			</audio>
 
-			
+
 			<!-- This div contains the list of marked clips, which can be selected for editing.
 			-->
 			<div class="clip_list_container" id="clip_list_container" align="center">
@@ -119,7 +118,7 @@
 
 				<div class="clip_list_div">
 					<table id="clip_list" class="clip_list">
-					
+
 						<tr class="title_row">
 							<th class="clip_list_checkbox"></th>
 							<th class="clip_list_assign"></th>
@@ -139,7 +138,6 @@
 					</table>
 				</div>
 			<div>
-			
 		</div>
 
 
@@ -150,11 +148,11 @@
 			var playing_clip_id = 0;
 			var playing_button_id = 0;
 			var duration_original_html;
-			
+
 			/* If a specific clip_id is specified, display only that clip and select it for assignment */
 			var assign_clip_id = [% assign_clip_id || 0 %];
 			var assign_clip_title = '';
-			
+
 			/* Timer to update the buttons */
 			var run_poll_ajax_timer = true;
 			var poll_ajax_timer;
@@ -176,39 +174,39 @@
 					if(isNaN(current_seconds) || isNaN(duration_seconds)) {
 						return;
 					}
-				
+
 					var seconds_remaining = duration_seconds - current_seconds;
 					var duration_html = seconds_to_hms(seconds_remaining);
-										
+
 					if(playing_button_id) {
 						var node = document.getElementById("button_box_duration_" + playing_button_id);
 						node.innerHTML = duration_html;
 					}
-					
+
 					if(playing_clip_id) {
 						var node = document.getElementById("clip_duration_" + playing_clip_id);
 						node.innerHTML = duration_html;
 					}
 				}
 			);
-				
+
 			player.addEventListener(
 				"pause",
 				function(event) {
  					clear_player();
 				}
 			);
-			
+
 			player.addEventListener(
 				"canplay",
 				function(event) {
  					player.play();
 				}
 			);
-			
+
 
 			function clear_player() {
-			
+
 				player.pause();
 
 				if(playing_button_id) {
@@ -216,7 +214,7 @@
 					if(duration_node) {
 						duration_node.innerHTML = duration_original_html;
 					}
-					
+
 					/* Reset style to normal, non-playing button */
 					var button_node = document.getElementById("button_box_button_" + playing_button_id);
 					if(button_node) {
@@ -229,49 +227,49 @@
 						play_link.innerHTML = 'play';
 					}
 				}
-				
+
 				if(playing_clip_id) {
-				
+
 					/* Highlight relevant table row */
 					var row_node = document.getElementById("clip_row_" + playing_clip_id);
 					if(row_node) {
 						row_node.setAttribute("class", "clip_row");
 					}
-										
+
 					/* Reset 'stop' button to 'play' */
 					var play_link = document.getElementById("clip_play_link_" + playing_clip_id);
 					if(play_link) {
 						play_link.innerHTML = 'play';
 					}
-					
+
 					/* Reset duration text */
 					var duration_node = document.getElementById("clip_duration_" + playing_clip_id);
 					if(duration_node) {
 						duration_node.innerHTML = duration_original_html;
 					}
-				}				
-				
+				}
+
 				playing_clip_id = 0;
 				playing_button_id = 0;
 				duration_original_html = "";
 			}
-			
-		
+
+
 			function update_buttons() {
-			
+
 				//TODO - check that the clip we're playing/assigning hasn't been deleted
-			
+
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
-				
+
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
+
 					if (request.readyState != 4) {
 						/* Request has not yet completed */
 						return;
 					}
-				
+
 					if(request.status == 200) {
 						/* Extract and parse payload */
 						var json_data = JSON.parse(request.responseText);
@@ -281,30 +279,30 @@
 					/* Free Up HTTP request object */
 					delete request;
 				}
-			
+
 				/* Send request */
 				var url = "/button_box/buttons_json";
 				request.open("GET", url, true);
 				request.send();
 			}
-		
-		
+
+
 			function populate_button_box_from_json(json_data) {
-			
+
 				for (var button_id in json_data) {
-					
+
 					/* Skip private object meta properties */
 					if (!json_data.hasOwnProperty(button_id)) {
 						next;
 					}
-					
+
 					button = json_data[button_id];
-					
+
 					/* Update Title */
 					var node;
 					node = document.getElementById('button_box_title_' + button.button_id);
 					node.innerHTML = button.title;
-					
+
 					/* Update Duration */
 					node = document.getElementById('button_box_duration_' + button.button_id);
 					if(button.clip_id) {
@@ -313,7 +311,7 @@
 					else {
 						node.innerHTML = "";
 					}
-					
+
 					/* Update style class, except if this is the button we are assigning
 					 * in which case we want to leave the style alone as it is set by
 					 * the assigning process */
@@ -332,23 +330,23 @@
 					}
 				}
 			}
-		
-		
+
+
 			function update_clip_list() {
-			
+
 				cancel_assign_clip();
-			
+
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
-				
+
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
+
 					if (request.readyState != 4) {
 						/* Request has not yet completed */
 						return;
 					}
-				
+
 					if(request.status == 200) {
 						var json_data = JSON.parse(request.responseText);
 						populate_clip_list_from_json(json_data);
@@ -364,71 +362,71 @@
 					/* Free Up HTTP request object */
 					delete request;
 				}
-			
+
 				/* Send request */
 				var url = (
 					"/clips/all?category=" +
-					get_clip_list_category_filters() + 
-					"&channel_id=" + 
+					get_clip_list_category_filters() +
+					"&channel_id=" +
 					get_clip_list_source_filters()
 				);
-				
+
 				/* If page is loaded with assign_clip_id defined, that
-				 * means we should load just that clip into the list 
+				 * means we should load just that clip into the list
 				 */
 				if( [% assign_clip_id %] ) {
 					url = "/clips/all?clip_id=" + [% assign_clip_id %];
 				}
-				
+
 				request.open("GET", url, true);
 				request.send();
 			}
-		
-		
+
+
 			function get_clip_list_category_filters() {
-			
+
 				/* Read status of filter checkboxes and return a corresponding query string */
 				var checkboxes = document.getElementsByName("clip_category_to_show");
 				var status_list = "";
-				
+
 				for( var i = 0; i < checkboxes.length; i ++ ) {
 					if(checkboxes[i].checked) {
 						status_list += "," + checkboxes[i].value;
 					}
 				}
-				
+
 				/* Always include user upload */
 				status_list += "," + 'user_upload';
-				
+
 				/* Strip off initial ',' */
 				status_list = status_list.substr(1);
 				return status_list;
 			}
-			
-			
+
+
 			function get_clip_list_source_filters() {
-			
+
 				/* Read status of filter checkboxes and return a corresponding query string */
 				var checkboxes = document.getElementsByName("clip_source_to_show");
 				var list = "";
-				
+
 				for( var i = 0; i < checkboxes.length; i ++ ) {
 					if(checkboxes[i].checked) {
 						list += "," + checkboxes[i].value;
 					}
 				}
-				
+
 				/* Strip off initial ',' */
 				list = list.substr(1);
 				return list;
 			}
-		
-		
+
+
 			function populate_clip_list_from_json(json_data) {
-			
+
 				var table = document.getElementById("clip_list");
 				var rows = table.rows;
-				
+
 				/* Loop through current table to remove redundant rows.
 				 * Work through table rows from highest index, otherwise
 				 * the indexes will start moving around beneath our feet
@@ -439,23 +437,23 @@
 					/* Actually, for now, just delete all existing rows and re-populate later */
 					table.deleteRow(i);
 				}
-			
+
 				/* Then update/create needed rows */
 				for (var clip_id in json_data) {
-					
+
 					/* Skip private object meta properties */
 					if (!json_data.hasOwnProperty(clip_id)) {
 						next;
 					}
-				
+
 					populate_clip_row( json_data[clip_id] );
-					
+
 					/* Capture the title of this clip for later use, if assigning a single clip */
 					if( [% assign_clip_id %] && clip_id == [% assign_clip_id %] ) {
 						assign_clip_title = json_data[clip_id].title;
 					}
 				}
-				
+
 				/* If we are playing a clip during the refresh, check that it
 				 * still exista after the refresh. Otherwise stop playing and
 				 * clear the player */
@@ -467,13 +465,13 @@
 					}
 				}
 			}
-		
-		
+
+
 			function populate_clip_row(clip_row) {
-			
+
 				var table = document.getElementById("clip_list");
 				var row_id = "clip_row_" + clip_row.clip_id;
-			
+
 				/* Look to see if we already have a row for this event_row_id */
 				var row = table.rows.namedItem(row_id);
 
@@ -481,21 +479,21 @@
 					/* Not an existing row, insert one after header row */
 					row = table.insertRow(1);
 					row.id = row_id;
-					
+
 					/* The table has 11 cells/fields */
 					for( var i = 0; i < 11; i ++  ) {
 						row.insertCell(-1);
 					}
-					
+
 					/* These elements are invariant. so only populate when row is created */
 					row.setAttribute("class", "clip_row");
 				}
-				
+
 				/* Update/populate the fields */
 				var i = 0;
 				row.cells.item(i).innerHTML = '<input type="checkbox" name="clip_row_selected" value="' + clip_row.clip_id + '" id="clip_row_selected_' + clip_row.clip_id + '">';   // checkbox
 				row.cells.item(i).setAttribute("class", "clip_list_checkbox");
-				i++;	
+				i++;
 				row.cells.item(i).appendChild( generate_assign_link(clip_row) );   // Assign
 				row.cells.item(i).setAttribute("class", "clip_list_assign");
 				i++;
@@ -529,24 +527,24 @@
 				row.cells.item(i).innerHTML = seconds_to_hms(clip_row.duration_seconds); // Duration
 				row.cells.item(i).setAttribute("class", "clip_list_duration");
 				row.cells.item(i).setAttribute("id", "clip_duration_" + clip_row.clip_id);
-				
+
 				/* Highlight row if it is playing */
 				if(playing_clip_id == clip_row.clip_id) {
-					
+
 					/* Highlight relevant table row */
 					var row_node = document.getElementById("clip_row_" + clip_row.clip_id);
 					row_node.setAttribute("class", "play_row");
-					
+
 					/* change 'play' button to 'stop' */
 					var play_node = document.getElementById("clip_play_link_" + clip_row.clip_id);
-					play_node.innerHTML = "stop";				
+					play_node.innerHTML = "stop";
 				}
-				
+
 			}
-		
-		
+
+
 			function generate_assign_link(clip_row) {
-			
+
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
  				a.appendChild(document.createTextNode('assign'));
@@ -558,13 +556,13 @@
  					}
  				);
  				a.setAttribute("id", "clip_assign_link_" + clip_row.clip_id);
-				
+
  				return a;
 			}
-			
-			
+
+
 			function generate_delete_link(clip_row) {
-			
+
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
  				a.appendChild(document.createTextNode('delete'));
@@ -575,13 +573,13 @@
  						event.preventDefault();
  					}
  				);
- 				
- 				return a;
-			}			
-			
+
+				return a;
+			}
+
 
 			function generate_play_link(clip_row) {
-			
+
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
  				a.appendChild(document.createTextNode('play'));
@@ -593,12 +591,12 @@
  					}
  				);
  				a.setAttribute("id", "clip_play_link_" + clip_row.clip_id);
- 				
+
  				return a;
 			}
-			
+
 			function generate_download_link(clip_row) {
-			
+
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
  				a.appendChild(document.createTextNode('download'));
@@ -610,12 +608,12 @@
  					}
  				);
  				a.setAttribute("id", "clip_download_link_" + clip_row.clip_id);
- 				
+
  				return a;
-			}			
-			
+			}
+
 			function generate_rename_link(clip_row) {
-			
+
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
  				a.appendChild(document.createTextNode('rename'));
@@ -627,39 +625,39 @@
  					}
  				);
  				a.setAttribute("id", "clip_rename_link_" + clip_row.clip_id);
- 				
+
  				return a;
-			}			
+			}
 
 
 			function delete_clip(clip_list) {
-		
+
 				/* This accepts either a single clip_id, or a
 				 * comma-separated list of clips.
-				 */			
+				 */
 				var clips = clip_list.split(",", clip_list);
 				for(var i = 0; i < clips.length; i++) {
-				
+
 					alert(clips[i]);
-	
+
 					if(clips[i] == playing_clip_id) {
 						clear_player();
 					}
-					
+
 					if(clips[i] == assigning_clip_id) {
 						cancel_assign_clip();
-					}			
+					}
 				}
 
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
-				
+
 					if (request.readyState != 4) {
 						/* Request has not yet completed */
 						return;
 					}
-				
+
 					if(request.status == 200) {
 						/* Success */
 						update_clip_list();
@@ -668,116 +666,116 @@
 					/* Free Up HTTP request object */
 					delete request;
 				}
-			
+
 				/* Send request */
 				var url = "/clips/delete/" + clip_list;
 				request.open("GET", url, true);
-				request.send();				
+				request.send();
 			}
-		
+
 
 			function cancel_assign_clip() {
-			
+
 				/* If we are already assigning a clip, cancel it */
 				if(assigning_clip_id > 0) {
-					
+
 					/* Unset row highlighting */
 					var row = document.getElementById("clip_row_" + assigning_clip_id);
 					if(row) {
 						row.setAttribute("class", "clip_row");
 					};
-			
+
 					/* Change 'cancel' button back to 'assign' */
 					var assign_node = document.getElementById("clip_assign_link_" + assigning_clip_id);
 					if(assign_node) {
 						assign_node.innerHTML = 'assign';
 					}
-			
+
 					assigning_clip_id = 0;
 				}
-				
+
 				/* Clear message */
 				set_user_message("");
-								
+
 				assign_clip_id = 0;
 			}
-		
-		
+
+
 			function assign_clip(clip_id, clip_title) {
-			
+
 				if(assigning_clip_id == clip_id) {
 					/* Already assigning this clip, so CANCEL action */
 					cancel_assign_clip();
 					clear_player();
 					return;
 				}
-					
+
 				/* Cancel any assignment already in progress */
 				cancel_assign_clip();
 				clear_player();
-			
+
 				/* Set global flag */
 				assigning_clip_id = clip_id;
-			
+
 				/* Highlight clip row  */
 				var row = document.getElementById("clip_row_" + clip_id);
 				if(row) {
 					row.setAttribute("class", "assign_row");
 				}
-				
+
 				/* Change 'cancel' button back to 'assign' */
 				var assign_node = document.getElementById("clip_assign_link_" + clip_id);
 				if(assign_node) {
 					assign_node.innerHTML = 'cancel';
 				}
-				
+
 				/* Set user message */
 				set_user_message (
 					"click on one of the player hotkey buttons above to load with clip <i>" +
 					clip_title +
 					"</i>"
 				);
-			}			
-			
-			
+			}
+
+
 			function zero_pad(n, desired_length) {
 				/* Given a string and desired length, keep adding '0' to the start
 				 * until the desired length is attained. Used for zero-padding numbers
 				 */
-				 
+
 				/* Coerce number into a string */
 				n = "" + n;
-				
+
 				/* Keep adding zeros to the front until we have desired length */
 				while( n.length < desired_length) {
-					n = "0" + n;	
+					n = "0" + n;
 				}
-				return n;			
+				return n;
 			}
-		
-		
+
+
 			function clear_button(button_id) {
 
 				/* If we are playing this button, stop it before clearing */
 				if(playing_button_id == button_id) {
 					clear_player();
 				}
-			
+
 				/* Highlight Button Clicked */
 				var node = document.getElementById("button_box_button_" + button_id);
 				node.setAttribute("class", "button_box_button_clearing");
-			
+
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
-				
+
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
+
 					if (request.readyState != 4) {
 						/* Request has not yet completed */
 						return;
 					}
-				
+
 					if(request.status == 200) {
 						var json_data = JSON.parse(request.responseText);
 						populate_button_box_from_json(json_data);
@@ -787,78 +785,78 @@
 					/* Free Up HTTP request object */
 					delete request;
 				}
-			
+
 				/* Send request */
 				var url = "/button_box/clear_button/" + button_id;
 				request.open("GET", url, true);
-				request.send();			
+				request.send();
 			}
 
-			
+
 			function download_button(button_id) {
-			
+
 				var audio_url = "/button_box/audio/" + button_id;
-				window.open(audio_url, "_self");			
+				window.open(audio_url, "_self");
 			}
-						
-			
+
+
 			function play_button(button_id) {
-			
+
 				if(playing_button_id == button_id) {
 					clear_player();
-					return;				
+					return;
 				}
-			
+
 				clear_player();
-			
+
 				/* Highlight Button Clicked */
 				var button_node = document.getElementById("button_box_button_" + button_id);
 				button_node.setAttribute("class", "button_box_button_playing");
-				
+
 				var duration_node = document.getElementById("button_box_duration_" + button_id);
 				var audio_url = "/button_box/audio/" + button_id;
 				duration_original_html = duration_node.innerHTML;
 				playing_button_id = button_id;
 				player.src = audio_url;
-				
+
 				/* Change link from 'play' to 'stop' */
 				var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
 				play_link.innerHTML = 'stop';
 			}
-			
-			
+
+
 			function click_button(button_id) {
 
 				/* Clicking on a button assigns a clip, but only if a clip is already selected */
 				if(assigning_clip_id == 0) {
 					return;
 				}
-			
+
 				/* Highlight Button Clicked */
 				var node = document.getElementById("button_box_button_" + button_id);
 				node.setAttribute("class", "button_box_button_assigning");
-			
+
 				assign_clip_to_button(assigning_clip_id, button_id, button);
 				cancel_assign_clip();
 			}
-			
-			
+
+
 			function assign_clip_to_button(clip_id, button_id, button) {
-										
+
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
-				
+
 					if (request.readyState != 4) {
 						/* Request not yet complete */
 						return;
 					}
-				
+
 					if(request.status == 200) {
 						/* success */
 						update_buttons();
 						set_user_message("");
-					
+
 						/* Set timeout to clear user message */
 						message_timeout = setTimeout(
 							function() {
@@ -868,69 +866,69 @@
 									assign_clip_id = 0;
 									window.location.href = "/ui/assign_clips";
 								}
-							
+
 								assign_clip_id = 0;
 							},
 							500
 						);
-					
+
 						update_clip_list(); // has side-effect of clearing user message
 					}
 					else {
 						/* some kind of error occurred */
 						set_user_message("error saving clip to button");
 					}
-					
+
 					delete request;
 				}
 
 				set_user_message("saving clip to button, please wait...");
-				
+
 				/* Send request */
 				var url = "/button_box/assign/" + button_id + "/" + clip_id;
 				request.open("GET", url, true);
-				request.send();				
+				request.send();
 			}
-			
-			
+
+
 			function play_clip(clip_id) {
-			
+
 				/* If we are already playing, stop */
 				if(playing_clip_id == clip_id) {
 					clear_player();
-					return;				
+					return;
 				}
-			
+
 				clear_player();
 				cancel_assign_clip();
-				
+
 				/* Highlight relevant table row */
 				var row_node = document.getElementById("clip_row_" + clip_id);
 				row_node.setAttribute("class", "play_row");
-				
+
 				/* change 'play' button to 'stop' */
 				var play_node = document.getElementById("clip_play_link_" + clip_id);
 				play_node.innerHTML = "stop";
-				
+
 				/* Save duration column while we use it for countdown */
 				var duration_node = document.getElementById("clip_duration_" + clip_id);
-				duration_original_html = duration_node.innerHTML;				
-				
+				duration_original_html = duration_node.innerHTML;
+
 				var audio_url = (
 					"[% clip_url_prefix %]" +
 					"/clip/[% c.session.profile_code %]/" +
 					clip_id +
 					".wav"
 				)
-				
+
 				playing_clip_id = clip_id;
 				player.src = audio_url;
-				
+
 			}
-			
-			
+
+
 			function download_clip(clip_id) {
-			
+
 				var audio_url = (
 					"[% clip_url_prefix %]" +
 					"/clip/[% c.session.profile_code %]/" +
@@ -940,8 +938,8 @@
 
 				window.open(audio_url, "_self");
 			}
-		
-			
+
+
 			function delete_selected_clips() {
 
 				/* Build comma-separated list of selected clips */
@@ -968,22 +966,20 @@
 				if(seconds >= 86400) {
 					return "more than a day";
 				}
-			
+
 				var t = new Date(seconds * 1000);
 				var text = t.toISOString();
 				return text.substr(11, 8);
 			}
 
-			
+
 			function set_user_message(message) {
 				/* Set innerHTML of user message div */
 				var node = document.getElementById("progress_message_container");
 				node.innerHTML = message;
 			}
-		
+
 		</script>
-
-
 	</body>
 </html>
-	
+
