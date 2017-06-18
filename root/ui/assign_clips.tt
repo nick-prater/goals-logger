@@ -193,12 +193,12 @@
 
 					if(playing_button_id) {
 						var node = document.getElementById("button_box_duration_" + playing_button_id);
-						node.innerHTML = duration_html;
+						node.innerText = duration_html;
 					}
 
 					if(playing_clip_id) {
 						var node = document.getElementById("clip_duration_" + playing_clip_id);
-						node.innerHTML = duration_html;
+						node.innerText = duration_html;
 					}
 				}
 			);
@@ -237,7 +237,7 @@
 					/* Reset 'pause' button to 'play' */
 					var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
 					if(play_link) {
-						play_link.innerHTML = 'play';
+						play_link.innerText = 'play';
 					}
 				}
 
@@ -252,7 +252,7 @@
 					/* Reset 'stop' button to 'play' */
 					var play_link = document.getElementById("clip_play_link_" + playing_clip_id);
 					if(play_link) {
-						play_link.innerHTML = 'play';
+						play_link.innerText = 'play';
 					}
 
 					/* Reset duration text */
@@ -314,12 +314,12 @@
 					/* Update Title */
 					var node;
 					node = document.getElementById('button_box_title_' + button.button_id);
-					node.innerHTML = button.title;
+					node.innerText = button.title;
 
 					/* Update Duration */
 					node = document.getElementById('button_box_duration_' + button.button_id);
 					if(button.clip_id) {
-						node.innerHTML = seconds_to_hms(button.duration_seconds);
+						node.innerText = seconds_to_hms(button.duration_seconds);
 					}
 					else {
 						node.innerHTML = "";
@@ -542,22 +542,22 @@
 				row.cells.item(i).appendChild( generate_rename_link(clip_row) );   // Rename
 				row.cells.item(i).setAttribute("class", "clip_list_rename");
 				i++;
-				row.cells.item(i).innerHTML = clip_row.title;        // Title
+				row.cells.item(i).innerText = clip_row.title;        // Title
 				row.cells.item(i).setAttribute("class", "clip_list_title");
 				i++;
-				row.cells.item(i).innerHTML = clip_row.source;       // Source
+				row.cells.item(i).innerText = clip_row.source;       // Source
 				row.cells.item(i).setAttribute("class", "clip_list_source");
 				i++;
-				row.cells.item(i).innerHTML = clip_row.category;     // Category
+				row.cells.item(i).innerText = clip_row.category;     // Category
 				row.cells.item(i).setAttribute("class", "clip_list_category");
 				i++;
-				row.cells.item(i).innerHTML = clip_row.display_date; // Date
+				row.cells.item(i).innerText = clip_row.display_date; // Date
 				row.cells.item(i).setAttribute("class", "clip_list_date");
 				i++;
-				row.cells.item(i).innerHTML = clip_row.display_time; // Time
+				row.cells.item(i).innertext = clip_row.display_time; // Time
 				row.cells.item(i).setAttribute("class", "clip_list_time");
 				i++;
-				row.cells.item(i).innerHTML = seconds_to_hms(clip_row.duration_seconds); // Duration
+				row.cells.item(i).innerText = seconds_to_hms(clip_row.duration_seconds); // Duration
 				row.cells.item(i).setAttribute("class", "clip_list_duration");
 				row.cells.item(i).setAttribute("id", "clip_duration_" + clip_row.clip_id);
 
@@ -570,7 +570,7 @@
 
 					/* change 'play' button to 'stop' */
 					var play_node = document.getElementById("clip_play_link_" + clip_row.clip_id);
-					play_node.innerHTML = "stop";
+					play_node.innerText = "stop";
 				}
 
 			}
@@ -721,7 +721,7 @@
 					/* Change 'cancel' button back to 'assign' */
 					var assign_node = document.getElementById("clip_assign_link_" + assigning_clip_id);
 					if(assign_node) {
-						assign_node.innerHTML = 'assign';
+						assign_node.innerText = 'assign';
 					}
 
 					assigning_clip_id = 0;
@@ -759,7 +759,7 @@
 				/* Change 'cancel' button back to 'assign' */
 				var assign_node = document.getElementById("clip_assign_link_" + clip_id);
 				if(assign_node) {
-					assign_node.innerHTML = 'cancel';
+					assign_node.innerText = 'cancel';
 				}
 
 				/* Set user message */
@@ -854,7 +854,7 @@
 
 				/* Change link from 'play' to 'stop' */
 				var play_link = document.getElementById("button_box_play_link_" + playing_button_id);
-				play_link.innerHTML = 'stop';
+				play_link.innerText = 'stop';
 			}
 
 
@@ -941,7 +941,7 @@
 
 				/* change 'play' button to 'stop' */
 				var play_node = document.getElementById("clip_play_link_" + clip_id);
-				play_node.innerHTML = "stop";
+				play_node.innerText = "stop";
 
 				/* Save duration column while we use it for countdown */
 				var duration_node = document.getElementById("clip_duration_" + clip_id);
