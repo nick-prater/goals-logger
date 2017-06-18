@@ -29,12 +29,12 @@
 		<link rel="stylesheet" href="/goals.css" />
 	</head>
 	<body>
-	
+
 		<div id="source_list_container">
 
-			<div class="profile_name">[% c.session.profile_name %]</div>
+			<div class="profile_name">[% c.session.profile_name | html %]</div>
 			<p />
-			
+
 			<div align="center"><b>event filter</b></div>
 			<form>
 				<fieldset>
@@ -54,16 +54,13 @@
 								</td>
 								<td>
 									<span class="source_text">
-										[% channel.source_label %]
-										<!-- <br />
-										[% channel.match_title %]
-										-->
+										[% channel.source_label | html %]
 									</span>
 								</td>
 							</tr>
 						[% END %]
 					</table>
-				</fieldset>	
+				</fieldset>
 				<fieldset id="status_to_show_fieldset">
 					<legend>status</legend>
 					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" checked="true" value="new" />new<br />
@@ -73,7 +70,7 @@
 				</fieldset>
 			</form>
 			<hr />
-[% INCLUDE ui/menu_links.tt %]	
+[% INCLUDE ui/menu_links.tt %]
 			<hr />
 
 		</div>
@@ -86,17 +83,17 @@
 				<!-- source populated dynamically by javascript -->
 			</audio>
 
-			
+
 			<div id="audio_selection" align="center">
-								
+
 				<label for="channel">source:</label>
 				<select name="channel_id" id="channel_id">
 					<option value="0">select channel</option>
 					[% FOREACH channel IN channels %]
-						<option value="[% channel.channel_id %]">[% channel.source_label _ " : " _ channel.match_title %]</option>
+						<option value="[% channel.channel_id %]">[% channel.source_label _ " : " _ channel.match_title | html %]</option>
 					[% END %]
 				</select>
-					
+
 				<label for="start_date">start date:</label>
 				<select name="start_date" id="start_date">
 					[% FOREACH dt IN start_dates %]
@@ -116,7 +113,7 @@
 						<option value="[% minute %]">[% minute FILTER format("%02u") %]</option>
 					[% END %]
 				</select>
-				:	
+				:
 				<select name="start_second" id="start_second" placeholder="jj">
 					<option value="0">SS</option>
 					[% FOREACH second IN [0..59] %]
@@ -137,7 +134,7 @@
 						<option value="[% minute %]">[% minute FILTER format("%02u") %]</option>
 					[% END %]
 				</select>
-				:	
+				:
 				<select name="end_second" id="end_second">
 					<option value="0">SS</option>
 					[% FOREACH second IN [0..59] %]
@@ -146,15 +143,15 @@
 				</select>
 				<button type="button" onclick="audio_start_fractional_seconds = 0; audio_end_fractional_seconds = 0; load_audio()">LOAD AUDIO</button>
 			</div>
-			
-			
+
+
 			<div name="player_container">
 
 				<div id="coarse_trim_buttons" style="display:block">
-				
+
 					<div id="buttons_left_of_player">
 						<div class="side_buttons_heading">trim start</div>
-						
+
 						<div>
 							<div class="side_buttons_label">&mdash;&nbsp;10s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-10)">&larr;</button>
@@ -166,9 +163,9 @@
 							<button class="side_button_left" type="button" onclick="trim_start(-30)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(30)">&rarr;</button>
 						</div>
-						
+
 					</div>
-					
+
 					<div id="buttons_right_of_player">
 						<div class="side_buttons_heading">trim end</div>
 						<div>
@@ -185,27 +182,27 @@
 					</div>
 
 				</div>
-			
-			
+
+
 				<div id="fine_trim_buttons" style="display:none">
-				
+
 					<div id="buttons_left_of_player">
 						<div class="side_buttons_heading">trim start</div>
-						
+
 						<div>
 							<div class="side_buttons_label">&mdash;&nbsp;0.1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-0.1)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(0.1)">&rarr;</button>
 						</div>
-						<br />	
+						<br />
 						<div>
 							<div class="side_buttons_label">&mdash;&nbsp;1s&nbsp;&mdash;</div>
 							<button class="side_button_left" type="button" onclick="trim_start(-1.0)">&larr;</button>
 							<button class="side_button_right" type="button" onclick="trim_start(1.0)">&rarr;</button>
 						</div>
-						
+
 					</div>
-					
+
 					<div id="buttons_right_of_player">
 						<div class="side_buttons_heading">trim end</div>
 						<div>
@@ -221,12 +218,12 @@
 						</div>
 					</div>
 				</div>
-			
-			
+
+
 				<div id="waveform_container">
 
 					<!-- size of SVG is defined by style of waveform_container -->
-					<svg 
+					<svg
 						id="waveform_svg"
 						xmlns="http://www.w3.org/2000/svg"
 						xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -243,7 +240,7 @@
 								fill="rgb(150,150,150)"
 							/>
 						</g>
-					
+
 						<image
 							x="0%"
 							y="0%"
@@ -253,7 +250,7 @@
 							xlink:href="/default_waveform.png"
 							id="waveform_image"
 						/>
-						
+
 
 						<line
 							id="clip_marker"
@@ -277,9 +274,9 @@
 							draggable="true"
 						/>
 					</svg>
-				
-				
-				
+
+
+
 					<div id="time below_player" align="center">
 						<table style="width:100%">
 							<tr>
@@ -288,12 +285,12 @@
 								<td align="right"><b id="out_time"">--:--:--.--</b></td>
 							</tr>
 						</table>
-					</div>				
+					</div>
 				</div>
 
 			</div>
-						
-			
+
+
 			<div id="buttons_below_player" align="center">
 				<button type="button" onclick="mark_in()">MARK IN</button>
 				<button type="button" onclick="mark_out()">MARK OUT</button>
@@ -304,9 +301,9 @@
 				<button type="button" onclick="download_clip()">DOWNLOAD</button>
 				<button type="button" onclick="play_pause()" id="play_pause_button" class="play_pause_button">PLAY</button>
 			</div>
-			
+
 			<hr />
-			
+
 			<!-- This div contains the form used to input metadata for a new audio clip
 			     it is hidden until the create clip button is pressed
 			-->
@@ -318,7 +315,7 @@
 					<ol>
 						<li>
 							<label for="title">title</label>
-							<input 
+							<input
 								type="text"
 								name="title"
 								placeholder="Short title to show on hotkey"
@@ -330,7 +327,7 @@
 
 						<li>
 							<label for="people">people</label>
-							<input 
+							<input
 								type="text"
 								name="people"
 								placeholder="Names of the people speaking"
@@ -352,7 +349,7 @@
 
 						<li>
 							<label for="out_cue">out cue</label>
-							<input 
+							<input
 								type="text"
 								name="out_cue"
 								placeholder="enter the last few words or describe how the clip ends"
@@ -382,7 +379,7 @@
 								<option value="other">Other</option>
 							</select>
 						</li>
-						
+
 						<li>
 							<label for="duration">duration</label>
 							<span id="create_clip_duration">--:--</span>
@@ -395,7 +392,7 @@
 				</form>
 			</div>
 
-			
+
 			<!-- This div contains the form used to display status feedback when clips are created.
 			     It is hidden until the create clip button is pressed. Message is populated dynamically
 			-->
@@ -430,7 +427,7 @@
 		<script type="text/javascript">
 
 			/* Do these lookups once, to save having to query the DOM
-			 * every time in each function that references the objects. As a 
+			 * every time in each function that references the objects. As a
 			 * consequence, this code must go after the HTML which
 			 * creates the objects.
 			 */
@@ -439,7 +436,7 @@
 			var play_pause_button = document.getElementById('play_pause_button');
 			var time = document.getElementById('time');
 			var clip_marker = document.getElementById('clip_marker');
-			var waveform_svg = document.getElementById('waveform_svg');	
+			var waveform_svg = document.getElementById('waveform_svg');
 			var clip_metadata = document.getElementById('clip_metadata_container');
 
 			/* Global state variables */
@@ -454,7 +451,7 @@
 			var load_position_seconds = 0; // If non-zero, autoplay starts from this time position in audio
 			var click_seconds = 0;         // Keeps track of where mouse button was last clicked
 			var max_clip_seconds = [% max_clip_seconds %];
-			
+
 			/* Keep track of fractional seconds for selected audio:
 			 * When audio is loaded, we get the time-span from drop-down boxes on the form,
 			 * but these don't allow finer resolution than 1 second to be specified. For clips,
@@ -462,19 +459,19 @@
 			 * fractional second part of the timespec in milliseconds */
 			audio_start_fractional_seconds = 0;
 			audio_end_fractional_seconds = 0;
-			
+
 			/* Use a standard javascript timer to update the play cursor and stop
 			 * at the marked clip end. The built-in audio timeupdate event fires
 			 * too infrequently (typically only evert 250ms or so, browser dependent
 			 */
 			var run_play_timer = true;
 			var play_timer;
-			
+
 			/* Timer to update the event/clip list */
 			var poll_ajax_timer_period_ms = 5000; // Set to 0 to disable
 			var poll_ajax_timer;
 			refresh_event_list();
-			
+
 
 			function play_pause() {
 
@@ -492,7 +489,7 @@
 					if(player.currentTime >= player.duration) {
 						player.currentTime = 0;
 					}
-					
+
 					player.play();
 				}
 				else {
@@ -500,7 +497,7 @@
 				}
 			}
 
-			
+
 			function skip(seconds) {
 
 				/* Move player forward or back by specified number of seconds.
@@ -544,7 +541,7 @@
 				if(out_seconds > window_end_seconds) {
 					out_seconds = window_end_seconds;
 				}
-								
+
 				var in_marker_percent = ((in_seconds / window_duration_seconds) * 100);
 				var out_marker_percent = ((out_seconds / window_duration_seconds) * 100);
 
@@ -552,7 +549,7 @@
 				if(isNaN(in_marker_percent) || isNaN(out_marker_percent)) {
 					return;
 				}
-				
+
 				/* Update marker bar */
 				clip_marker.setAttribute("x1", in_marker_percent + "%");
 				clip_marker.setAttribute("x2", out_marker_percent + "%");
@@ -573,7 +570,7 @@
 				/* Reset clip marks to defaults - whole of audio */
 				in_point_seconds = 0;
 				out_point_seconds = player.duration;
-	
+
 				/* We call this to update relevant text fields */
 				display_clip_marker(in_point_seconds, out_point_seconds);
 
@@ -615,26 +612,26 @@
 				/* Hide clip list */
 				var clip_list = document.getElementById('clip_list_container');
 				clip_list.style.display = "none";
-				
+
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf() + (in_point_seconds * 1000);
 				var out_point_ms = audio_start_dt.valueOf() + (out_point_seconds * 1000);
 				var duration_seconds = (out_point_seconds - in_point_seconds);
-				
+
 				/* This updates the drop down boxes to reflect the given start/end points */
 				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
-								
+
 				/* Load Audio for marked clip */
 				autoplay = false;
-				load_audio();				
-				
+				load_audio();
+
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
 				duration_text_field.innerHTML = seconds_to_hours_mins_secs(duration_seconds);
-				
+
 				/* Show clip_details div */
 				clip_metadata.style.display = "block";
-				
+
 				/* Show clip trim buttons */
 				var node;
 				node = document.getElementById("coarse_trim_buttons");
@@ -655,48 +652,48 @@
 				node.style.display = "none";
 				node = document.getElementById("coarse_trim_buttons");
 				node.style.display = "block";
-				
+
 				/* Show event list */
 				var clip_list = document.getElementById('clip_list_container');
-				clip_list.style.display = "block";	
+				clip_list.style.display = "block";
 			}
 
-			
+
 			function trim_start(seconds) {
-			
+
 				/* Trimming is based on the duration of audio in the player
 				 * if there is no audio loaded, perhaps because we are still waiting for
 				 * a clip to load, trimming is invalid, so do nohing
-				 */	
+				 */
 				var current_duration_seconds = player.duration;
 				if(isNaN(current_duration_seconds)) {
 					return;
 				}
-	
+
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf() + (seconds * 1000);
 				var out_point_ms = audio_start_dt.valueOf() + (current_duration_seconds * 1000);
 				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
-				
+
 				/* This updates the drop down boxes to reflect the given start/end points */
 				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
-								
+
 				/* Load Audio for marked clip */
 				autoplay = true;
 				load_audio();
-				
+
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
 				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 			}
-			
-			
+
+
 			function trim_end(seconds) {
-		
+
 				/* Trimming is based on the duration of audio in the player
 				 * if there is no audio loaded, perhaps because we are still waiting for
 				 * a clip to load, trimming is invalid, so do nohing
-				 */	
+				 */
 				var current_duration_seconds = player.duration;
 				if(isNaN(current_duration_seconds)) {
 					return;
@@ -706,30 +703,30 @@
 				var in_point_ms  = audio_start_dt.valueOf();
 				var out_point_ms = audio_start_dt.valueOf() + ((current_duration_seconds + seconds) * 1000);
 				var duration_seconds = (out_point_ms- in_point_ms) / 1000;
-				
+
 				/* This updates the drop down boxes to reflect the given start/end points */
 				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
-								
+
 				/* Load Audio for marked clip */
 				autoplay = true;
-				load_position_seconds = (out_point_ms / 1000) - 1;				
+				load_position_seconds = (out_point_ms / 1000) - 1;
 				load_audio();
-				
+
 				/* Update text fields on metadata form */
 				var duration_text_field = document.getElementById('create_clip_duration');
 				duration_text_field.innerHTML = ( seconds_to_hours_mins_secs(duration_seconds) );
 			}
-			
-			
+
+
 			function play_from_in_point() {
 
 				player.currentTime = in_point_seconds;
-				player.play();				
+				player.play();
 			}
 
 
 			function play_to_out_point(preroll_seconds) {
-			
+
 				var start_seconds = out_point_seconds - preroll_seconds;
 
 				if(start_seconds < in_point_seconds) {
@@ -752,7 +749,7 @@
 
 				if(event.ctrlKey) {
 
-					/* If Control is held, in the first instance skip back to marked 
+					/* If Control is held, in the first instance skip back to marked
 					 * end, then clip start, then beginning of audio
 					 */
 					if(player.currentTime > out_point_seconds) {
@@ -767,7 +764,7 @@
 
 				}
 				else {
-				
+
 					/* Skip one minute if Shift key is also pressed down */
 					skip_seconds = event.shiftKey ? -60 : -2;
 					skip(skip_seconds);
@@ -801,7 +798,7 @@
 
 				}
 				else {
-				
+
 					/* Skip one minute if Shift key is also pressed down */
 					skip_seconds = event.shiftKey ? 60 : 2;
 					skip(skip_seconds);
@@ -866,7 +863,7 @@
 					 */
 					run_play_timer = true;
 					play_timer_event();
-					
+
 					/* This is used when trimming end of a clip, so that
 					 * autoplay starts from somewhere other than start of clip */
 					if(load_position_seconds) {
@@ -887,12 +884,12 @@
 
 				/* Reposition play cursor */
 				var position_percent = ((player.currentTime / player.duration) * 100);
-				
+
 				/* Sanity Check */
 				if(isNaN(position_percent)) {
 					return;
 				}
-				
+
 				cursor.setAttribute("x1", position_percent + '%');
 				cursor.setAttribute("x2", position_percent + '%');
 
@@ -903,7 +900,7 @@
 				else if(stop_at_clip_end) {
 					player.pause();
 				}
-				
+
 			}
 
 
@@ -932,7 +929,7 @@
 					if(clip_metadata.style.display == "block") {
 						return;
 					}
-								
+
 					switch(event.keyCode) {
 
 						case 37: // Left Arrow
@@ -963,7 +960,7 @@
 			document.addEventListener(
 				"keypress",
 				function(event) {
-				
+
 					/* Suppress keyboard shortcuts if clip metadata form is being
 					 * displayed to avoid conflict. For example, if we didn't do this,
 					 * every time a space character was entered into the clip metadata
@@ -986,13 +983,13 @@
 
 
 
-			/* Waveform Display Event Handlers */			 
+			/* Waveform Display Event Handlers */
 			waveform_svg.addEventListener("mousedown", waveform_mouse_down);
-			
+
 			/* Dynamically load the waveform once the player starts loading data */
 			player.addEventListener("loadstart", load_waveform);
 			player.addEventListener("progress", update_progress);
-	
+
 			/* Resize event only triggers on outermost container, therfore
 			 * we have to listen to the window.resize event, rather than the
 			 * waveform_svg.resize event.
@@ -1033,7 +1030,7 @@
 				if(out_seconds > window_end_seconds) {
 					out_seconds = window_end_seconds;
 				}
-								
+
 				var in_marker_percent = ((in_seconds / window_duration_seconds) * 100);
 				var out_marker_percent = ((out_seconds / window_duration_seconds) * 100);
 				var width_percent = (out_marker_percent - in_marker_percent);
@@ -1052,17 +1049,17 @@
 					element = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 					element.setAttribute("id", id);
 					element.setAttribute("name", "buffer_region");
-					element.setAttribute("y", "0%"); 
-					element.setAttribute("height", "100%"); 
+					element.setAttribute("y", "0%");
+					element.setAttribute("height", "100%");
 					element.setAttribute("stroke", "black");
 					element.setAttribute("fill", "white");
 					element.setAttribute("opacity", "1");
 					group.appendChild(element);
 				}
-	
+
 				/* Update the element */
-				element.setAttribute("x", in_marker_percent + "%"); 
-				element.setAttribute("width", width_percent + "%"); 
+				element.setAttribute("x", in_marker_percent + "%");
+				element.setAttribute("width", width_percent + "%");
 			}
 
 
@@ -1091,7 +1088,7 @@
 					if(isNaN(index)) {
 						continue;
 					}
-					
+
 					if(index >= region_count) {
 						delete_queue.push(element);
 					}
@@ -1116,41 +1113,41 @@
 
 				/* Extract actual size in pixels of SVG on screen */
 				var bounds = waveform_svg.getBoundingClientRect();
-				
+
 				/*
 				URL formats:
 				audio/wav/2/2012-07-03T10:22:22Z/2012-07-03T10:23:44
 				audio/waveform/2/2012-07-03T10:22:22Z/2012-07-03T10:23:44/width/height/colour
 				*/
-				
+
 				/* Extract a valid audio URI from the player object */
 				var audio_uri = player.currentSrc;
 				if(audio_uri.search("audio/wav/") == -1) {
 					/* Audio is not a valid URL for some reason */
 					return;
 				}
-				
-				/* Generate waveform URI based on audio URI */			
+
+				/* Generate waveform URI based on audio URI */
 				var waveform_uri = audio_uri.replace("wav", "waveform");
 				waveform_uri += "/" + Math.floor(bounds.width) ;
 				waveform_uri += "/" + Math.floor(bounds.height);
 				waveform_uri += "/" + '112233'; // colour in rrggbb html format
-				
+
 				image.setAttribute("xlink:href",waveform_uri);
 			}
-			
-			
+
+
 			function waveform_mouse_down(event) {
 
 				/* React to the click position */
 				waveform_mouse_move(event);
-				
+
 				/* Capture and react to any further movement over the waveform */
 				waveform_svg.addEventListener("mousemove", waveform_mouse_move);
 
 				/* Stop capturing movement when mouse button is released anywhere */
 				document.addEventListener("mouseup", waveform_mouse_up);
-				
+
 				player.play();
 			}
 
@@ -1160,7 +1157,7 @@
 				/* Stop reacting to mouse movements, if we were doing so */
 				waveform_svg.removeEventListener("mousemove", waveform_mouse_move);
 				document.removeEventListener("mouseup", waveform_mouse_up);
-				
+
 				/* Pause and reposition player back to where we last clicked/moved */
 				player.pause();
 				player.currentTime = click_seconds;
@@ -1199,21 +1196,21 @@
 
 
 			function player_seconds_to_hmsc(seconds) {
-			
+
 				var t = new Date((seconds * 1000) + audio_start_dt.valueOf());
 				var text = t.toISOString();
 				return text.substr(11, 11);
 			}
-			
+
 
 			function seconds_to_hours_mins_secs(seconds) {
-			
+
 				/* Given a number of seconds, returns a string in format "H hours M minutes S seconds" */
 				var hours = Math.floor(seconds / 3600);
 				var minutes = Math.floor((seconds % 3600 / 60));
 				seconds = Math.floor(seconds % 60);
 				var rv = "";
-			
+
 				/* Only output hours if duration is >= 1 hour */
 				if(hours > 0) {
 					rv = hours + " hour";
@@ -1221,44 +1218,44 @@
 					rv += "  ";
 				}
 
-	
+
 				/* Only output minutes if duration is >= 1 minute */
 				if( minutes > 0 || hours > 0) {
 					rv += minutes + " minute";
 					if(minutes != 1) { rv += "s" }; // plural-ise if required
 					rv += "  ";
 				}
-				
+
 				/* Always output seconds */
 				rv += seconds + " second";
 				if(seconds != 1) { rv += "s" }; // plural-ise if required
-				
+
 				return rv;
 			}
 
-			
+
 			function zero_pad(n, desired_length) {
 				/* Given a string and desired length, keep adding '0' to the start
 				 * until the desired length is attained. Used for zero-padding numbers
 				 */
-				 
+
 				/* Coerce number into a string */
 				n = "" + n;
-				
+
 				/* Keep adding zeros to the front until we have desired length */
 				while( n.length < desired_length) {
-					n = "0" + n;	
+					n = "0" + n;
 				}
-				return n;			
+				return n;
 			}
-			
-			
+
+
 			/* Functions to dynamically load Clip Event List */
 			function process_event_json(object) {
-			
+
 				var table = document.getElementById("clip_list");
 				var rows = table.rows;
-				
+
 				/* Loop through current table to remove redundant rows.
 				 * Work through table rows from highest index, otherwise
 				 * the indexes will start moving around beneath our feet
@@ -1266,42 +1263,42 @@
 				 * position. Don't test index 0 as this is the title row.
 				 */
 				for (var i = (rows.length - 1); i > 0; i--) {
-					
+
 					/* row ids are composed as event_row_XXX, where
 					 * XXX is the event_id, which we will extract
 					 */
 					var event_id = rows[i].id.substr(5);
-					
+
 					/* Sanity check that we have an event_id */
 					if(!event_id) {
 						/* ERROR extracting event_id - skip */
 						continue;
 					}
-					
+
 					/* Delete row if it's id isn't in latest server response? */
 					if(!object[event_id]) {
-						table.deleteRow(i);	
+						table.deleteRow(i);
 					}
 				}
-			
+
 				/* Loop through each returned event */
 				for (var event_id in object) {
-					
+
 					/* Skip private object meta properties */
 					if (!object.hasOwnProperty(event_id)) {
 						next;
 					}
-					
+
 					populate_event_row(object[event_id]);
 				}
-			}			
-	
-	
+			}
+
+
 			function populate_event_row(event_row) {
-			
+
 				var table = document.getElementById("clip_list");
 				var row_id = "event_row_" + event_row.id;
-			
+
 				/* Look to see if we already have a row for this event_row_id */
 				var row = table.rows.namedItem(row_id);
 
@@ -1309,7 +1306,7 @@
 					/* Not an existing row, insert one after header row */
 					row = table.insertRow(1);
 					row.id = row_id;
-					
+
 					/* The table has 6 cells/fields */
 					row.insertCell(-1);
 					row.insertCell(-1);
@@ -1339,10 +1336,10 @@
 				row.cells.item(7).appendChild(generate_delete_link(event_row));
 				row.cells.item(7).setAttribute("class", "clip_list_delete");
 			}
-	
-	
+
+
 			function generate_edit_link(event_row) {
-			
+
 				var a = document.createElement('a');
 				a.setAttribute('href', '');
 				a.appendChild(document.createTextNode('edit'));
@@ -1354,18 +1351,18 @@
 						event.preventDefault();
 					}
 				);
-				
+
 				return a;
 			}
 
-			
+
 			function generate_delete_link(event_row) {
-			
+
 				var a = document.createElement('a');
 				a.setAttribute('href', '');
-				
+
 				if( event_row.status != 'deleted') {
-					
+
 					a.appendChild(document.createTextNode('delete'));
 					a.addEventListener(
 						"click",
@@ -1375,7 +1372,7 @@
 						}
 					);
 				}
-				else {	
+				else {
 					a.appendChild(document.createTextNode('undelete'));
 					a.addEventListener(
 						"click",
@@ -1384,61 +1381,61 @@
 							event.preventDefault();
 						}
 					);
-								
+
 				}
-				
+
 				return a;
 			}
 
-	
+
 			function refresh_event_list() {
-			
+
 				var request = new XMLHttpRequest();
 
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
+
 					if(request.readyState != 4) {
 						/* request has not yet completed */
 						return;
 					}
 
-					if(request.status == 200) { 
-			
+					if(request.status == 200) {
+
 						/* Extract and parse payload */
 						var response = JSON.parse(request.responseText);
-		
+
 						/* Process the payload */
 						process_event_json(response);
 					}
-					
+
 					/* Free Up HTTP request object */
 					delete request;
-				
+
 					/* Schedule next update timer if we're running it */
 					if(poll_ajax_timer_period_ms) {
 						poll_ajax_timer = setTimeout("refresh_event_list()", poll_ajax_timer_period_ms);
 					}
 				}
-			
+
 				var url = "/events/all?status=" + get_clip_list_status_filters() + ";channel_id=" + get_clip_list_source_filters();
 				request.open("GET", url, true);
 				request.send();
 			}
-			
-			
+
+
 			function get_clip_list_status_filters() {
-			
+
 				/* Read status of filter checkboxes and return a corresponding query string */
 				var checkboxes = document.getElementsByName("clip_status_to_show");
 				var status_list = "";
-				
+
 				for( var i = 0; i < checkboxes.length; i ++ ) {
 					if(checkboxes[i].checked) {
 						status_list += "," + checkboxes[i].value;
 					}
 				}
-				
+
 				/* Strip off initial ',' */
 				status_list = status_list.substr(1);
 
@@ -1448,31 +1445,31 @@
 
 				return status_list;
 			}
-			
-			
+
+
 			function get_clip_list_source_filters() {
-			
+
 				/* Read status of filter checkboxes and return a corresponding query string */
 				var checkboxes = document.getElementsByName("clip_source_to_show");
 				var list = "";
-				
+
 				for( var i = 0; i < checkboxes.length; i ++ ) {
 					if(checkboxes[i].checked) {
 						list += "," + checkboxes[i].value;
 					}
 				}
-				
+
 				/* Strip off initial ',' */
 				list = list.substr(1);
 				return list;
 			}
-			
-			
+
+
 			/* Functions to load specified audio timespan */
 			function audio_spec() {
-			
+
 				/* Extract the channel, time and date specified in the audio selection
-				 * boxes, returning them as a single audio specification object */	
+				 * boxes, returning them as a single audio specification object */
 				this.channel_id = document.getElementById("channel_id").value;
 				this.start_date = document.getElementById("start_date").value;
 				this.start_hour = document.getElementById("start_hour").value;
@@ -1481,39 +1478,39 @@
 				this.end_hour = document.getElementById("end_hour").value;
 				this.end_minute = document.getElementById("end_minute").value;
 				this.end_second = document.getElementById("end_second").value;
-				
+
 				/* Parse the date and time paremters into a javascript Date object
 				 specify the times as UTC, even though they may be in a different
 				 timezone, to stop javascript adjusting them based on the browser's
 				 timezone. We want to consider the timestamps as referenced to the
 				 audio channel's timezone (i.e. where it is being recorded) */
-				 
+
 				/* Decimal part of times are extracted from two global variables,
 				 * rather than the user-interface drop down */
-								
+
 				var start = new Date(this.start_date);
 				start.setUTCHours(this.start_hour);
 				start.setUTCMinutes(this.start_minute);
 				start.setUTCSeconds(this.start_second);
 				start.setUTCMilliseconds(audio_start_fractional_seconds);
-				
+
 				var end = new Date(this.start_date);
 				end.setUTCHours(this.end_hour);
 				end.setUTCMinutes(this.end_minute);
 				end.setUTCSeconds(this.end_second);
 				end.setUTCMilliseconds(audio_end_fractional_seconds);
-							
+
 				if(end <= start) {
 					/* Date portion is shared by the start and end timestamps
 					 * so if end timestamp appears before the start timestamp
 					 * it should be interpreted as being the following day */
 					end.setHours(end.getHours() + 24);
 				}
-				
+
 				this.start_dt = start;
 				this.end_dt = end;
 				this.duration_seconds = ((end.getTime() - start.getTime()) / 1000);
-				
+
 				/* Javascript generates extended ISO timestamps in the format:
 				 * 2012-07-06T00:00:00.000Z
 				 * Strip off the final 'Z' UTC designation, as these are not UTC timestamps
@@ -1523,19 +1520,19 @@
 				this.start_epoch_ms = start.valueOf();
 				this.end_epoch_ms = end.valueOf();
 			}
-			
+
 			function download_clip() {
-			
+
 				var channel_id = this.channel_id = document.getElementById("channel_id").value;
 				var in_point_ms  = audio_start_dt.valueOf() + (in_point_seconds * 1000);
 				var out_point_ms = audio_start_dt.valueOf() + (out_point_seconds * 1000);
-				
+
 				var start = new Date(in_point_ms);
 				var end = new Date(out_point_ms);
-							
+
 				var start_iso = start.toISOString().substr(0, 23);
 				var end_iso = end.toISOString().substr(0, 23);
-				
+
 				var audio_url = (
 					"/audio/wav/" +
 					channel_id + "/" +
@@ -1543,23 +1540,23 @@
 					end_iso +
 					"?filename=audio.wav"
 				)
-				
+
 				window.open(audio_url, "_self");
-				//alert("DEBUG: loading audio_url: " + audio_url);			
+				//alert("DEBUG: loading audio_url: " + audio_url);
 			}
-			
-			
+
+
 			function load_audio() {
-							
+
 				var spec = new audio_spec();
-				
+
 				var audio_url = (
 					"/audio/wav/" +
 					spec.channel_id + "/" +
 					spec.start_iso + "/" +
 					spec.end_iso
 				)
-				
+
 				if( isNaN(spec.channel_id) || spec.channel_id == 0 ) {
 					alert("Please select an audio source");
 					return;
@@ -1592,13 +1589,13 @@
 					spec.end_epoch_ms
 				);
 			}
-			
+
 			/* We set the select boxes to the appropriate local time,
 			 * because we don't want to rely on the browser's understanding
 			 * of local or channel time zones.
 			 * Alternative is more ajax interaction with server using UTC */
 			function edit_clip(local_iso_timestamp, channel_id, event_id) {
-				
+
 				set_channel(channel_id);
 				set_start_date(local_iso_timestamp);
 				audio_event_id = event_id; // update global status variable
@@ -1606,35 +1603,35 @@
 				open_event(event_id)
 				load_audio();
 			}
-		
-	
+
+
 			function call_event_action(cmd, event_id) {
-			
+
 				var request = new XMLHttpRequest();
-				
+
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-			
+
 					if(request.readyState != 4) {
 						/* request has not yet completed */
 						return;
 					}
-	
+
 					if (request.status == 200) {
 						refresh_event_list();
 					}
-					
+
 					/* Free Up HTTP request object */
 					delete request;
 				}
-			
+
 				/* Send request */
 				var url = "/events/" + cmd + "/" + event_id;
 				request.open("GET", url, true);
-				request.send();				
+				request.send();
 			}
-		
-		
+
+
 			function delete_event(event_id) {
 
 				call_event_action('delete', event_id);
@@ -1646,20 +1643,20 @@
 				call_event_action('undelete', event_id);
 			}
 
-			
+
 			function open_event(event_id) {
 
 				call_event_action('open', event_id);
 			}
 
-	
+
 			function remove_table_row(table_id, row_id) {
 
 				/* Not presently using this function - just refreshing whole list */
-				
+
 				var table = document.getElementById(table_id);
 				var rows = table.rows;
-				
+
 				/* Loop through current table to remove redundant rows.
 				 * Work through table rows from highest index, otherwise
 				 * the indexes will start moving around beneath our feet
@@ -1667,7 +1664,7 @@
 				 * position. Don't test index 0 as this is the title row.
 				 */
 				for (var i = (rows.length - 1); i > 0; i--) {
-					
+
 					/* row ids are composed as event_row_XXX, where
 					 * XXX is the event_id, which we will extract
 					 */
@@ -1677,33 +1674,33 @@
 				}
 			}
 
-			
+
 			function set_audio_times_from_event_local_timestamp(local_iso_timestamp) {
-			
+
 				/* Although local_iso_timestamp isn't in UTC, but is in the audio recording
 				 * timezone, add a 'Z' to indicate UTC. This will prevent any automatic
 				 * timezone translation by javascript */
 				var dt = new Date(local_iso_timestamp + "Z");
 				var preroll_ms  = 60 * 1000;
 				var postroll_ms = 30 * 1000;
-				
+
 				set_audio_times_from_local_epoch_ms(
 					(dt.valueOf() - preroll_ms),
 					(dt.valueOf() + postroll_ms)
 				);
 			}
-			
-			
+
+
 			function set_audio_times_from_local_epoch_ms(start_local_epoch_ms, end_local_epoch_ms) {
-						
+
 				/* Given an ISO YYYY-MM-DDTHHMMSS.nnn timestamp, in the
 				 * display time zone, populate the audio time selection
-				 * boxes to match this time */				
+				 * boxes to match this time */
 				var select_box;
-				
+
 				var dt_end   = new Date(end_local_epoch_ms);
 				var dt_start = new Date(start_local_epoch_ms);
-				
+
 				/* Hour, Minute, Seconds fields are indexed in order,
 				 * but first entry is placeholder text, so +1 to minutes,
 				 * hours, or seconds value to get index
@@ -1716,7 +1713,7 @@
 				select_box = document.getElementById("start_second");
 				select_box.selectedIndex = dt_start.getUTCSeconds() + 1;
 				audio_start_fractional_seconds = dt_start.getUTCMilliseconds();
-			
+
 				select_box = document.getElementById("end_hour");
 				select_box.selectedIndex = dt_end.getUTCHours() + 1;
 				select_box = document.getElementById("end_minute");
@@ -1725,55 +1722,55 @@
 				select_box.selectedIndex = dt_end.getUTCSeconds() + 1;
 				audio_end_fractional_seconds = dt_end.getUTCMilliseconds();
 			}
-		
-			
+
+
 			function set_start_date(local_iso_timestamp) {
-						
+
 				var select_box = document.getElementById("start_date");
 				var iso_date = local_iso_timestamp.substr(0, 10);
-				
+
 				for(var i = 0; i < select_box.length; i++) {
 					if(select_box.options[i].value == iso_date) {
 						select_box.selectedIndex = i;
 						break;
 					}
 				}
-				
+
 				/* Check that we were able to select the requested date. There is a possibility
 				 * that the requested date was unavailable in the selction list */
 				if(select_box.value != iso_date) {
 					alert("ERROR: Unable to select audio corresponding to this event. There appears to be no audio available for the relevant date");
 					return false;
 				}
-				
+
 				return true;
 			}
-			
-			
+
+
 			function set_channel(channel_id) {
 
 				var select_box = document.getElementById("channel_id");
-								
+
 				for(var i = 0; i < select_box.length; i++) {
 					if(select_box.options[i].value == channel_id) {
 						select_box.selectedIndex = i;
 						break;
 					}
 				}
-				
+
 				/* Check that we were able to select the requested channel. There is a possibility
 				 * that it was not available in the selction list */
 				if(select_box.value != channel_id) {
 					alert("ERROR: Unable to select audio corresponding to this event. There appears to be no audio available for the relevant channel");
 					return false;
 				}
-				
-				return true;				
+
+				return true;
 			}
-			
-			
+
+
 			function post_clip_metadata() {
-			
+
  				var spec = new audio_spec()
  				spec.title = document.getElementById("clip_title").value;
  				spec.people = document.getElementById("clip_people").value;
@@ -1784,25 +1781,25 @@
  				spec.event_id = audio_event_id;
  				spec.profile_id = "[% c.session.profile_id %]";
  				spec.profile_code = "[% c.session.profile_code %]";
-			
+
 				var request = new XMLHttpRequest();
 				var progress_container = document.getElementById('progress_message_container');
 				var metadata_container = document.getElementById('clip_metadata_container');
 
 				/* Define handler to deal with response */
 				request.onreadystatechange = function() {
-				
+
 					if(request.readyState != 4) {
 						/* Request has not yet completed */
 						return;
 					}
-				
+
 					if(request.status == 200) {
 
 						/* Success - extract and parse payload */
 						console.log("success: ", request.responseText);
 						var response = JSON.parse(request.responseText);
-		
+
 						if(response.clip_id) {
 							/* Clip created OK - forward to hotkey assignment */
 							window.location.href = "assign_clips?clip_id=" + response.clip_id;
@@ -1815,19 +1812,19 @@
 					/* Free Up HTTP request object */
 					delete request;
 				}
-				
+
 				/* Show progress message - hide metadata */
 				metadata_container.style.display = "none";
 				progress_container.innerHTML = '<span id="progress_message">Creating clip, please wait...</span>';
 				progress_container.style.display = "block";
-			
+
  				request.open("PUT", "/clips/create", true);
  				request.setRequestHeader("Content-Type", "application/json"); //;charset=UTF-8");
  				request.send(JSON.stringify(spec));
 			}
-			
-			
-			
+
+
+
 		</script>
 
 
