@@ -27,7 +27,6 @@
 		width:30em;
 	}
 
-
 	#source_list_container {
 		position: absolute;
 		left:0%;
@@ -45,10 +44,70 @@
 		position:relative;
 		left:5%;
 		width:90%;
+		height: 100%;
+		background: #bbb;
+	}
+
+	#clip_list_container {
+		height: 60%;
+		overflow: auto;
+	}
+
+	.profile_name {
+		text-align: center;
+		background: #222;
+		color: #fff;
+	}
+
+	#clip_list {
+		width: 100%;
+	}
+
+	#buttons_left_of_player {
+		position: absolute;
+		float: left;
+		width: 5%;
+		
+	}
+
+	#buttons_right_of_player {
+		position: absolute;
+		left: 95%;
+		width: 5%;
+	}
+
+	.side_buttons_heading {
+		text-align: center;
+		font-size: 10pt;
+		font-weight: bold;
+	}
+
+	.side_buttons_label {
+		text-align: center;
+		font-size: 8pt;
+		background: #ffffff;
+	}
+
+	.side_button_left {
+		float: left;
+		width: 25px;
+		height: 16pt;
+		font-size: 8pt;
+	}
+	.side_button_right {
+		float: right;
+		width: 25px;
+		height: 16pt;
+		font-size: 8pt;
+	}
+
+	.play_pause_button {
+		width: 6em;
 	}
 	
 	body {
 		font-family: Arial, Helvetica, Verdana, sans-serif;
+		height: 100%;
 	}
 
 	form#clip_metadata label {
@@ -65,12 +124,7 @@
 		font-size: 90%;
 	}
 	
-	.profile_name {
-		text-align: center;
-		background: #222;
-		color: #fff;
-	}
-	
+
 	/* Styling for studio player 'Button Box' */
 	table.button_box {
 		width: 100%;
@@ -144,6 +198,7 @@
 	}
 
 	#clip_list_container {
+		height: 60%;
 		position: relative;
 	}
 
