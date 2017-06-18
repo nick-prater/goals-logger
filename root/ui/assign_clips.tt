@@ -112,29 +112,35 @@
 			-->
 			<div class="clip_list_container" align="center">
 
-				<div class="clip_list_heading_links">
-					<a href="javascript:delete_selected_clips()">delete selected</a>
-				</div>
-
 				<div class="clip_list_div">
 					<table id="clip_list" class="clip_list">
 
-						<tr class="title_row">
-							<th class="clip_list_checkbox"></th>
-							<th class="clip_list_assign"></th>
-							<!-- <th class="clip_list_delete"></th> -->
-							<th class="clip_list_play"></th>
-							<th class="clip_list_download"></th>
-							<th class="clip_list_rename"></th>
-							<th class="clip_list_title">title</th>
-							<th class="clip_list_source">source</th>
-							<th class="clip_list_category">category</th>
-							<th class="clip_list_date">date</th>
-							<th class="clip_list_time">time</th>
-							<th class="clip_list_duration">duration</th>
-						</tr>
+						<thead>
+							<div class="clip_list_heading_links">
+								<a href="javascript:delete_selected_clips()">delete selected</a>
+							</div>
+						</thead>
 
-						<!-- data rows will be populated dynamically -->
+						<tbody>
+							<tr class="title_row">
+								<th class="clip_list_checkbox">
+									<input type="checkbox" name="clip_list_select_all" id="clip_list_select_all"/>
+								</th>
+								<th class="clip_list_assign"></th>
+								<!-- <th class="clip_list_delete"></th> -->
+								<th class="clip_list_play"></th>
+								<th class="clip_list_download"></th>
+								<th class="clip_list_rename"></th>
+								<th class="clip_list_title">title</th>
+								<th class="clip_list_source">source</th>
+								<th class="clip_list_category">category</th>
+								<th class="clip_list_date">date</th>
+								<th class="clip_list_time">time</th>
+								<th class="clip_list_duration">duration</th>
+							</tr>
+
+							<!-- data rows will be populated dynamically -->
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -158,6 +164,12 @@
 			var poll_ajax_timer;
 			update_buttons();
 			update_clip_list();
+
+			/* Handle change to clip list "select all" checkbox */
+			document.getElementById("clip_list_select_all").addEventListener(
+				"click",
+				clip_list_select_all
+			);
 
 			/* Define handlers for player events */
 			var player = document.getElementById("player");
@@ -328,6 +340,21 @@
 					else {
 						node.setAttribute("hidden", "hidden");
 					}
+				}
+			}
+
+
+			function clip_list_select_all(e) {
+
+				/* Loop through all visible clip rows, make their selected checkbox
+				 * match that of the 'select all' checkbox
+				 */
+
+				var checked_status = e.target.checked;
+				var checkboxes = document.getElementsByName("clip_row_selected");
+
+				for(var i = 0; i < checkboxes.length; i++) {
+					checkboxes[i].checked = checked_status;
 				}
 			}
 
