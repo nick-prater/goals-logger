@@ -26,55 +26,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>talkSPORT GOALS</title>
-
-		<style type="text/css">
-
-			#source_list_container {
-				position: absolute;
-				left:0%;
-				top:5%;
-				width:10%;
-			}
-
-			#body_container {
-				position: absolute;
-				left:10%;
-				width:90%;				
-			}
-
-			#waveform_container {
-				position:relative;
-				left:5%;
-				width:90%;
-			}
-
-
-			body {
-				font-family: Arial, Helvetica, Verdana, sans-serif;
-			}
-
-			form#clip_metadata label {
-				float: left;
-				font-size: 14px;
-				width: 110px;
-			}
-
-			form#clip_metadata ol li {
-				list-style: none;
-			}
-
-			table#clip_list tr:nth-child(even) {  
-			    background: #E3E3E3;  
-			}
-
-			
-			.source_text {
-				font-size: 90%;
-			}
-
-
-		</style>
-
+		<link rel="stylesheet" href="/goals.css" />
 	</head>
 	<body>
 		<div id="body_container">
