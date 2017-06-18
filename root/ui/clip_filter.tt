@@ -1,7 +1,7 @@
 		<div id="source_list_container">
 
 			<!-- update_clip_list() is called when filter selection is changed -->
-			<div class="profile_name">[% c.session.profile_name %]</div>
+			<div class="profile_name">[% c.session.profile_name | html %]</div>
 			<p></p>
 
 			<div [% IF assign_clip_id %] style="display: none" [% END %]>
@@ -26,7 +26,7 @@
 							</td>
 							<td>
 								<span class="source_text">
-									[% channel.source_label %]
+									[% channel.source_label | html %]
 								</span>
 							</td>
 						</tr>
@@ -59,8 +59,8 @@
 							name="clip_category_to_show"
 							checked="true"
 							onchange="update_clip_list()"
-							value="[%- value -%]"
-						/>[%- categories.$value | html -%]<br />
+							value="[% value %]"
+						/>[% categories.$value | html %]<br />
 					[% END %]
 				</fieldset>
 
