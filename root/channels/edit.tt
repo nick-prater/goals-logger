@@ -6,7 +6,7 @@
        Andrew White
        Paul Kelly
 
-    Copyright (C) 2012 NP Broadcast Limited.
+    Copyright (C) 2012,2017 NP Broadcast Limited.
 
     GOALS-logger is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -22,12 +22,10 @@
     along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-[% USE HTML %]
-
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>talkSPORT GOALS Recording Channel [% channel.channel_id %]</title>
+		<title>talkSPORT GOALS Recording Channel [% channel.channel_id | html %]</title>
 		<link rel="stylesheet" href="/goals.css" />
 	</head>
 	<body>
@@ -48,7 +46,7 @@
 						<input
 							type="text"
 							name="source_label"
-							value="[% channel.source_label %]"
+							value="[% channel.source_label | html %]"
 							required
 							size="60"
 						/>
@@ -59,7 +57,7 @@
 						<input
 							type="text"
 							name="match_title"
-							value="[% channel.match_title %]"
+							value="[% channel.match_title | html %]"
 							placeholder="Team 1 v Team 2"
 							size="40"
 						/>
@@ -69,7 +67,7 @@
 						<input
 							type="text"
 							name="commentator"
-							value="[% channel.commentator %]"
+							value="[% channel.commentator | html %]"
 							placeholder="Name of the Commentator"
 							size="40"
 						/>
@@ -78,11 +76,11 @@
 						<label for="profile">profile</label>
 						<select name="profile_id" id="channel_profile">
 							[% FOREACH value IN profiles.keys %]
-								<option value="[% value %]"
+								<option value="[% value | html %]"
 									[%- IF channel.profile_id == value -%]
 										selected
 									[%- END -%]
-								>[% HTML.escape(profiles.$value) %]</option>
+								>[% profiles.$value | html %]</option>
 							[% END %]
 						</select>
 					</li>
@@ -99,6 +97,3 @@
 
 	</body>
 </html>
-
-
-
