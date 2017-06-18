@@ -222,11 +222,7 @@
 				</fieldset>
 			</form>
 			<hr />
-			<a href="/channels/list">channels</a>
-			<br />
-			<a href="/ui/upload_clip">upload clip</a>
-			<br />
-			<a href="/ui/assign_clips">hotkeys</a>
+[% INCLUDE ui/menu_links.tt %]	
 			<hr />
 
 		</div>
