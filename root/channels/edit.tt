@@ -28,7 +28,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>talkSPORT GOALS Recording Channel [% channel.channel_id %]</title>
-		[% INSERT goals.css %]
+		<link rel="stylesheet" href="/goals.css" />
 	</head>
 	<body>
 

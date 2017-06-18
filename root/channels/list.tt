@@ -27,7 +27,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>talkSPORT GOALS</title>
-		[% INSERT goals.css %]
+		<link rel="stylesheet" href="/goals.css" />
 
 		<script type="text/javascript">
 
