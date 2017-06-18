@@ -33,13 +33,13 @@ sub index :Path :Args(0) {
 sub player : Local {
 	my $self = shift;
 	my $c = shift;
-	
+
 	# It is now mandatory to have session data to define our profile
 	unless( $c->session->{profile_code} ) {
 		$c->log->warn("ERROR: profile not defined in session data");
 		$c->response->redirect('/');
-	}	
-	
+	}
+
 	$c->forward('get_available_channels');
 	$c->forward('get_available_start_dates');
 	$c->forward('get_available_categories');
@@ -68,12 +68,12 @@ sub build_playlist : Local {
 	unless( $c->session->{profile_id} ) {
 		$c->log->warn("build_playlist called without a valid session profile_id");
 		$c->response->redirect('/');
-	};	
-	
+	};
+
 	$c->forward('get_available_channels');
 	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
-	
+
 	# Setting this on the stash configures the hotkey page
 	# to assign a single clip, then return.
 	$c->stash(
@@ -89,12 +89,12 @@ sub assign_clips : Local {
 	unless( $c->session->{profile_id} ) {
 		$c->log->warn("assign_clips called without a valid session profile_id");
 		$c->response->redirect('/');
-	};	
-	
+	};
+
 	$c->forward('get_available_channels');
 	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
-	
+
 	# Setting this on the stash configures the hotkey page
 	# to assign a single clip, then return.
 	$c->stash(
@@ -111,13 +111,13 @@ sub rename_clip : Local : Args(1) {
 	my $clip_id = shift;
 
 	my $rs = $c->model('DB::Clip');
-	
+
 	my $clip = $rs->find({
 		clip_id => $clip_id
 	}) or do {
 		die "No such clip";
 	};
-	
+
 	# Populate stash, and hence form, with current values
 	$c->stash(
 		clip => {
@@ -128,9 +128,9 @@ sub rename_clip : Local : Args(1) {
 			out_cue     => $clip->out_cue,
 			category    => $clip->category,
 			language    => $clip->language,
-		}	
+		}
 	);
-	
+
 	$c->forward('get_available_categories');
 	$c->forward('get_available_languages');
 }
@@ -139,7 +139,7 @@ sub rename_clip : Local : Args(1) {
 sub get_buttons : Private {
 
 	my ( $self, $c ) = @_;
-	
+
 	my @records = $c->model('DB::Button')->search(
 		{
 			profile_id => $c->session->{profile_id},
@@ -148,26 +148,26 @@ sub get_buttons : Private {
 			order_by => { -asc => 'button_id'},
 			join => 'clip'
 		}
-		
+
 	);
-		
+
 	# Split buttons into rows
 	my @buttons;
 	my $y = 0;
 	$buttons[$y] = [];
 	my $row = $buttons[$y];
-	
+
 	foreach my $button(@records) {
-	
+
 		push(@{$row}, $button);
-		
+
 		if(scalar(@{$row}) >= $c->config->{buttons_per_row}) {
 			$y ++;
 			$buttons[$y] = [];
-			$row = $buttons[$y];	
+			$row = $buttons[$y];
 		}
 	}
-	
+
 	$c->stash(
 		buttons => \@buttons
 	);
@@ -182,13 +182,13 @@ sub get_available_profiles : Private {
 	my ( $self, $c ) = @_;
 	my $rs = $c->model('DB::Profile');
 	my @results = $rs->all;
-	
+
 	# Explicitly dereference into a hash
 	my %profiles;
 	foreach my $result(@results) {
 		$profiles{ $result->profile_id } = $result->display_name;
 	}
-		
+
 	$c->stash(
 		profiles => \%profiles,
 	);
@@ -202,13 +202,13 @@ sub get_available_profile_codes : Private {
 	my ( $self, $c ) = @_;
 	my $rs = $c->model('DB::Profile');
 	my @results = $rs->all;
-	
+
 	# Explicitly dereference into a hash
 	my %profiles;
 	foreach my $result(@results) {
 		$profiles{ $result->profile_code } = $result->display_name;
 	}
-		
+
 	$c->stash(
 		profile_codes => \%profiles,
 	);
@@ -226,9 +226,9 @@ sub get_available_channels : Private {
 	my $where = {};
 
 	$where->{profile_id} = $c->session->{profile_id};
-	
+
 	my @channels = $rs->search($where);
-	
+
 	$c->stash(
 		channels => \@channels
 	);
@@ -243,7 +243,7 @@ sub get_available_start_dates : Private {
 
 	my $dt = DateTime->today;
 	my $one_day_dt = DateTime::Duration->new( days => 1 );
-		
+
 	while( $days ) {
 		my $dt_clone = $dt->clone;
 		$dt_clone->set_time_zone('Europe/London');
@@ -265,7 +265,7 @@ sub get_available_categories : Private {
 
 	my $self = shift;
 	my $c = shift;
-	
+
 	$c->stash(
 		categories => {
 			'goal'             => 'Goal',
@@ -274,7 +274,7 @@ sub get_available_categories : Private {
 			'interview'        => 'Interview',
 			'commercial'       => 'Commercial',
 			'other'            => 'Other',
-		}	
+		}
 	)
 }
 
@@ -283,9 +283,9 @@ sub get_available_languages : Private {
 
 	my $self = shift;
 	my $c = shift;
-	
+
 	my $default = $c->config->{default_language} || 'english';
-	
+
 	$c->stash(
 		languages => {
 
@@ -304,7 +304,7 @@ sub profile_id_from_code : Private {
 	my $self = shift;
 	my $c = shift;
 	my $profile_code = shift;
-	
+
 	# Must have a profile code
 	$profile_code or return undef;
 
@@ -316,10 +316,10 @@ sub profile_id_from_code : Private {
 		$c->log->error("ERROR: no such profile");
 		return undef;
 	};
-	
+
 	$c->log->debug("profile_id: " . $profile->profile_id);
 	$c->log->debug("display_name: " . $profile->display_name);
-	
+
 	# Populate stash, and hence form, with current values
 	$c->stash(
 		profile_code => $profile->profile_code,
@@ -336,7 +336,7 @@ sub profile_code_from_id : Private {
 	my $self = shift;
 	my $c = shift;
 	my $profile_id = shift;
-	
+
 	# Must have a profile code
 	$profile_id or return undef;
 
@@ -348,10 +348,10 @@ sub profile_code_from_id : Private {
 		$c->log->error("ERROR: no such profile");
 		return undef;
 	};
-	
+
 	$c->log->debug("profile_id: " . $profile->profile_id);
 	$c->log->debug("display_name: " . $profile->display_name);
-	
+
 	# Populate stash, and hence form, with current values
 	$c->stash(
 		profile_code => $profile->profile_code,
