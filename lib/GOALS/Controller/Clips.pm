@@ -50,11 +50,11 @@ sub delete : Path('delete') : Args(1) {
 		# have a grace period and an undelete feature? Like we do for events.
 		# The clips table already has a 'deleted' value for status. We would need
 		# to add an update_timestamp field.
-	
+
 		$clip_id && $clip_id =~ m/^\d+$/ or next;
-	
+
 		$c->log->debug("deleting clip $clip_id");
-		
+
 		# Remove database record
 		$c->log->debug("removing database record for clip $clip_id");
 		my $rs = $c->model('DB::Clip');
@@ -63,38 +63,38 @@ sub delete : Path('delete') : Args(1) {
 		}) or do {
 			die "No such event";
 		};
-		
+
 		my $profile_code = $clip->profile->profile_code;
 		$c->log->debug("clip has profile code: $profile_code");
-		
+
 		$clip->delete or do {
 			$c->error("problem deleting clip_id=$clip_id from database");
 			die;
 		};
-		
+
 		# Remove wav file
 		my $clip_dir = $c->config->{clips_path} . "/$profile_code";
 		unless( $clip_dir && -d $clip_dir ) {
 			$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 			die;
 		}
-		
+
 		my $clip_path = sprintf(
 			"%s/%u.wav",
 			$clip_dir,
 			$clip_id
 		);
-		
+
 		$c->log->debug("deleting file $clip_path");
 		unlink($clip_path) or do {
 			$c->error("ERROR deleting file $clip_path: $!");
-			die;	
+			die;
 		};
-	}	
-	
+	}
+
 	# We should return something more meaningful, but for now OK is fine
 	$c->response->content_type('text/plain');
-	$c->response->body("OK");	
+	$c->response->body("OK");
 }
 
 
@@ -111,50 +111,50 @@ sub purge_deleted : Local {
 	#
 	# Note that Neil's playout directory uses the same directory to hold
 	# ads and fillers. These shouldn't be named so that they collide with
-	# the clips name format, but there is always that possibility. A 
+	# the clips name format, but there is always that possibility. A
 	# separate directory would have been better, but the playout software
 	# doesn't support that.
-	
+
 	my $self = shift;
 	my $c = shift;
 	my $clip_id = shift;
-	
+
 	# Purge database records
 	my $rs = $c->model('DB::Clip');
 	my $where = {};
-	
+
 	$c->log->debug("purging from database clips marked as 'deleted'");
-	
+
 	$where->{status} = 'deleted';
 	my $clips = $rs->search($where);
 	$clips->delete;
-	
+
 	# Purge filesystem
 	my $clip_dir = $c->config->{clips_path};
 	unless( $clip_dir && -d $clip_dir ) {
 		$c->error("ERROR: either clips_path is undefined in configuration file, or it is not a valid directory path");
 		die;
 	}
-	
+
 	# Do a recursive search of clip dir
 	$c->log->debug("recursively searching $clip_dir for clip audio files");
 	find(
 		sub {
 			$c->log->debug("considering $File::Find::name");
-		
+
 			# Only process ordinary files
 			-f $File::Find::name or next;
-			
+
 			# Only process files matching standard clip format
 			my ($clip_id) = m/^(\d+)\.wav$/ or next;
-			
+
 			$c->log->debug("found audio file corresponding to clip_id $clip_id");
 
 			# See if corresponding record exists in database
 			my $clip = $rs->find({
 				clip_id => $clip_id
 			});
-			
+
 			# Delete file if it is no longer active
 			if ($clip) {
 				$c->log->debug("file maps to an active clip - OK");
@@ -168,7 +168,7 @@ sub purge_deleted : Local {
 		},
 		$clip_dir
 	);
-	
+
 	# We should return something more meaningful, but for now OK is fine
 	$c->response->content_type('text/plain');
 	$c->response->body("OK\n");
@@ -182,9 +182,9 @@ sub rename : Local : Args(1) {
 	my $clip_id = shift;
 
 	$c->log->debug("updating clip_id $clip_id");
-	
+
 	my $rs = $c->model('DB::Clip');
-	
+
 	my $clip = $rs->find({
 		clip_id => $clip_id
 	}) or do {
@@ -199,7 +199,7 @@ sub rename : Local : Args(1) {
 	}
 
 	# Create a clip row - set to processing until we're ready with audio
-	$clip->update({		
+	$clip->update({
 		title => $params->{title},
 		people => $params->{people},
 		description => $params->{description},
@@ -210,10 +210,10 @@ sub rename : Local : Args(1) {
 		$c->error("ERROR updating clip");
 		die;
 	};
-	
+
 	# We should return the clip we altered, but for now OK is fine
 	$c->response->content_type('text/plain');
-	$c->response->body("OK\nclip_id=" . $clip->clip_id);	
+	$c->response->body("OK\nclip_id=" . $clip->clip_id);
 }
 
 
@@ -227,22 +227,22 @@ sub update_status : Path('update_status') : Args(2) {
 	# We don't check that the specified event_id or status is valid
 	# That is enforced by the database, which will raise an error.
 	$c->log->debug("setting status=$status for clip_id=$id");
-	
+
 	my $rs = $c->model('DB::Clip');
-	
+
 	my $clip = $rs->find({
 		clip_id => $id
 	}) or do {
 		die "No such event";
 	};
-	
+
 	$clip->update({
 		status => $status,
 	}) or do {
 		$c->error("problem setting status=$status for clip_id=$id");
-		die;	
+		die;
 	};
-	
+
 	# We should return the clip we altered, but for now OK is fine
 	$c->response->content_type('text/plain');
 	$c->response->body("OK\nevent_id=" . $clip->clip_id);
@@ -256,53 +256,53 @@ sub all : Path('all') : Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $json_data = {};
-	
+
 	my $rs = $c->model('DB::Clip');
 	my $where = {};
 	my $search_params = {};
-	
+
 	# By default only show completed (and not processing or deleted) clips
 	$where->{status} = ['complete'];
 
 	# By default, don't return clips assigned to buttons
 	$search_params->{join} = 'buttons';
 	$where->{button_id} = undef;
-	
+
 	# Restrict results by profile_id, if parameter is supplied
 	if( $c->session->{profile_id} ) {
 		$c->log->debug("searching for clips with profile_id: " . $c->session->{profile_id} );
 		$where->{'me.profile_id'} = $c->session->{profile_id};
 	}
-	
+
 	# Restrict results by status, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('status') ) {
  		$c->log->debug("searching for clips with status of: " . $c->request->param('status'));
 		$where->{status} = [ split(',', $c->request->param('status')) ];
 	};
-	
+
 	# Restrict results by channel_id, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('channel_id') ) {
 		$c->log->debug("searching for clips with channel_id of: " . $c->request->param('channel_id'));
-		
+
 		my @channel_ids = split(',', $c->request->param('channel_id'));
-		
+
 		# If NULL is specified, replace with undef;
 		foreach my $channel_id(@channel_ids) {
 			$channel_id eq 'NULL' and $channel_id = undef;
-		}		
-		
+		}
+
  		$where->{channel_id} = [ @channel_ids ];
 	};
-	
+
 	# Restrict results by channel_id, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('clip_id') ) {
  		$c->log->debug("searching for clips with clip_id of: " . $c->request->param('clip_id'));
 		$where->{'me.clip_id'} = [ split(',', $c->request->param('clip_id')) ];
 	};
-	
+
 	# Restrict results by category, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('category') ) {
@@ -311,13 +311,13 @@ sub all : Path('all') : Args(0) {
 	};
 
 	my @clips = $rs->search($where, $search_params);
-	
+
 	foreach my $clip(@clips) {
-	
+
 		# Normally display name of studio/audio source, unless it is a user upload,
 		# which doesn't have an internal source or channel
 		my $display_source = ($clip->source eq 'user_upload' ? 'user upload' : $clip->source_label);
-	
+
 		$json_data->{$clip->clip_id} = {
 			clip_id => $clip->clip_id,
 			title => $clip->title,
@@ -328,14 +328,14 @@ sub all : Path('all') : Args(0) {
 			commentator => $clip->commentator,
 			source => $display_source,
 		};
-		
-		# Set timezone, so we can extract time and date in channel's 
+
+		# Set timezone, so we can extract time and date in channel's
 		# time zone. This should be pushed back into the DB model class.
 		# This only applies to clips assigned to a channel. User uploads, for example,
 		# do not have a time or timezone
 		if( $clip->channel && $clip->clip_start_timestamp && $clip->channel->timezone ) {
 			$clip->clip_start_timestamp->set_time_zone( $clip->channel->timezone );
-		
+
 			# Resulting display dates and times will be in the channel's time zone
 			$json_data->{$clip->clip_id}->{display_date} = $clip->clip_start_timestamp->strftime('%a %d/%m/%Y');
 			$json_data->{$clip->clip_id}->{display_time} = $clip->clip_start_timestamp->strftime('%H:%M:%S');
@@ -345,7 +345,7 @@ sub all : Path('all') : Args(0) {
 			$json_data->{$clip->clip_id}->{display_time} = "";
 		}
 	}
-	
+
 	# Return status to page
 	$c->stash(
 		current_view => 'JSON',
@@ -363,7 +363,7 @@ sub upload : Path : Local {
 		$c->log->warn("upload called without a session profile_id");
 		$c->response->redirect('/');
 	}
-	
+
 	# Check we have an audio file to process
 	my $upload = $c->request->upload('clip_file') or do {
 		$c->error("ERROR: no upload file specified");
@@ -374,7 +374,7 @@ sub upload : Path : Local {
 		die;
 	};
 	$c->log->debug("audio clip uploaded to temporary file: $temp_audio_path");
-	
+
 	# Validate audio. Determine $duration_seconds
 	my $duration_seconds = $c->forward(
 		'validate_wav',
@@ -410,7 +410,7 @@ sub upload : Path : Local {
 	};
 
 	$c->log->debug("inserted clip_id " . $clip->clip_id);
-	
+
 
 	# Move uploaded file to clips directory
 	# Destination of clips is specified in global configuration file
@@ -423,7 +423,7 @@ sub upload : Path : Local {
 		$c->error("error moving audio clip: $!");
 		die;
 	};
-	
+
 	# Update clip status to completed
 	$c->log->debug("marking clip as completed");
 	$clip->update({
@@ -431,13 +431,13 @@ sub upload : Path : Local {
 	}) or do {
 		$c->error("ERROR updating clip status to completed");
 	};
-	
+
 	# Return status to page
 	$c->log->debug("clip marked complete - returning status");
 	$c->stash(
 		current_view => 'JSON',
 		json_data => { clip_id => $clip->clip_id },
-	)	
+	)
 }
 
 
@@ -445,7 +445,7 @@ sub create : Path : Local {
 
 	my $self = shift;
 	my $c = shift;
-	
+
 	# Parse submitted JSON structure
 	my $json = JSON->new;
 	my $body = File::Slurp::read_file($c->request->body);
@@ -453,7 +453,7 @@ sub create : Path : Local {
 		$c->error("ERROR: didm't receive valid JSON data");
 		die;
 	};
-	
+
 	# Trim whitespace and Log submitted data
 	foreach (keys %{$params}) {
 		$params->{$_} = trim_whitespace( $params->{$_} );
@@ -469,13 +469,13 @@ sub create : Path : Local {
         # As we use the submitted profile code to determine a
         # filesystem directory name, verify it is valid, by translating
         # into a an id. This is necessary to prevent
-        # malicious behabviour 
+        # malicious behabviour
 	my $profile_id = $c->forward(  '/ui/profile_id_from_code', [ $c->session->{profile_code} ] );
 	unless($profile_id) {
 		$c->error("ERROR: profile_code parameter is missing or invalid");
 		die;
 	}
- 
+
 	# Look up relevant channel data;
 	my $channel;
 	if( $params->{channel_id} ) {
@@ -487,13 +487,13 @@ sub create : Path : Local {
 	unless ($channel) {
 		$c->error("unable to find channel record associated with this clip, populating channel fields with nulls");
 	}
-	
+
 	# TODO:
 	# Look up relevant event data to check timestamp for sanity
 	# It's possible for a user to start editing a given audio event, but then navigate
 	# to a completely different piece of audio. We should check that the audio clip time
 	# is vaguely sane for the event being associated.
-	
+
 	# Convert timestamps from channel timezone to UTC
 	my $start_dt = iso_parameter_to_dt($params->{start_iso}, $channel->timezone) or do {
 		$c->error("ERROR parsing start_iso timestamp parameter");
@@ -504,7 +504,7 @@ sub create : Path : Local {
 		die;
 	};
 	$start_dt->set_time_zone('UTC');
-	$end_dt->set_time_zone('UTC');	
+	$end_dt->set_time_zone('UTC');
 	$c->stash(
 		start_dt => $start_dt,
 		end_dt => $end_dt,
@@ -513,7 +513,7 @@ sub create : Path : Local {
 	# Sanitise event_id
 	my $event_id = $params->{event_id};
 	$event_id && $event_id =~ m/^\d+$/ && $event_id > 0 or $event_id = undef;
-	
+
 	# Create a clip row - set to processing until we're ready with audio
 	my $rs = $c->model('DB::Clip');
 	my $clip = $rs->create({
@@ -540,7 +540,7 @@ sub create : Path : Local {
 	};
 
 	$c->log->debug("inserted clip_id " . $clip->clip_id);
-		
+
 	# Create Audio
 	my $audio_cache_path = $c->forward(
 		'/audio/generate_audio',
@@ -551,14 +551,14 @@ sub create : Path : Local {
 	};
 
 	my $audio_dest_path = $self->clip_audio_path($c, $clip) or die;
-	
+
 	# Copy cached file to clips directory
 	$c->log->debug("copying $audio_cache_path -> $audio_dest_path");
 	copy($audio_cache_path, $audio_dest_path) or do {
 		$c->error("error copying audio clip: $!");
 		die;
 	};
-	
+
 	# Update clip status to completed
 	$c->log->debug("marking clip as completed");
 	$clip->update({
@@ -566,12 +566,12 @@ sub create : Path : Local {
 	}) or do {
 		$c->error("ERROR updating clip status to completed");
 	};
-	
+
 	# Mark event as 'exported' if this clip related to an event
 	if($event_id) {
 		$c->forward ("/events/exported/$event_id");
 	}
-	
+
 	# Return status to page
 	$c->stash(
 		current_view => 'JSON',
@@ -586,14 +586,14 @@ sub iso_parameter_to_dt {
 
 	my $iso = shift;
 	my $timezone = shift;
-	
+
 	$iso or return undef;
 	$iso =~	m/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d\d\dZ?$/ or return undef;
-	
+
 	# Does it end with Z, indicating UTC time?
 	$iso =~ s/Z$// and $timezone = 'UTC';
 	$timezone or return undef;
-			
+
 	my $strp = DateTime::Format::Strptime->new(
 		pattern   => '%FT%T.%3N',
 		time_zone => $timezone,
@@ -604,7 +604,7 @@ sub iso_parameter_to_dt {
 
 
 sub trim_whitespace {
-	
+
 	my $text = shift;
 	$text =~ s/^\s*//s;
 	$text =~ s/\s*$//s;
@@ -642,7 +642,7 @@ sub validate_wav : Private {
 
 	my $duration_seconds = $wav->length_seconds;
 	$c->log->debug("duration :: $duration_seconds seconds");
-	
+
 	return $duration_seconds;
 }
 
