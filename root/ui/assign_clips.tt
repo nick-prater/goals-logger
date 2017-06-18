@@ -234,7 +234,7 @@
 			var duration_original_html;
 			
 			/* If a specific clip_id is specified, display only that clip and select it for assignment */
-			var assign_clip_id = [% assign_clip_id %];
+			var assign_clip_id = [% assign_clip_id || 0 %];
 			var assign_clip_title = '';
 			
 			/* Timer to update the buttons */
