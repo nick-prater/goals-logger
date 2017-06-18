@@ -7,7 +7,7 @@
        Andrew White
        Paul Kelly
 
-    Copyright (C) 2012 NP Broadcast Limited.
+    Copyright (C) 2012,2017 NP Broadcast Limited.
 
     GOALS-logger is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -32,22 +32,22 @@
 	<body>
 
 		<div id="profile_choice_container">
-	
+
 			<h1>GOALS-logger system</h1>
-		
+
 			<h2>Please select a profile to use:</h2>
-		
+
 			<ul>
-			
+
 				[% FOREACH key IN profile_codes.keys %]
 				<li>
-					<a href="/[% key %]">[% profile_codes.$key %]</a>
+					<a href="/[% key %]">[% profile_codes.$key | html %]</a>
 				</li>
 				[% END %]
 			</ul>
-			
+
 		</div>
-	
+
 	</body>
 
 </html>
