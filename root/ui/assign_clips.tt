@@ -984,7 +984,10 @@
 					}
 				}
 
-				delete_clip(clip_list);
+				/* Only continue if something was selected for deletion */
+				if(clip_list) {
+					delete_clip(clip_list);
+				};
 			}
 
 
