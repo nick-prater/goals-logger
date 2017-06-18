@@ -3,13 +3,13 @@
 			<!-- update_clip_list() is called when filter selection is changed -->
 			<div class="profile_name">[% c.session.profile_name %]</div>
 			<p></p>
-		
+
 			<div [% IF assign_clip_id %] style="display: none" [% END %]>
-			
+
 				<div align="center">
 					<b>clip filter</b>
 				</div>
-					
+
 				<fieldset>
 					<legend>source</legend>
 					<table>
@@ -31,13 +31,13 @@
 							</td>
 						</tr>
 						[% END %]
-					
+
 						<tr>
 							<td>
 								<input
 									type="checkbox"
 									name="clip_source_to_show"
-									value="NULL" 
+									value="NULL"
 									checked="true"
 									onchange="update_clip_list()"
 								/>
@@ -49,25 +49,25 @@
 							</td>
 						</tr>
 					</table>
-				</fieldset>	
-			
+				</fieldset>
+
 				<fieldset id="category_to_show_fieldset">
 					<legend>category</legend>
 					[% FOREACH value IN categories.keys %]
 						<input
 							type="checkbox"
-							name="clip_category_to_show" 
-							checked="true" 
-							onchange="update_clip_list()" 
-							value="[%- value -%]" 
+							name="clip_category_to_show"
+							checked="true"
+							onchange="update_clip_list()"
+							value="[%- value -%]"
 						/>[%- HTML.escape(categories.$value) -%]<br />
 					[% END %]
 				</fieldset>
-				
+
 			</div>
-			
+
 			<hr />
-[% INCLUDE ui/menu_links.tt %]	
+[% INCLUDE ui/menu_links.tt %]
 			<hr />
 
 		</div>
