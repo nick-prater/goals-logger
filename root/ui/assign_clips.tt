@@ -525,24 +525,39 @@
 
 				/* Update/populate the fields */
 				var i = 0;
-				row.cells.item(i).innerHTML = '<input type="checkbox" name="clip_row_selected" value="' + clip_row.clip_id + '" id="clip_row_selected_' + clip_row.clip_id + '">';   // checkbox
-				row.cells.item(i).setAttribute("class", "clip_list_checkbox");
-				i++;
-				row.cells.item(i).appendChild( generate_assign_link(clip_row) );   // Assign
-				row.cells.item(i).setAttribute("class", "clip_list_assign");
-				i++;
-				//row.cells.item(i).appendChild( generate_delete_link(clip_row) );   // Delete
-				//row.cells.item(i).setAttribute("class", "clip_list_delete");
-				//i++;
-				row.cells.item(i).appendChild( generate_play_link(clip_row) );     // Play
-				row.cells.item(i).setAttribute("class", "clip_list_play");
-				i++;
-				row.cells.item(i).appendChild( generate_download_link(clip_row) ); // Download
-				row.cells.item(i).setAttribute("class", "clip_list_download");
-				i++;
-				row.cells.item(i).appendChild( generate_rename_link(clip_row) );   // Rename
-				row.cells.item(i).setAttribute("class", "clip_list_rename");
-				i++;
+
+				/* Normal action links don't show if clip has been deleted */
+				if(clip_row.status == 'deleted') {
+					row.setAttribute("class", "clip_row deleted");
+					i += 3;
+					row.cells.item(i).innerHTML = '<a href="javascript:undelete(' + clip_row.clip_id + ')">undelete</a>';
+					row.cells.item(i).setAttribute("class", "undelete");
+					i++;
+					i++;
+				}
+				else {
+					row.cells.item(i).innerHTML = '<input type="checkbox" name="clip_row_selected" value="'
+								    + clip_row.clip_id + '" id="clip_row_selected_'
+								    + clip_row.clip_id + '">';   // checkbox
+					row.cells.item(i).setAttribute("class", "clip_list_checkbox");
+					i++;
+					row.cells.item(i).appendChild( generate_assign_link(clip_row) );   // Assign
+					row.cells.item(i).setAttribute("class", "clip_list_assign");
+					i++;
+					//row.cells.item(i).appendChild( generate_delete_link(clip_row) );   // Delete
+					//row.cells.item(i).setAttribute("class", "clip_list_delete");
+					//i++;
+					row.cells.item(i).appendChild( generate_play_link(clip_row) );     // Play
+					row.cells.item(i).setAttribute("class", "clip_list_play");
+					i++;
+					row.cells.item(i).appendChild( generate_download_link(clip_row) ); // Download
+					row.cells.item(i).setAttribute("class", "clip_list_download");
+					i++;
+					row.cells.item(i).appendChild( generate_rename_link(clip_row) );   // Rename
+					row.cells.item(i).setAttribute("class", "clip_list_rename");
+					i++;
+				}
+
 				row.cells.item(i).innerText = clip_row.title;        // Title
 				row.cells.item(i).setAttribute("class", "clip_list_title");
 				i++;

@@ -214,7 +214,12 @@ table#clip_list tr.clip_row:nth-child(even) {
 	background: #e3E3E3;
 }
 
-.clip_row {
+.clip_row.deleted td:not(.undelete) {
+	text-decoration: line-through;
+	color: gray;
+}
+.clip_row.deleted td.undelete {
+	text-align: center;
 
 }
 
