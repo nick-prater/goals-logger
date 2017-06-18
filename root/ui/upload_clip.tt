@@ -47,7 +47,7 @@
 							/>
 						<li>
 							<label for="title">title</label>
-							<input 
+							<input
 								type="text"
 								name="title"
 								placeholder="Short title to show on hotkey"
@@ -59,7 +59,7 @@
 
 						<li>
 							<label for="people">people</label>
-							<input 
+							<input
 								type="text"
 								name="people"
 								placeholder="Names of the people speaking"
@@ -67,7 +67,7 @@
 								id="clip_people"
 							/>
 						</li>
-						
+
 						<li>
 							<label for="description">description</label>
 							<textarea
@@ -82,7 +82,7 @@
 
 						<li>
 							<label for="out_cue">out cue</label>
-							<input 
+							<input
 								type="text"
 								name="out_cue"
 								placeholder="enter the last few words or describe how the clip ends"
@@ -112,25 +112,25 @@
 								<option value="other">Other</option>
 							</select>
 						</li>
-				
+
 						<li>
 							<button type="button" onclick="send_form()">OK</button>
 							<button type="button" onclick='window.location.href = "/ui/player"'>Cancel</button>
 						</li>
 					</ol>
-					
+
 					<input type="hidden" name="profile_id" value="[% c.session.profile_id %]" />
 					<input type="hidden" name="profile_code" value="[% c.session.profile_code %]" />
 				</form>
-				
+
 			</div>
 
-			
+
 			<!-- This div contains the form used to display status feedback when clips are created.
 			     It is hidden until the create clip button is pressed. Message is populated dynamically
 			-->
 			<div id="progress_message_container" style="display: block">
-			
+
 			</div>
 
 		</div>
@@ -138,15 +138,15 @@
 
 		<script type="text/javascript">
 
-		
+
 			function send_form() {
-			
+
 				var message_div = document.getElementById("progress_message_container");
 				var form_data = new FormData(document.forms.namedItem("clip_metadata"));
 				var request = new XMLHttpRequest();
 
 				request.open("POST", "/clips/upload", true);
-  
+
 				// TODO: Add upload progress meter
 				request.onload = function(event) {
 
@@ -155,13 +155,13 @@
 						delete request;
 						return;
 					}
-									
+
 					/* Extract and parse payload */
 					var response = JSON.parse(request.responseText);
-					
+
 					/* Free Up HTTP request object */
 					delete request;
-					
+
 					if(response.clip_id) {
 						/* Clip created OK - forward to hotkey assignment */
 						window.location.href = "/ui/assign_clips?clip_id=" + response.clip_id;
@@ -170,7 +170,7 @@
 						/* Process the payload */
 						message_div.innerHTML = "ERROR creating clip - a valid clip_id was not returned";
 					}
-					
+
 				};
 
 				message_div.innerHTML = "uploading file..."
