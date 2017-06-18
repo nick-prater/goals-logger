@@ -7,7 +7,7 @@
        Andrew White
        Paul Kelly
 
-    Copyright (C) 2012 NP Broadcast Limited.
+    Copyright (C) 2012,2017 NP Broadcast Limited.
 
     GOALS-logger is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -39,7 +39,7 @@
 				if(checkbox.checked) {
 					start_stop = 'start';
 				}
-				
+
 				window.location = '/channels/record/' + start_stop + '/' + channel_id;
 			}
 
@@ -47,20 +47,18 @@
 
 	</head>
 	<body>
-
-		[% # Some basic HTML with a loop to display list -%]
 		<table class="channel_list" id="channel_list">
-		
-			<tr class="title_row">
-				<th class="channel_list_edit"></td>
-				<th class="channel_list_source">Source</th>
-				<th class="channel_list_profile">Profile</th>
-				<th class="channel_list_match">Match</th>
-				<th class="channel_list_commentator">Commentator</th>
-				<th class="channel_list_recording">Recording</th>
-			</tr>
-
-			[% # Display each input in a table row %]
+			<thead>
+				<tr class="title_row">
+					<th class="channel_list_edit"></td>
+					<th class="channel_list_source">Source</th>
+					<th class="channel_list_profile">Profile</th>
+					<th class="channel_list_match">Match</th>
+					<th class="channel_list_commentator">Commentator</th>
+					<th class="channel_list_recording">Recording</th>
+				</tr>
+			</thead>
+			<tbody>
 			[% FOREACH channel IN channels -%]
 
 			[% IF channel.profile_id == c.session.profile_id %]
@@ -69,30 +67,30 @@
 			<tr class="channel_row_greyed">
 			[% END %]
 				<td class="channel_list_edit"> <a href="[% channel.edit_uri -%]">edit</a> </td>
-				<td class="channel_list_source">[% channel.source_label         -%]</td>
-				<td class="channel_list_profile">[% channel.profile.display_name %]</td>
-				<td class="channel_list_match">[% channel.match_title %]</td>
-				<td class="channel_list_commentator">[% channel.commentator          -%]</td>
+				<td class="channel_list_source">[% channel.source_label | html %]</td>
+				<td class="channel_list_profile">[% channel.profile.display_name | html %]</td>
+				<td class="channel_list_match">[% channel.match_title | html %]</td>
+				<td class="channel_list_commentator">[% channel.commentator | html %]</td>
 				<td class="channel_list_recording">
 				[% IF channel.profile_id == c.session.profile_id %]
 					<input type="checkbox"
 					       name="channel_recording_checkbox"
-					       value="[% channel.channel_id -%]"
-					       id="channel_recording_checkbox_[% channel.channel_id -%]"
+					       value="[% channel.channel_id %]"
+					       id="channel_recording_checkbox_[% channel.channel_id %]"
 					[% IF channel.recording == 'yes' %]
 					       checked="true"
 					[% END %]
-					       onchange="change_record_status([% channel.channel_id -%])"
+					       onchange="change_record_status([% channel.channel_id %])"
 					/>
 				[% END %]
 				</td>
 			</tr>
-			[% END -%]
+			[% END %]
 		</table>
 
 		<p />
 
-		<a href="/ui/player/[% profile_code %]">DONE</a>
-		
+		<a href="/ui/player">DONE</a>
+
 	</body>
 </html>
