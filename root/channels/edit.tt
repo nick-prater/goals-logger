@@ -41,11 +41,11 @@
 
 			<fieldset>
 				<legend>Edit Recording Channel Details</legend>
-			
+
 				<ol>
 					<li>
 						<label for="source_label">source label</label>
-						<input 
+						<input
 							type="text"
 							name="source_label"
 							value="[% channel.source_label %]"
@@ -56,7 +56,7 @@
 
 					<li>
 						<label for="match_title">match title</label>
-						<input 
+						<input
 							type="text"
 							name="match_title"
 							value="[% channel.match_title %]"
@@ -78,7 +78,7 @@
 						<label for="profile">profile</label>
 						<select name="profile_id" id="channel_profile">
 							[% FOREACH value IN profiles.keys %]
-								<option value="[% value %]" 
+								<option value="[% value %]"
 									[%- IF channel.profile_id == value -%]
 										selected
 									[%- END -%]
@@ -86,8 +86,8 @@
 							[% END %]
 						</select>
 					</li>
-					
-					
+
+
 				</ol>
 
 			</fieldset>
