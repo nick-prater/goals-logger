@@ -530,7 +530,7 @@
 				if(clip_row.status == 'deleted') {
 					row.setAttribute("class", "clip_row deleted");
 					i += 3;
-					row.cells.item(i).innerHTML = '<a href="javascript:undelete(' + clip_row.clip_id + ')">undelete</a>';
+					row.cells.item(i).innerHTML = '<a href="javascript:undelete_clip(' + clip_row.clip_id + ')">undelete</a>';
 					row.cells.item(i).setAttribute("class", "undelete");
 					i++;
 					i++;
@@ -718,6 +718,32 @@
 
 				/* Send request */
 				var url = "/clips/delete/" + clip_list;
+				request.open("GET", url, true);
+				request.send();
+			}
+
+
+			function undelete_clip(clip_id) {
+
+				var request = new XMLHttpRequest();
+				request.onreadystatechange = function() {
+
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
+						return;
+					}
+
+					if(request.status == 200) {
+						/* Success */
+						update_clip_list();
+					}
+
+					/* Free Up HTTP request object */
+					delete request;
+				}
+
+				/* Send request */
+				var url = "/clips/undelete/" + clip_id;
 				request.open("GET", url, true);
 				request.send();
 			}

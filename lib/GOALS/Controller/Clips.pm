@@ -79,6 +79,42 @@ sub delete : Path('delete') : Args(1) {
 }
 
 
+sub undelete : Path('undelete') : Args(1) {
+
+	# Reinstate a clip marked as deleted
+
+	my $self = shift;
+	my $c = shift;
+	my $clip_list = shift;
+	my $dbh = $c->model('DB')->storage->dbh;
+
+	# Clip list is a comma separated list of clips to delete
+	my @clips = split(/,/, $clip_list);
+
+	# Prepare query
+	my $q = $dbh->prepare("
+		UPDATE clips SET
+ 		    status = 'complete',
+		    deleted_timestamp = NULL
+		WHERE status != 'processing'
+		AND clip_id = ?
+	");
+
+	foreach my $clip_id(@clips) {
+		$clip_id && $clip_id =~ m/^\d+$/ or next;
+		$c->log->debug("undeleting clip $clip_id");
+
+		$q->execute($clip_id) or do {
+			$c->log->error("ERROR undeleting clip $clip_id");
+		};
+	}
+
+	# We should return something more meaningful, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
+}
+
+
 sub purge : Path('purge') : Args(1) {
 
 	# Purging a clip really does delete it.
