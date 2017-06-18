@@ -195,11 +195,6 @@ td.button_box, tr.button_box {
 	bottom: 0%;
 }
 
-#clip_list_container {
-	height: 60%;
-	position: relative;
-}
-
 .clip_list_div {
 	position: absolute;
 }
