@@ -62,6 +62,13 @@
 							value="[% value %]"
 						/>[% categories.$value | html %]<br />
 					[% END %]
+						<input
+							type="checkbox"
+							name="show_deleted_clips"
+							id="show_deleted_clips_checkbox"
+							onchange="update_clip_list()"
+							value="show_deleted"
+						/>Deleted<br />
 				</fieldset>
 
 			</div>

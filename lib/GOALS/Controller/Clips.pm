@@ -35,7 +35,51 @@ sub index :Path :Args(0) {
 }
 
 
-sub purge : Path('delete') : Args(1) {
+
+sub delete : Path('delete') : Args(1) {
+
+	# Mark a clip as deleted
+
+	my $self = shift;
+	my $c = shift;
+	my $clip_list = shift;
+	my $dbh = $c->model('DB')->storage->dbh;
+
+	# Clip list is a comma separated list of clips to delete
+	my @clips = split(/,/, $clip_list);
+
+	# Prepare query
+	# I know people love DBIx::Class. I know the Catalyst book tells
+	# you to use it. I know I forced myself to use it in the first
+	# generation of this application. But I know SQL. It doesn't hide
+	# behind magic. And it let's me update a column with the true
+	# database CURRENT_TIMESTAMP() without jumping through opaque hoops.
+	# Sorry... I'm not a fan and haven't used DBIx::Class in any project
+	# since this one. My life is happier as a result :)
+	my $q = $dbh->prepare("
+		UPDATE clips SET
+ 		    status = 'deleted',
+		    deleted_timestamp = CURRENT_TIMESTAMP()
+		WHERE status != 'processing'
+		AND clip_id = ?
+	");
+
+	foreach my $clip_id(@clips) {
+		$clip_id && $clip_id =~ m/^\d+$/ or next;
+		$c->log->debug("marking clip $clip_id as deleted");
+
+		$q->execute($clip_id) or do {
+			$c->log->error("ERROR marking clip $clip_id as deleted");
+		};
+	}
+
+	# We should return something more meaningful, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
+}
+
+
+sub purge : Path('purge') : Args(1) {
 
 	# Purging a clip really does delete it.
 	# Whereas the alternative delete action just marks it as deleted
@@ -307,6 +351,13 @@ sub all : Path('all') : Args(0) {
  		$c->log->debug("searching for clips with category of: " . $c->request->param('category'));
 		$where->{category} = [ split(',', $c->request->param('category')) ];
 	};
+
+	# Show deleted clips only if requested
+	if( $c->request->param('deleted') ) {
+		push(@{$where->{status}}, 'deleted');
+	}
+
+ 	$c->log->debug("searching for clips with status of: " . join(',', @{$where->{status}}));
 
 	my @clips = $rs->search($where, $search_params);
 

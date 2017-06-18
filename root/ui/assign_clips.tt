@@ -391,13 +391,17 @@
 					delete request;
 				}
 
-				/* Send request */
 				var url = (
 					"/clips/all?category=" +
 					get_clip_list_category_filters() +
 					"&channel_id=" +
 					get_clip_list_source_filters()
 				);
+
+				var show_deleted_checkbox = document.getElementById("show_deleted_clips_checkbox");
+				if(show_deleted_checkbox.checked) {
+					url = url + "&deleted=1";
+				}
 
 				/* If page is loaded with assign_clip_id defined, that
 				 * means we should load just that clip into the list
