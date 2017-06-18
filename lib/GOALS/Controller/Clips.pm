@@ -35,7 +35,10 @@ sub index :Path :Args(0) {
 }
 
 
-sub delete : Path('delete') : Args(1) {
+sub purge : Path('delete') : Args(1) {
+
+	# Purging a clip really does delete it.
+	# Whereas the alternative delete action just marks it as deleted
 
 	my $self = shift;
 	my $c = shift;
@@ -46,14 +49,9 @@ sub delete : Path('delete') : Args(1) {
 
 	foreach my $clip_id(@clips) {
 
-		# Deleting a clip really does delete it. Maybe in future we should
-		# have a grace period and an undelete feature? Like we do for events.
-		# The clips table already has a 'deleted' value for status. We would need
-		# to add an update_timestamp field.
-
 		$clip_id && $clip_id =~ m/^\d+$/ or next;
 
-		$c->log->debug("deleting clip $clip_id");
+		$c->log->debug("purging clip $clip_id");
 
 		# Remove database record
 		$c->log->debug("removing database record for clip $clip_id");
@@ -68,7 +66,7 @@ sub delete : Path('delete') : Args(1) {
 		$c->log->debug("clip has profile code: $profile_code");
 
 		$clip->delete or do {
-			$c->error("problem deleting clip_id=$clip_id from database");
+			$c->error("problem purging clip_id=$clip_id from database");
 			die;
 		};
 
@@ -87,7 +85,7 @@ sub delete : Path('delete') : Args(1) {
 
 		$c->log->debug("deleting file $clip_path");
 		unlink($clip_path) or do {
-			$c->error("ERROR deleting file $clip_path: $!");
+			$c->error("ERROR unlinking file $clip_path: $!");
 			die;
 		};
 	}
