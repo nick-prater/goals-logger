@@ -67,12 +67,7 @@
 			</div>
 			
 			<hr />
-			
-			<span class="menu_links">
-				<a href="/channels/list" class="menu_links">channels</a><br />
-				<a href="/ui/upload_clip">upload clip</a><br />
-				<a href="/ui/player">audio editor</a>
-			</span>
+[% INCLUDE ui/menu_links.tt %]	
 			<hr />
 
 		</div>
