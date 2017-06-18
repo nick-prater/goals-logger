@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 
-[% USE HTML %]
-
 <!--
     This file is part of GOALS-logger, a broadcast audio logging system by:
        Nick Prater
@@ -47,7 +45,7 @@
 								name="title"
 								required="required"
 								placeholder="Short title to show on hotkey"
-								value="[% clip.title %]"
+								value="[% clip.title | html %]"
 								size="60"
 								id="clip_title"
 							/>
@@ -59,7 +57,7 @@
 								type="text"
 								name="people"
 								placeholder="Names of the people speaking"
-								value="[% clip.people %]"
+								value="[% clip.people | html %]"
 								size="60"
 								id="clip_people"
 							/>
@@ -73,7 +71,7 @@
 								rows="4"
 								cols="45"
 								id="clip_description"
-							>[%- HTML.escape(clip.description) -%]</textarea>
+							>[%- clip.description | html -%]</textarea>
 						</li>
 
 						<li>
@@ -82,7 +80,7 @@
 								type="text"
 								name="out_cue"
 								placeholder="enter the last few words or describe how the clip ends"
-								value="[% clip.out_cue %]"
+								value="[% clip.out_cue | html %]"
 								size="60"
 								id="clip_out_cue"
 							/>
@@ -96,7 +94,7 @@
 									[%- IF clip.category == value -%]
 										selected
 									[%- END -%]
-								>[% HTML.escape(categories.$value) %]</option>
+								>[% categories.$value | html %]</option>
 							[% END %]
 							</select>
 						</li>
@@ -109,7 +107,7 @@
 									[%- IF clip.language == value -%]
 										selected
 									[%- END -%]
-								>[% HTML.escape(languages.$value) %]</option>
+								>[% languages.$value | html %]</option>
 							[% END %]
 							</select>
 						</li>
