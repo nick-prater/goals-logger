@@ -60,7 +60,7 @@
 							checked="true"
 							onchange="update_clip_list()"
 							value="[%- value -%]"
-						/>[%- HTML.escape(categories.$value) -%]<br />
+						/>[%- categories.$value | html -%]<br />
 					[% END %]
 				</fieldset>
 
