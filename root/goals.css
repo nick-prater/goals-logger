@@ -1,10 +1,10 @@
-<!--
+/*
     This file is part of GOALS-logger, a broadcast audio logging system by:
        Nick Prater
        Andrew White
        Paul Kelly
 
-    Copyright (C) 2012 NP Broadcast Limited.
+    Copyright (C) 2012,2017 NP Broadcast Limited.
 
     GOALS-logger is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -18,7 +18,7 @@
 
     You should have received a copy of the GNU Affero General Public License
     along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
--->
+*/
 
 <style type="text/css">
 
@@ -308,5 +308,11 @@
 		width: 5em;
 		text-align: center;
 	}
+
+	.menu_links {
+		list-style: none;
+		color: red;
+	}
+
 	
 </style>
