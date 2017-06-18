@@ -115,13 +115,13 @@
 				<div class="clip_list_div">
 					<table id="clip_list" class="clip_list">
 
-						<thead>
+						<caption>
 							<div class="clip_list_heading_links">
 								<a href="javascript:delete_selected_clips()">delete selected</a>
 							</div>
-						</thead>
+						</caption>
 
-						<tbody>
+						<thead>
 							<tr class="title_row">
 								<th class="clip_list_checkbox">
 									<input type="checkbox" name="clip_list_select_all" id="clip_list_select_all"/>
@@ -138,7 +138,8 @@
 								<th class="clip_list_time">time</th>
 								<th class="clip_list_duration">duration</th>
 							</tr>
-
+						</thead>
+						<tbody>
 							<!-- data rows will be populated dynamically -->
 						</tbody>
 					</table>
