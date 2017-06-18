@@ -110,7 +110,7 @@
 
 			<!-- This div contains the list of marked clips, which can be selected for editing.
 			-->
-			<div class="clip_list_container" id="clip_list_container" align="center">
+			<div class="clip_list_container" align="center">
 
 				<div class="clip_list_heading_links">
 					<a href="javascript:delete_selected_clips()">delete selected</a>
@@ -137,7 +137,7 @@
 						<!-- data rows will be populated dynamically -->
 					</table>
 				</div>
-			<div>
+			</div>
 		</div>
 
 
@@ -358,6 +358,9 @@
 							assign_clip( [% assign_clip_id %], assign_clip_title );
 						}
 					}
+					else {
+						console.log("ERROR updating clip list");
+					}
 
 					/* Free Up HTTP request object */
 					delete request;
@@ -471,6 +474,8 @@
 
 				var table = document.getElementById("clip_list");
 				var row_id = "clip_row_" + clip_row.clip_id;
+
+				console.log("populating clip row:", clip_row);
 
 				/* Look to see if we already have a row for this event_row_id */
 				var row = table.rows.namedItem(row_id);
