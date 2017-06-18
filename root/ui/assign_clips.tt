@@ -22,9 +22,6 @@
     along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-[% USE Date %]
-[% USE HTML %]
-
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
