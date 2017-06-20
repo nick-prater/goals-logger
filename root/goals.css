@@ -52,12 +52,6 @@
 	overflow: auto;
 }
 
-.profile_name {
-	text-align: center;
-	background: #222;
-	color: #fff;
-}
-
 #clip_list {
 	width: 100%;
 }
@@ -376,7 +370,7 @@ table#channel_list tr.channel_row:nth-child(even) {
 .filter_list li {
 	list-style: none;
 }
-.filter_list.menu_links ul {
-	padding-left: 14px;
+ul.menu_links {
+	padding-left: 12px;
 	list-style: none;
 }

@@ -30,45 +30,13 @@
 	</head>
 	<body>
 
-		<div id="source_list_container">
+		<div id="source_list_container" class="filter_list">
 
-			<div class="profile_name">[% c.session.profile_name | html %]</div>
-			<p />
+			<h1>[% c.session.profile_name | html %]</h1>
+			<h2>event filter</h2>
 
-			<div align="center"><b>event filter</b></div>
-			<form>
-				<fieldset>
-					<legend>source</legend>
-					<table>
-						<!-- TODO: This should be dynamically populated in case updated elsewhere -->
-						[% FOREACH channel IN channels %]
-							<tr>
-								<td>
-									<input
-										type="checkbox"
-										name="clip_source_to_show"
-										value="[% channel.channel_id %]"
-										checked="true"
-										onchange="refresh_event_list()"
-									/>
-								</td>
-								<td>
-									<span class="source_text">
-										[% channel.source_label | html %]
-									</span>
-								</td>
-							</tr>
-						[% END %]
-					</table>
-				</fieldset>
-				<fieldset id="status_to_show_fieldset">
-					<legend>status</legend>
-					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" checked="true" value="new" />new<br />
-					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" checked="true" value="open" />open<br />
-					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" value="exported" />exported<br />
-					<input type="checkbox" name="clip_status_to_show" onchange="refresh_event_list()" value="deleted" />deleted<br />
-				</fieldset>
-			</form>
+[% INCLUDE ui/source_filter.tt %]
+[% INCLUDE ui/status_filter.tt %]
 			<hr />
 [% INCLUDE ui/menu_links.tt %]
 			<hr />
@@ -471,6 +439,15 @@
 			var poll_ajax_timer_period_ms = 5000; // Set to 0 to disable
 			var poll_ajax_timer;
 			refresh_event_list();
+
+			/* Handle filter change */
+			var filter_checkboxes = document.getElementsByClassName("filter_checkbox");
+			for(var i = 0; i < filter_checkboxes.length; i++) {
+				filter_checkboxes[i].addEventListener(
+					"change",
+					refresh_event_list
+				);
+			}
 
 
 			function play_pause() {
