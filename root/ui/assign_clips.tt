@@ -157,9 +157,6 @@
 			var assign_clip_id = [% assign_clip_id || 0 %];
 			var assign_clip_title = '';
 
-			/* Timer to update the buttons */
-			var run_poll_ajax_timer = true;
-			var poll_ajax_timer;
 			update_buttons();
 			update_clip_list();
 
