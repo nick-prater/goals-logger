@@ -163,6 +163,15 @@
 			update_buttons();
 			update_clip_list();
 
+			/* Handle filter change */
+			var filter_checkboxes = document.getElementsByClassName("filter_checkbox");
+			for(var i = 0; i < filter_checkboxes.length; i++) {
+				filter_checkboxes[i].addEventListener(
+					"change",
+					update_clip_list
+				);
+			}
+
 			/* Handle change to clip list "select all" checkbox */
 			document.getElementById("clip_list_select_all").addEventListener(
 				"click",

@@ -1,0 +1,27 @@
+				<fieldset>
+					<legend>source</legend>
+					<ul>
+						[% FOREACH channel IN channels %]
+						<li>
+							<input
+								type="checkbox"
+								name="clip_source_to_show"
+								class="filter_checkbox"
+								value="[% channel.channel_id %]"
+								checked="true"
+							/>
+							[% channel.source_label | html %]
+						</li>
+						[% END %]
+						<li>
+							<input
+								type="checkbox"
+								name="clip_source_to_show"
+								class="filter_checkbox"
+								value="NULL"
+								checked="true"
+							/>
+							upload
+						</li>
+					</ul>
+				</fieldset>

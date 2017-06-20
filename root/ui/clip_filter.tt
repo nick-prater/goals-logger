@@ -7,33 +7,7 @@
 
 				<h2>clip filter</h2>
 
-				<fieldset>
-					<legend>source</legend>
-					<ul>
-						[% FOREACH channel IN channels %]
-						<li>
-							<input
-								type="checkbox"
-								name="clip_source_to_show"
-								value="[% channel.channel_id %]"
-								checked="true"
-								onchange="update_clip_list()"
-							/>
-							[% channel.source_label | html %]
-						</li>
-						[% END %]
-						<li>
-							<input
-								type="checkbox"
-								name="clip_source_to_show"
-								value="NULL"
-								checked="true"
-								onchange="update_clip_list()"
-							/>
-							upload
-						</li>
-					</ul>
-				</fieldset>
+[% INCLUDE ui/source_filter.tt %]
 
 				<fieldset id="category_to_show_fieldset">
 					<legend>category</legend>
@@ -43,8 +17,8 @@
 							<input
 								type="checkbox"
 								name="clip_category_to_show"
+								class="filter_checkbox"
 								checked="true"
-								onchange="update_clip_list()"
 								value="[% value %]"
 							/>[% categories.$value | html %]
 						</li>
@@ -53,8 +27,8 @@
 							<input
 								type="checkbox"
 								name="show_deleted_clips"
+								class="filter_checkbox"
 								id="show_deleted_clips_checkbox"
-								onchange="update_clip_list()"
 								value="show_deleted"
 							/>Deleted
 						</li>
