@@ -357,3 +357,13 @@ table#channel_list tr.channel_row:nth-child(even) {
 	list-style: none;
 }
 
+fieldset.filter_list {
+	padding-left: 0px;
+	padding-right: 0px;
+}
+.filter_list ul {
+	padding-left: 0px;
+}
+.filter_list li {
+	list-style: none;
+}

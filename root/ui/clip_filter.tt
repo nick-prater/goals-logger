@@ -10,65 +10,58 @@
 					<b>clip filter</b>
 				</div>
 
-				<fieldset>
+				<fieldset class="filter_list">
 					<legend>source</legend>
-					<table>
+					<ul>
 						[% FOREACH channel IN channels %]
-						<tr>
-							<td>
-								<input
-									type="checkbox"
-									name="clip_source_to_show"
-									value="[% channel.channel_id %]"
-									checked="true"
-									onchange="update_clip_list()"
-								/>
-							</td>
-							<td>
-								<span class="source_text">
-									[% channel.source_label | html %]
-								</span>
-							</td>
-						</tr>
+						<li>
+							<input
+								type="checkbox"
+								name="clip_source_to_show"
+								value="[% channel.channel_id %]"
+								checked="true"
+								onchange="update_clip_list()"
+							/>
+							[% channel.source_label | html %]
+						</li>
 						[% END %]
-
-						<tr>
-							<td>
-								<input
-									type="checkbox"
-									name="clip_source_to_show"
-									value="NULL"
-									checked="true"
-									onchange="update_clip_list()"
-								/>
-							</td>
-							<td>
-								<span class="source_text">
-									upload
-								</span>
-							</td>
-						</tr>
-					</table>
+						<li>
+							<input
+								type="checkbox"
+								name="clip_source_to_show"
+								value="NULL"
+								checked="true"
+								onchange="update_clip_list()"
+							/>
+							upload
+						</li>
+					</ul>
 				</fieldset>
 
-				<fieldset id="category_to_show_fieldset">
+				<fieldset id="category_to_show_fieldset" class="filter_list">
 					<legend>category</legend>
-					[% FOREACH value IN categories.keys %]
-						<input
-							type="checkbox"
-							name="clip_category_to_show"
-							checked="true"
-							onchange="update_clip_list()"
-							value="[% value %]"
-						/>[% categories.$value | html %]<br />
+					<ul>
+					[% FOREACH value IN categories.keys.sort %]
+						<li>
+							<input
+								type="checkbox"
+								name="clip_category_to_show"
+								checked="true"
+								onchange="update_clip_list()"
+								value="[% value %]"
+							/>[% categories.$value | html %]
+						</li>
 					[% END %]
-						<input
-							type="checkbox"
-							name="show_deleted_clips"
-							id="show_deleted_clips_checkbox"
-							onchange="update_clip_list()"
-							value="show_deleted"
-						/>Deleted<br />
+						<li>
+							<input
+								type="checkbox"
+								name="show_deleted_clips"
+								id="show_deleted_clips_checkbox"
+								onchange="update_clip_list()"
+								value="show_deleted"
+							/>Deleted
+						</li>
+					</ul>
 				</fieldset>
 
 			</div>
