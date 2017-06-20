@@ -693,8 +693,6 @@
 				var clips = clip_list.split(",", clip_list);
 				for(var i = 0; i < clips.length; i++) {
 
-					alert(clips[i]);
-
 					if(clips[i] == playing_clip_id) {
 						clear_player();
 					}
