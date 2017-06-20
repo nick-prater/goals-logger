@@ -352,18 +352,31 @@ table#channel_list tr.channel_row:nth-child(even) {
 	text-align: center;
 }
 
-.menu_links {
-	padding-left: 14px;
-	list-style: none;
+.filter_list h1 {
+	font-size: 12pt;
+	text-align: center;
+	background: black;
+	color: white;
+	margin-top: 0;
 }
-
-fieldset.filter_list {
-	padding-left: 0px;
-	padding-right: 0px;
+.filter_list h2 {
+	font-size: 12pt;
+	text-align: center;
+	margin: 0;
+}
+.filter_list fieldset {
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 4px;
 }
 .filter_list ul {
-	padding-left: 0px;
+	padding-left: 0;
+	margin: 0;
 }
 .filter_list li {
+	list-style: none;
+}
+.filter_list.menu_links ul {
+	padding-left: 14px;
 	list-style: none;
 }

@@ -1,16 +1,13 @@
-		<div id="source_list_container">
+		<div id="source_list_container" class="filter_list">
 
 			<!-- update_clip_list() is called when filter selection is changed -->
-			<div class="profile_name">[% c.session.profile_name | html %]</div>
-			<p></p>
+			<h1>[% c.session.profile_name | html %]</h1>
 
 			<div [% IF assign_clip_id %] style="display: none" [% END %]>
 
-				<div align="center">
-					<b>clip filter</b>
-				</div>
+				<h2>clip filter</h2>
 
-				<fieldset class="filter_list">
+				<fieldset>
 					<legend>source</legend>
 					<ul>
 						[% FOREACH channel IN channels %]
@@ -38,7 +35,7 @@
 					</ul>
 				</fieldset>
 
-				<fieldset id="category_to_show_fieldset" class="filter_list">
+				<fieldset id="category_to_show_fieldset">
 					<legend>category</legend>
 					<ul>
 					[% FOREACH value IN categories.keys.sort %]
