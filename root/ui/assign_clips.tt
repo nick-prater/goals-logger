@@ -35,7 +35,13 @@
 		<div id="body_container">
 
 			<div id="button_container" style="display: block">
-[% INCLUDE ui/hotkeys.tt %]
+[% IF hotkeys %]
+	[% INCLUDE ui/hotkeys.tt %]
+[% END %]
+[% IF build_playlist %]
+	[% INCLUDE ui/playlist.tt %]
+[% END %]
+
 				<!-- This contains the form used to display status feedback when clips are created.
 				     It is hidden until the create clip button is pressed. Message is populated dynamically
 				-->
@@ -109,7 +115,9 @@
 			var assign_clip_id = [% assign_clip_id || 0 %];
 			var assign_clip_title = '';
 
+[% IF hotkeys %]
 			update_buttons();
+[% END %]
 			update_clip_list();
 
 			/* Handle filter change */
@@ -276,8 +284,10 @@
 					"/clips/all?category=" +
 					get_clip_list_category_filters() +
 					"&channel_id=" +
-					get_clip_list_source_filters() +
-					"&button_clips=0"
+					get_clip_list_source_filters()
+[% IF build_playlist %]
+					+ "&button_clips=1"
+[% END %]
 				);
 
 				var show_deleted_checkbox = document.getElementById("show_deleted_clips_checkbox");
@@ -653,43 +663,6 @@
 				set_user_message("");
 
 				assign_clip_id = 0;
-			}
-
-
-			function assign_clip(clip_id, clip_title) {
-
-				if(assigning_clip_id == clip_id) {
-					/* Already assigning this clip, so CANCEL action */
-					cancel_assign_clip();
-					clear_player();
-					return;
-				}
-
-				/* Cancel any assignment already in progress */
-				cancel_assign_clip();
-				clear_player();
-
-				/* Set global flag */
-				assigning_clip_id = clip_id;
-
-				/* Highlight clip row  */
-				var row = document.getElementById("clip_row_" + clip_id);
-				if(row) {
-					row.setAttribute("class", "assign_row");
-				}
-
-				/* Change 'cancel' button back to 'assign' */
-				var assign_node = document.getElementById("clip_assign_link_" + clip_id);
-				if(assign_node) {
-					assign_node.innerText = 'cancel';
-				}
-
-				/* Set user message */
-				set_user_message (
-					"click on one of the player hotkey buttons above to load with clip <i>" +
-					clip_title +
-					"</i>"
-				);
 			}
 
 

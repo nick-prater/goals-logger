@@ -206,6 +206,43 @@
 	}
 
 
+	function assign_clip(clip_id, clip_title) {
+
+		if(assigning_clip_id == clip_id) {
+			/* Already assigning this clip, so CANCEL action */
+			cancel_assign_clip();
+			clear_player();
+			return;
+		}
+
+		/* Cancel any assignment already in progress */
+		cancel_assign_clip();
+		clear_player();
+
+		/* Set global flag */
+		assigning_clip_id = clip_id;
+
+		/* Highlight clip row  */
+		var row = document.getElementById("clip_row_" + clip_id);
+		if(row) {
+			row.setAttribute("class", "assign_row");
+		}
+
+		/* Change 'cancel' button back to 'assign' */
+		var assign_node = document.getElementById("clip_assign_link_" + clip_id);
+		if(assign_node) {
+			assign_node.innerText = 'cancel';
+		}
+
+		/* Set user message */
+		set_user_message (
+			"click on one of the player hotkey buttons above to load with clip <i>" +
+			clip_title +
+			"</i>"
+		);
+	}
+
+
 	function assign_clip_to_button(clip_id, button_id, button) {
 
 		/* Fire off asynchronous request to server */
