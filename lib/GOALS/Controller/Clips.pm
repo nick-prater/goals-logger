@@ -344,7 +344,9 @@ sub all : Path('all') : Args(0) {
 
 	# By default, don't return clips assigned to buttons
 	$search_params->{join} = 'buttons';
-	$where->{button_id} = undef;
+	if( !$c->request->param('button_clips') ) {
+		$where->{button_id} = undef;
+	}
 
 	# Restrict results by profile_id, if parameter is supplied
 	if( $c->session->{profile_id} ) {
