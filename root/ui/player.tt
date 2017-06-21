@@ -370,24 +370,22 @@
 			<!-- This div contains the list of marked clips, which can be selected for editing.
 			-->
 			<div id="clip_list_container" align="center">
-
 				<table id="clip_list">
-
-					<tr>
-						<th class="clip_list_status">status</th>
-						<th class="clip_list_date">date</th>
-						<th class="clip_list_time">time</th>
-						<th class="clip_list_source">source</th>
-						<th class="clip_list_match">match</th>
-						<th class="clip_list_commentator">commentator</th>
-					</tr>
-
-					<!-- data rows will be populated dynamically -->
+					<thead>
+						<tr>
+							<th class="clip_list_status">status</th>
+							<th class="clip_list_date">date</th>
+							<th class="clip_list_time">time</th>
+							<th class="clip_list_source">source</th>
+							<th class="clip_list_match">match</th>
+							<th class="clip_list_commentator">commentator</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- data rows will be populated dynamically -->
+					</tbody>
 				</table>
-
 			<div>
-
-
 		</div>
 
 
@@ -436,7 +434,7 @@
 			var play_timer;
 
 			/* Timer to update the event/clip list */
-			var poll_ajax_timer_period_ms = 5000; // Set to 0 to disable
+			var poll_ajax_timer_period_ms = 0; //5000; // Set to 0 to disable
 			var poll_ajax_timer;
 			refresh_event_list();
 
@@ -1308,10 +1306,21 @@
 				row.cells.item(4).setAttribute("class", "clip_list_match");
 				row.cells.item(5).innerHTML = event_row.commentator;
 				row.cells.item(5).setAttribute("class", "clip_list_commentator");
-				row.cells.item(6).appendChild(generate_edit_link(event_row));
-				row.cells.item(6).setAttribute("class", "clip_list_edit");
+
+				if(event_row.status != 'deleted') {
+					row.cells.item(6).appendChild(generate_edit_link(event_row));
+					row.cells.item(6).setAttribute("class", "clip_list_edit");
+				}
+
 				row.cells.item(7).appendChild(generate_delete_link(event_row));
-				row.cells.item(7).setAttribute("class", "clip_list_delete");
+				row.cells.item(7).classList.add("clip_list_delete");
+
+				/* Set formatting if event has been deleted */
+				row.setAttribute("class", "event_row");
+				if(event_row.status == 'deleted') {
+					row.classList.add("deleted");
+					row.cells.item(7).classList.add("undelete");
+				}
 			}
 
 
@@ -1358,7 +1367,6 @@
 							event.preventDefault();
 						}
 					);
-
 				}
 
 				return a;

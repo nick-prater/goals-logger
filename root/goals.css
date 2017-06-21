@@ -208,7 +208,8 @@ table#clip_list tr.clip_row:nth-child(even) {
 	background: #e3E3E3;
 }
 
-.clip_row.deleted td:not(.undelete) {
+.clip_row.deleted td:not(.undelete),
+.event_row.deleted td:not(.undelete) {
 	text-decoration: line-through;
 	color: gray;
 }
