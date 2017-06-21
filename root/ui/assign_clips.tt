@@ -79,12 +79,7 @@
 					[% END %]
 				</table>
 
-				<!--
-				<button type="button" onclick="update_buttons()">refresh buttons</button>
-				<button type="button" onclick="update_clip_list()">refresh clip list</button>
-				-->
-
-				<!-- This ontains the form used to display status feedback when clips are created.
+				<!-- This contains the form used to display status feedback when clips are created.
 				     It is hidden until the create clip button is pressed. Message is populated dynamically
 				-->
 				<div
@@ -385,8 +380,8 @@
 						/* If page is loaded with assign_clip_id defined, that
 						 * means we should select that clip for assignment
 						 */
-						if( [% assign_clip_id %] ) {
-							assign_clip( [% assign_clip_id %], assign_clip_title );
+						if(assign_clip_id) {
+							assign_clip(assign_clip_id, assign_clip_title);
 						}
 					}
 					else {
@@ -401,7 +396,8 @@
 					"/clips/all?category=" +
 					get_clip_list_category_filters() +
 					"&channel_id=" +
-					get_clip_list_source_filters()
+					get_clip_list_source_filters() +
+					"&button_clips=0"
 				);
 
 				var show_deleted_checkbox = document.getElementById("show_deleted_clips_checkbox");
@@ -412,8 +408,8 @@
 				/* If page is loaded with assign_clip_id defined, that
 				 * means we should load just that clip into the list
 				 */
-				if( [% assign_clip_id %] ) {
-					url = "/clips/all?clip_id=" + [% assign_clip_id %];
+				if(assign_clip_id) {
+					url = "/clips/all?clip_id=" + assign_clip_id;
 				}
 
 				request.open("GET", url, true);
@@ -487,7 +483,7 @@
 					populate_clip_row( json_data[clip_id] );
 
 					/* Capture the title of this clip for later use, if assigning a single clip */
-					if( [% assign_clip_id %] && clip_id == [% assign_clip_id %] ) {
+					if(assign_clip_id && clip_id == assign_clip_id) {
 						assign_clip_title = json_data[clip_id].title;
 					}
 				}
@@ -941,7 +937,7 @@
 							function() {
 								/* If page is loaded with assign_clip_id defined, that
 								* means we are only assigning a single clip, so return to player */
-								if([% assign_clip_id %]) {
+								if(assign_clip_id) {
 									assign_clip_id = 0;
 									window.location.href = "/ui/assign_clips";
 								}
