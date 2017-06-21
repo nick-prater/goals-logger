@@ -27,18 +27,18 @@ sub index :Path :Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $rs = $c->model('DB::Event');
-	
+
 	my $response;
 	my $event = $rs->find({
 		event_id => 10
 	});
-	
-	$response .= 
+
+	$response .=
 		$event->event_timestamp->strftime('%d/%m/%Y %H:%M:%S') . "<br />" .
 		$event->status . "<br />" .
 		$event->event_input->name . "<br />" .
 		$event->event_input->channel->commentator . "<br />";
-		    
+
 	$c->response->body($response);
 }
 
@@ -55,7 +55,7 @@ sub all :Path('all') :Args(0) {
 	my $audio_days = $c->config->{keep_audio_days} - 1;
 	my $dt = DateTime->today->subtract(DateTime::Duration->new( days => $audio_days ));
 	$where->{event_timestamp} = { '>' => $dt };
-	
+
 	# Restrict results by status, if parameter is supplied
 	# multiple status values are comma separated
 	if( $c->request->param('status') ) {
@@ -70,22 +70,22 @@ sub all :Path('all') :Args(0) {
 		$where->{channel_id} = [ split(',', $c->request->param('channel_id')) ];
 		$search_params->{join} = 'event_input';
 	};
-	
+
 	my @events = $rs->search($where, $search_params);
-	
+
 	# Extract events into JSON structure
 	# This ensures that every value we need is explicitly de-referenced
 	my $json_data = {};
 	foreach my $event(@events) {
-	
+
 		# Extract UTC iso timestamp
 		$event->event_timestamp->set_time_zone('UTC');
 		my $iso_timestamp = $event->event_timestamp->strftime('%Y-%m-%dT%H:%M:%S.%3NZ');
-	
+
 		# Set to channel timezone to extract local timestamp
 		# TODO : Extract channel time zone (put into Channel model)
 		$event->event_timestamp->set_time_zone('Europe/London');
-	
+
 		my %json_event = (
 			id => $event->event_id,
 			status => $event->status,
@@ -98,17 +98,17 @@ sub all :Path('all') :Args(0) {
 			iso_timestamp => $iso_timestamp,
 			local_iso_timestamp => $event->event_timestamp->strftime('%Y-%m-%dT%H:%M:%S.%3N'),
 		);
-				
+
 		$json_data->{$event->event_id} = \%json_event;
 	}
-	
+
 	$c->stash(
 		events => \@events,
 		template => 'events/index.tt',
 		current_view => 'JSON',
 		json_data => $json_data,
 	)
-	
+
 }
 
 
@@ -121,25 +121,25 @@ sub add : Path('add') {
 	my $event_input_id = shift;
 	my $event_type = $c->request->param('event_type');
 	my $timestamp = $c->request->param('timestamp');
-	
+
 	unless($event_input_id) {
 		$c->error("mandatory event_input_id not supplied");
 		die;
 	}
-	
+
 	unless($event_type) {
 		$event_type = 'instance';
 		$c->log->debug("defaulting to event_type='$event_type'");
 	}
-		
+
 	unless($timestamp) {
 		$timestamp = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime());
 		$c->log->debug("defaulting to timestamp: $timestamp");
 	}
-	
+
 	# We don't check that the specified event_id or event_type is valid
 	# That is enforced by the database, which will raise an error.
-	
+
 	my $rs = $c->model('DB::Event');
 	my $event = $rs->create({
 		event_type => $event_type,
@@ -149,9 +149,9 @@ sub add : Path('add') {
 		update_timestamp => DateTime->now(),
 	}) or do {
 		$c->error("problem adding new event record: $!");
-		die;	
+		die;
 	};
-	
+
 	# We should return the event we added, but for now OK is fine
 	$c->response->content_type('text/plain');
 	$c->response->body("OK\nevent_id=" . $event->event_id);
@@ -168,7 +168,7 @@ sub delete : Path('delete') : Args(1) {
 	$c->forward(
 		'update_status',
 		[ $event_id, 'deleted' ]
-	);	
+	);
 }
 
 
@@ -178,39 +178,39 @@ sub purge_deleted : Local {
 	my $c = shift;
 
 	# We don't remove 'deleted' event rows from the database immediately.
-	# They are first just marked as status='deleted'. This gives an 
+	# They are first just marked as status='deleted'. This gives an
 	# opportunity for users to 'undelete' them.
-	# 
+	#
 	# This method is called to remove the rows marked as deleted, after
 	# a certain grace period has expired.
-	
+
 	# Pull grace period from configuration file, but fall back to a default
 	my $keep_days = $c->config->{keep_deleted_events_days};
 	unless (defined $keep_days) {
 		$keep_days = 28;
 	}
-	
+
 	my $delete_dt = DateTime->now->subtract( days => $keep_days );
 	my $rs = $c->model('DB::Event');
 	my $where = {};
 	my $attributes = {};
-	
+
 	$c->log->debug(
 		"purging from database events marked as 'deleted' prior to ".
 		$delete_dt->strftime("%Y-%m-%dT%H:%M:%SZ")
 	);
-			
+
 	$attributes->{join} = 'clips';
 	$where->{'me.update_timestamp'} = { '<' => $delete_dt };
 	$where->{'me.status'} = 'deleted';
 	$where->{'clips.clip_id'} = undef;
-	
+
 	my $events = $rs->search(
 		$where,
 		$attributes
 	);
 	$events->delete;
-		
+
 	# Return an OK
 	$c->response->content_type('text/plain');
 	$c->response->body("OK");
@@ -225,30 +225,30 @@ sub purge_expired : Local {
 	# This removes event rows from the database a number of days
 	# after their event_timestamp, defined in the keep_events_days configuration
 	# parameter. Usually events will lose their relevance once audio has
-	# been deleted, so there is no point in keeping them longer.	
+	# been deleted, so there is no point in keeping them longer.
 	# All events with an event_timestamp outside the keep_events_days
 	# time period will be removed, regardless of their status.
-	
+
 	# Pull grace period from configuration file, but fall back to a default
 	my $keep_days = $c->config->{keep_events_days};
 	unless (defined $keep_days) {
 		$keep_days = 90;
 	}
-	
+
 	my $delete_dt = DateTime->now->subtract( days => $keep_days );
 	my $rs = $c->model('DB::Event');
 	my $where = {};
-	
+
 	$c->log->debug(
 		"purging from database events prior to ".
 		$delete_dt->strftime("%Y-%m-%dT%H:%M:%SZ")
 	);
-			
+
 	$where->{update_timestamp} = { '<' => $delete_dt };
-	
+
 	my $events = $rs->search($where);
 	$events->delete;
-		
+
 	# Return an OK
 	$c->response->content_type('text/plain');
 	$c->response->body("OK");
@@ -265,7 +265,7 @@ sub open : Path('open') : Args(1) {
 	$c->forward(
 		'update_status',
 		[ $event_id, 'open' ]
-	);	
+	);
 }
 
 
@@ -279,7 +279,7 @@ sub exported : Path('exported') : Args(1) {
 	$c->forward(
 		'update_status',
 		[ $event_id, 'exported' ]
-	);	
+	);
 }
 
 
@@ -293,7 +293,7 @@ sub undelete : Path('undelete') : Args(1) {
 	$c->forward(
 		'update_status',
 		[ $event_id, 'new' ]
-	);	
+	);
 }
 
 
@@ -308,9 +308,9 @@ sub update_status : Path('update_status') : Args(2) {
 	# We don't check that the specified event_id or event_type is valid
 	# That is enforced by the database, which will raise an error.
 	$c->log->debug("setting status=$status for event_id=$event_id");
-	
+
 	my $rs = $c->model('DB::Event');
-	
+
 	my $event = $rs->find({
 		event_id => $event_id
 	}) or do {
@@ -326,15 +326,15 @@ sub update_status : Path('update_status') : Args(2) {
 		$c->response->body("UNCHANGED\nevent_id=" . $event->event_id);
 		return;
 	}
-		
+
 	$event->update({
 		status => $status,
 		update_timestamp => DateTime->now(),
 	}) or do {
 		$c->error("problem setting status=$status for event_id=$event_id");
-		die;	
+		die;
 	};
-	
+
 	if( $status ne 'exported' ) {
 		# We should return the event we added, but for now OK is fine
 		$c->response->content_type('text/plain');
