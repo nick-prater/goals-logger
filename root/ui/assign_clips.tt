@@ -410,17 +410,18 @@
 					for( var i = 0; i < 11; i ++  ) {
 						row.insertCell(-1);
 					}
-
-					/* These elements are invariant. so only populate when row is created */
-					row.setAttribute("class", "clip_row");
 				}
+
+				/* Reset attributes */
+				row.setAttribute("class", "clip_row");
+				row.dataset.clip_id = clip_row.clip_id;
 
 				/* Update/populate the fields */
 				var i = 0;
 
 				/* Normal action links don't show if clip has been deleted */
 				if(clip_row.status == 'deleted') {
-					row.setAttribute("class", "clip_row deleted");
+					row.classList.add("deleted");
 					i += 3;
 					row.cells.item(i).innerHTML = '<a href="javascript:undelete_clip(' + clip_row.clip_id + ')">undelete</a>';
 					row.cells.item(i).setAttribute("class", "undelete");
