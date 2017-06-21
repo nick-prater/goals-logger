@@ -1,9 +1,34 @@
 				<h1>Package Clips</h1>
 				<ul id="playlist">
-					<li>test clip position</li>
+					<li id="empty_playlist_item">empty_playlist</li>
 				</ul>
 
 <script type="text/javascript">
+	console.log("including playlist");
+
+
+	function assign_clip(clip_id, clip_title) {
+
+		console.log("playlist::assign_clip()");
+
+		var playlist = document.getElementById("playlist");
+		var clip_row = document.getElementById("clip_row_" + clip_id);
+		var clip_id = clip_row.dataset.clip_id;
+
+
+		hide_empty_playlist_item();
+		var li = document.createElement("li");
+		li.innerHTML = clip_row.cells[5].innerHTML;
+		playlist.appendChild(li);
+
+	}
+
+
+	function hide_empty_playlist_item() {
+
+		li = document.getElementById("empty_playlist_item");
+		li.setAttribute("hidden", "hidden");
+	}
 
 
 </script>

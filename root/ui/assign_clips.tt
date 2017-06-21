@@ -488,7 +488,7 @@
 			function generate_assign_link(clip_row) {
 
  				var a = document.createElement('a');
- 				a.setAttribute('href', '');
+				a.setAttribute('href', 'javascript:void(0)');
  				a.appendChild(document.createTextNode('assign'));
  				a.addEventListener(
  					"click",

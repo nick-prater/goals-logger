@@ -42,6 +42,8 @@
 
 
 <script type="text/javascript">
+	console.log("including hotkeys");
+
 	function update_buttons() {
 
 		//TODO - check that the clip we're playing/assigning hasn't been deleted
