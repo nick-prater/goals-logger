@@ -1,7 +1,8 @@
 /*
  * This script is provided to give an example how the playlist can be controlled using the event emitter.
  * This enables projects to create/control the useability of the project.
-*/
+ * Ultimately move this code to ui/playlist
+ */
 var ee = playlist.getEventEmitter();
 var $container = $("body");
 var $timeFormat = $container.find('.time-format');
@@ -117,66 +118,6 @@ $container.on("click", ".btn-clear", function() {
   ee.emit("clear");
 });
 
-
-
-/* Handle Mode Buttons */
-$("div.btn-playlist-state-group").on("click", ".btn-select", function() {
-	deselect_mode_buttons();
-	$(this).addClass("active");
-	ee.emit("statechange", "select");
-});
-
-
-$("div.btn-playlist-state-group").on("click", ".btn-shift", function() {
-	deselect_mode_buttons();
-	$(this).addClass("active");
-	ee.emit("statechange", "shift");
-});
-
-
-
-/* Handle fade buttons */
-$("div.btn-fade-state-group").on("click", ".btn", function() {
-
-	console.log("fade button click");
-	console.log(this);
-	var $el = $(this);
-
-
-	/* Select appropriate cursor mode */
-	if($el.hasClass("btn-fade-in")) {
-		ee.emit("statechange", "fadein");
-	}
-	else if($el.hasClass("btn-fade-out")) {
-		console.log("fade out");
-		ee.emit("statechange", "fadeout");
-	}
-
-	/* Select appropriate fade curve */
-	if($el.hasClass("btn-logarithmic")) {
-		ee.emit("fadetype", "logarithmic");
-	}
-	else if ($el.hasClass("btn-linear")) {
-		ee.emit("fadetype", "linear");
-	}
-	else if ($el.hasClass("btn-exponential")) {
-		ee.emit("fadetype", "exponential");
-	}
-	else if ($el.hasClass("btn-scurve")) {
-		ee.emit("fadetype", "sCurve");
-	}
-
-	/* Select this button */
-	deselect_mode_buttons();
-	$el.addClass("active");
-});
-
-
-
-function deselect_mode_buttons() {
-	$(".btn-fade-state-group .active").removeClass("active");
-	$(".btn-playlist-state-group .active").removeClass("active");
-}
 
 
 

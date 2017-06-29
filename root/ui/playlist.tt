@@ -49,5 +49,63 @@
 	});
 
 
+	/* Handle Mode Buttons */
+	$("div.btn-playlist-state-group").on("click", ".btn-select", function() {
+		deselect_mode_buttons();
+		$(this).addClass("active");
+		ee.emit("statechange", "select");
+	});
+
+	$("div.btn-playlist-state-group").on("click", ".btn-shift", function() {
+		deselect_mode_buttons();
+		$(this).addClass("active");
+		ee.emit("statechange", "shift");
+	});
+
+
+	/* Handle fade buttons */
+	$("div.btn-fade-state-group").on("click", ".btn", function() {
+
+		console.log("fade button click");
+		console.log(this);
+		var $el = $(this);
+
+
+		/* Select appropriate cursor mode */
+		if($el.hasClass("btn-fade-in")) {
+			ee.emit("statechange", "fadein");
+		}
+		else if($el.hasClass("btn-fade-out")) {
+			console.log("fade out");
+			ee.emit("statechange", "fadeout");
+		}
+
+		/* Select appropriate fade curve */
+		if($el.hasClass("btn-logarithmic")) {
+			ee.emit("fadetype", "logarithmic");
+		}
+		else if ($el.hasClass("btn-linear")) {
+			ee.emit("fadetype", "linear");
+		}
+		else if ($el.hasClass("btn-exponential")) {
+			ee.emit("fadetype", "exponential");
+		}
+		else if ($el.hasClass("btn-scurve")) {
+			ee.emit("fadetype", "sCurve");
+		}
+
+		/* Select this button */
+		deselect_mode_buttons();
+		$el.addClass("active");
+	});
+
+
+	/* Deselect all editor mode buttons */
+	function deselect_mode_buttons() {
+		$(".btn-fade-state-group .active").removeClass("active");
+		$(".btn-playlist-state-group .active").removeClass("active");
+	}
+
+
 
 </script>
