@@ -222,7 +222,7 @@ ee.on("loadprogress", function(percent, src) {
     name = src.name;
   }
 
-  displayLoadingData("Track " + name + " has loaded " + percent + "%");
+  displayLoadingData("Track " + name + " has loaded " + Math.round(percent) + "%");
 });
 
 ee.on("audiosourcesloaded", function() {
