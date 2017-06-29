@@ -183,22 +183,6 @@ function deselect_mode_buttons() {
 
 
 
-//zoom buttons
-$container.on("click", ".btn-zoom-in", function() {
-	ee.emit("zoomin");
-});
-
-$container.on("click", ".btn-zoom-out", function() {
-	ee.emit("zoomout");
-});
-
-$container.on("click", ".btn-trim-audio", function() {
-	ee.emit("trim");
-});
-
-
-
-
 $container.on("click", ".btn-info", function() {
   console.log(playlist.getInfo());
 });
