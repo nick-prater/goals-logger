@@ -9,7 +9,7 @@
 
 [% INCLUDE ui/source_filter.tt %]
 
-				<fieldset id="category_to_show_fieldset">
+				<fieldset id="category_to_show_fieldset" class="panel panel-default">
 					<legend>category</legend>
 					<ul>
 					[% FOREACH value IN categories.keys.sort %]

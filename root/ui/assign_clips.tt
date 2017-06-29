@@ -26,6 +26,11 @@
 	<head>
 		<meta charset="utf-8">
 		<title>talkSPORT GOALS</title>
+[% IF build_playlist %]
+		<link rel="stylesheet" href="/waveform-playlist/css/bootstrap.css"/>
+		<link rel="stylesheet" href="/waveform-playlist/font-awesome-4.7.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="/waveform-playlist/css/main.css">
+[% END %]
 		<link rel="stylesheet" href="/goals.css" />
 	</head>
 	<body>
@@ -39,7 +44,8 @@
 	[% INCLUDE ui/hotkeys.tt %]
 [% END %]
 [% IF build_playlist %]
-	[% INCLUDE ui/playlist.tt %]
+	[% INSERT "ui/web-audio-editor.html" %]
+	[% INCLUDE "ui/playlist.tt" %]
 [% END %]
 
 				<!-- This contains the form used to display status feedback when clips are created.

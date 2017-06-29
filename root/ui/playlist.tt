@@ -1,7 +1,14 @@
+<!--
 				<h1>Package Clips</h1>
 				<ul id="playlist">
 					<li id="empty_playlist_item">empty_playlist</li>
 				</ul>
+-->
+
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="/waveform-playlist/js/waveform-playlist.var.js"></script>
+<script type="text/javascript" src="/waveform-playlist/js/web-audio-editor.js"></script>
+<script type="text/javascript" src="/waveform-playlist/js/emitter.js"></script>
 
 <script type="text/javascript">
 	console.log("including playlist");
@@ -11,24 +18,19 @@
 
 		console.log("playlist::assign_clip()");
 
-		var playlist = document.getElementById("playlist");
 		var clip_row = document.getElementById("clip_row_" + clip_id);
 		var clip_id = clip_row.dataset.clip_id;
+		var title_html = clip_row.cells[5].innerHTML;
 
+		var audio_url = (
+			"[% clip_url_prefix %]" +
+			"/clip/[% c.session.profile_code %]/" +
+			clip_id +
+			".wav"
+		)
 
-		hide_empty_playlist_item();
-		var li = document.createElement("li");
-		li.innerHTML = clip_row.cells[5].innerHTML;
-		playlist.appendChild(li);
-
+		ee.emit("newtrack", audio_url, title_html);
+		document.getElementById("empty_playlist_message").setAttribute("hidden", "hidden");
 	}
-
-
-	function hide_empty_playlist_item() {
-
-		li = document.getElementById("empty_playlist_item");
-		li.setAttribute("hidden", "hidden");
-	}
-
 
 </script>

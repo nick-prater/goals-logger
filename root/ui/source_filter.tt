@@ -1,4 +1,4 @@
-				<fieldset>
+				<fieldset class="panel panel-default">
 					<legend>source</legend>
 					<ul>
 						[% FOREACH channel IN channels %]

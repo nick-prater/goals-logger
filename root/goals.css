@@ -191,6 +191,8 @@ td.button_box, tr.button_box {
 
 .clip_list_div {
 	position: absolute;
+	width: 98%;
+	left: 1%;
 }
 
 .clip_list_heading_links {
@@ -347,6 +349,9 @@ table#channel_list tr.channel_row:nth-child(even) {
 	text-align: center;
 }
 
+.filter_list {
+	line-height: initial;
+}
 .filter_list h1 {
 	font-size: 12pt;
 	text-align: center;
@@ -357,13 +362,39 @@ table#channel_list tr.channel_row:nth-child(even) {
 .filter_list h2 {
 	font-size: 12pt;
 	text-align: center;
+	font-weight: bold;
 	margin: 0;
 }
-.filter_list fieldset {
+.filter_list fieldsets {
 	padding-left: 0;
 	padding-right: 0;
 	padding-bottom: 4px;
 }
+fieldset.panel-default {
+	border-color: black;
+	margin-top: 0px;
+	margin-bottom: 5px;
+	margin-left: 3px;
+	margin-right: 3px;
+	padding-left: 3px;
+}
+.filter_list legend {
+	width: auto;
+	padding-left 10px;
+	margin-bottom: 0;
+	margin-left: 8px;
+	text-align: center;
+	font-size: inherit;
+	line-height: inherit;
+	border-bottom: none;
+	text-align: left;
+}
+.filter_list hr {
+	color: black;
+	margin: 0;
+}
+
+
 .filter_list ul {
 	padding-left: 0;
 	margin: 0;
@@ -374,4 +405,10 @@ table#channel_list tr.channel_row:nth-child(even) {
 ul.menu_links {
 	padding-left: 12px;
 	list-style: none;
+}
+
+
+/* Multitrack editor */
+.fade_icon {
+	height: 14pt;
 }

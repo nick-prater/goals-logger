@@ -1,0 +1,174 @@
+<!--
+	Multitrack web audio editor, powered and inspired by:
+	https://github.com/naomiaro/waveform-playlist
+
+	Released under MIT License
+
+	The MIT License (MIT)
+
+	Copyright (c) 2015 Naomi
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+-->
+
+<div class="container">
+	<div class="wrapper">
+
+		<div id="playlist">
+		</div>
+		<div id="empty_playlist_message">
+			empty playlist &mdash; click 'assign' to add a clip
+		</div>
+
+		<div class="playlist-bottom-bar">
+		       <span class="audio-pos">00:00:00.000</span>
+		</div>
+
+		<div id="top-bar" class="playlist-top-bar">
+
+		    <div class="playlist-toolbar">
+
+			<!-- Transport Buttons -->
+			<div class="btn-group">
+			    <span class="btn-pause btn btn-warning">
+				<i class="fa fa-pause"></i>
+			    </span>
+			    <span class="btn-play btn btn-success">
+				<i class="fa fa-play"></i>
+			    </span>
+<!--
+			    <span class="btn-stop btn btn-danger">
+				<i class="fa fa-stop"></i>
+			    </span>
+-->
+			    <span class="btn-rewind btn btn-success">
+				<i class="fa fa-fast-backward"></i>
+			    </span>
+			    <span class="btn-fast-forward btn btn-success">
+				<i class="fa fa-fast-forward"></i>
+			    </span>
+			</div>
+
+			<!-- Cursor mode buttons -->
+			<div class="btn-group btn-playlist-state-group">
+			    <span class="btn-select btn btn-default" title="select audio region">
+				<i class="fa fa-italic"></i>
+			    </span>
+			    <span class="btn-shift btn btn-default" title="shift audio in time">
+				<i class="fa fa-arrows-h"></i>
+			    </span>
+<!--
+			    <span class="btn-fadein btn btn-default" title="set audio fade in">
+				<i class="fa fa-long-arrow-left"></i>
+			    </span>
+			    <span class="btn-fadeout btn btn-default" title="set audio fade out">
+				<i class="fa fa-long-arrow-right"></i>
+			    </span>
+-->
+			</div>
+
+			<!-- fade-in buttons -->
+			<div class="btn-group btn-fade-state-group">
+				<span class="btn btn-default btn-logarithmic btn-fade-in" title="fade in : logarithmic">
+					<img class="fade_icon" src="/img/fade-in-log.svg" />
+				</span>
+				<span class="btn btn-default btn-linear btn-fade-in" title="fade in : linear">
+					<img class="fade_icon" src="/img/fade-in-linear.svg" />
+				</span>
+				<span class="btn btn-default btn-exponential btn-fade-in" title="fade in : exponential">
+					<img class="fade_icon" src="/img/fade-in-exp.svg" />
+				</span>
+				<span class="btn btn-default btn-scurve btn-fade-in" title="fade in : S-curve">
+					<img class="fade_icon" src="/img/fade-in-s.svg" />
+				</span>
+			</div>
+
+			<!-- fade-out buttons -->
+			<div class="btn-group btn-fade-state-group">
+				<span class="btn btn-default btn-logarithmic btn-fade-out" title="fade out : logarithmic">
+					<img class="fade_icon" src="/img/fade-out-log.svg" />
+				</span>
+				<span class="btn btn-default btn-linear btn-fade-out" title="fade out : linear">
+					<img class="fade_icon" src="/img/fade-out-linear.svg" />
+				</span>
+				<span class="btn btn-default btn-exponential btn-fade-out" title="fade out : exponential">
+					<img class="fade_icon" src="/img/fade-out-exp.svg" />
+				</span>
+				<span class="btn btn-default btn-scurve btn-fade-out" title="fade out : S-curve">
+					<img class="fade_icon" src="/img/fade-out-s.svg" />
+				</span>
+			</div>
+
+			<!-- Zoom Buttons -->
+			<div class="btn-group">
+			    <span title="zoom in" class="btn-zoom-in btn btn-default">
+				 <i class="fa fa-search-plus"></i>
+			    </span>
+			    <span title="zoom out" class="btn-zoom-out btn btn-default">
+				  <i class="fa fa-search-minus"></i>
+			    </span>
+			</div>
+
+			<div class="btn-group btn-select-state-group">
+				<span
+					title="keep only the selected audio region for a track"
+					class="btn-trim-audio btn btn-primary disabled"
+				>Trim
+		    		</span>
+			</div>
+
+			<div class="btn-group btn-select-state-group">
+				<span
+					title="Save this playlist"
+					class="btn-save-playlist btn btn-primary"
+				>Save
+		    		</span>
+
+			</div>
+
+
+<!--
+			<div class="btn-group">
+			    <span
+				title="Prints playlist info to console"
+				class="btn btn-info"
+			    >Print
+			    </span>
+			    <span
+				title="Clear the playlist's tracks"
+				class="btn btn-clear btn-danger"
+			    >Clear
+			    </span>
+			</div>
+			<div class="btn-group">
+			    <span title="Download the current work as Wav file" class="btn btn-download btn-primary">
+				<i class="fa fa-download"></i>
+			    </span>
+			</div>
+-->
+			</div> <!-- end of playlist-toolbar -->
+
+			<div id="playlist_status_message">
+			</div>
+
+		</div>     <!-- end of top-bar -->
+
+	</div>
+</div>
+
