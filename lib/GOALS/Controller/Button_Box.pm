@@ -38,31 +38,31 @@ sub audio : Local : Args(1) {
 	my $button_id = shift;
 
 	$c->log->debug("directing to audio for button $button_id");
-	
+
 	my $rs = $c->model('DB::Button')->find(
 		{ button_id => $button_id }
 	) or do {
 		$c->error("unable to find button_id $button_id in database");
 		die;
 	};
-	
+
 	my $clip_id = $rs->clip_id;
 	my $profile_code = $rs->profile->profile_code;
-	
+
 	$c->log->debug("clip has profile_code: $profile_code");
-	
+
 	# Respond according to whether a button has a clip assigned or not
 	if($clip_id) {
 		my $prefix = $c->config->{clip_url_prefix} || '';
 		my $url = "$prefix/clip/$profile_code/$clip_id.wav";
 		$c->log->debug("button $button_id maps to clip_id $clip_id");
 		$c->log->debug("redirecting to $url");
-		$c->response->redirect($url);		
+		$c->response->redirect($url);
 	}
 	else {
 		$c->log->debug("button $button_id does not map to a clip - sending 204 No content response");
-		$c->response->status(204);	
-	}	
+		$c->response->status(204);
+	}
 }
 
 
@@ -70,21 +70,21 @@ sub clear_button : Local : Args(1) {
 
 	my $self = shift;
 	my $c = shift;
-	my $button_id = shift;	
+	my $button_id = shift;
 
 	$c->log->debug("clearing button_id $button_id");
-	
+
 	my $rs = $c->model('DB::Button')->find(
 		{ button_id => $button_id }
 	) or do {
 		$c->error("unable to find button_id $button_id in database");
 		die;
 	};
-	
+
 	$rs->update({
 		clip_id => undef
 	});
-	
+
 	$c->forward('refresh_buttons_config');
 	$c->detach('buttons_json');
 }
@@ -96,25 +96,25 @@ sub assign : Local : Args(2) {
 	my $c = shift;
 	my $button_id = shift;
 	my $clip_id = shift;
-	
+
 	$c->log->debug("assigning clip $clip_id to button $button_id");
-	
+
 	my $rs = $c->model('DB::Button')->find(
 		{ button_id => $button_id }
 	) or do {
 		$c->error("unable to find button_id $button_id in database");
 		die;
 	};
-	
+
 	$rs->update({
 		clip_id => $clip_id
 	}) or do {
 		$c->error("error assigning clip to button");
 		die;
 	};
-	
+
 	$c->forward('refresh_buttons_config');
-	
+
 	$c->detach('buttons_json');
 }
 
@@ -125,11 +125,11 @@ sub buttons_json : Local {
 	my $self = shift;
 	my $c = shift;
 	my %json_data;
-	
+
 	$c->forward('get_hotkeys');
-	
+
 	foreach my $button( @{$c->stash->{hotkey_buttons}} ) {
-	
+
 		$json_data{$button->button_id} = {
 			button_id => $button->id,
 			clip_id => $button->clip_id,
@@ -137,7 +137,7 @@ sub buttons_json : Local {
 			duration_seconds => ($button->clip ? $button->clip->duration_seconds : undef),
 		};
 	}
-	
+
 	$c->stash(
 		current_view => 'JSON',
 		json_data => \%json_data,
@@ -150,11 +150,11 @@ sub refresh_buttons_config : Private {
 	my $self = shift;
 	my $c = shift;
 	my $ini = '';
-	
+
 	$c->log->debug("refresh_buttons_config called");
-	
+
 	$c->forward('get_hotkeys');
-	
+
 	# Create output in the form:
 	#[Button 1]
 	#File=2102 liverpool 6-1 brighton.wav
@@ -165,27 +165,27 @@ sub refresh_buttons_config : Private {
 	#Text=
 	my $button_id = 0;
 	foreach my $button( @{$c->stash->{hotkey_buttons}} ) {
-	
+
 		$button_id ++;
-	
+
 		my $path = $button->clip ? sprintf("%s.wav", $button->clip_id) : '';
 		$ini .= "[Button $button_id]\r\n";
 		$ini .= "File=$path\r\n";
 		$ini .= "Text=" . ($button->clip ? $button->clip->title : '') . "\r\n";
 		$ini .= "\r\n";
 	}
-	
+
 	$c->stash(
 		ini_data => $ini,
 	);
-	
+
 	# Write ini configuration data to file
 	my $dest_path = sprintf(
 		"%s/%s/buttons.ini",
 		$c->config->{clips_path},
 		$c->session->{profile_code},
 	);
-	
+
 	$c->forward(
 		'write_ini',
 		[ $dest_path ]
@@ -198,9 +198,9 @@ sub buttons_ini : Local {
 	my $self = shift;
 	my $c = shift;
 	my $ini = '';
-	
+
 	$c->forward('refresh_buttons_config');
-	
+
 	# Output ini file to browser
 	$c->response->content_type('text/plain');
 	$c->response->body($c->stash->{ini_data});
@@ -214,7 +214,7 @@ sub sources_ini : Local {
 	my $c = shift;
 
 	$c->forward('refresh_sources_ini');
-	
+
 	# Output ini file to browser
 	$c->response->content_type('text/plain');
 	$c->response->body($c->stash->{ini_data});
@@ -228,15 +228,15 @@ sub refresh_sources_ini : Private {
 	my $ini = '';
 
 	$c->log->debug('refresh_sources_ini called');
-	
+
 	# We need a profile_code to filter out irrelevant channels
 	unless($c->session->{profile_id} && $c->session->{profile_code}) {
 		$c->error("refresh_sources_ini() called without a session profile_id");
 		die;
-	}	
-	
+	}
+
 	$c->forward('get_sources');
-	
+
 	# Output ini file in the form:
 	#[Button 1]
 	#Text=Test Label
@@ -245,9 +245,9 @@ sub refresh_sources_ini : Private {
 	#Text=Tony Incenzo QPR
 	my $button_id = 0;
 	foreach my $channel( @{$c->stash->{channels}} ) {
-		
+
 		$button_id ++;
-		
+
 		if($channel->profile_id != $c->session->{profile_id}) {
 			# Insert an empty button if this channel isn't in
 			# our profile
@@ -255,7 +255,7 @@ sub refresh_sources_ini : Private {
 			$ini .= "Text=\r\n";
 		}
 		else {
-			# Insert the button		
+			# Insert the button
 			my $label = sprintf(
 				"%s %s",
 				$channel->commentator || '',
@@ -269,19 +269,19 @@ sub refresh_sources_ini : Private {
 	$c->stash(
 		ini_data => $ini,
 	);
-	
+
 	# Write ini configuration data to file
 	my $dest_path = sprintf(
 		"%s/%s/labels.ini",
 		$c->config->{clips_path},
 		$c->session->{profile_code},
 	);
-	
+
 	$c->forward(
 		'write_ini',
 		[ $dest_path ]
 	);
-	
+
 }
 
 
@@ -299,7 +299,7 @@ sub get_hotkeys : Private {
 			join => 'clip',
 		}
 	);
-	
+
 	$c->stash(
 		hotkey_buttons => \@records,
 	);
@@ -310,7 +310,7 @@ sub get_sources : Private {
 
 	my $self = shift;
 	my $c = shift;
-	
+
 	my @channels = $c->model('DB::Channel')->search(
 		{ },
 		{
@@ -330,7 +330,7 @@ sub write_ini : Private {
 	my $self = shift;
 	my $c = shift;
 	my $dest_path = shift;
-		
+
 	# Write initially to a temporary file, then do an
 	# atomic rename to the desired filename to avoid
 	# race confitions
@@ -341,31 +341,31 @@ sub write_ini : Private {
 	};
 	my $temp_path = $fh->filename;
 	$c->log->debug("writing ini to temporary file " . $temp_path);
-	
+
 	# Output data to file
 	print $fh $c->stash->{ini_data} or do {
 		$c->error("ERROR writing ini data to temporary file: $!");
 		die;
 	};
-	
+
 	# Close file to flush buffer
 	close $fh or do {
 		$c->error("ERROR closing temporary file: $!");
 		die;
 	};
-	
+
 	# Set permissions so all can read
 	chmod( 0664, $temp_path ) or do {
 		$c->error("ERROR setting permissions on temporary file");
 	};
-	
+
 	$c->log->debug("renaming temporary file $temp_path -> $dest_path");
 
 	move($temp_path, $dest_path) or do {
 		$c->error("ERROR renaming temporary file: $!");
 		die;
 	};
-	
+
 	return 1;
 }
 
