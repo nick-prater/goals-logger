@@ -1859,10 +1859,11 @@ var WaveformPlaylist =
 	        _this2.fadeType = type;
 	      });
 	
-	      ee.on('newtrack', function (file, name) {
+	      ee.on('newtrack', function (file, name, start_time) {
 	        _this2.load([{
 	          src: file,
-	          name: name
+	          name: name,
+                  startTime: start_time
 	        }]);
 	      });
 	
@@ -1967,7 +1968,7 @@ var WaveformPlaylist =
 	          }
 	
 	          track.setState(_this3.getState());
-	          track.setStartTime(start);
+	          track.setStartTime(info.startTime || start); //NP/start);
 	          track.setPlayout(playout);
 	
 	          track.setGainLevel(gain);

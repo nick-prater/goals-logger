@@ -29,8 +29,9 @@
 			".wav"
 		)
 
-		ee.emit("newtrack", audio_url, title_html);
+		ee.emit("newtrack", audio_url, title_html, playlist.duration);
 		document.getElementById("empty_playlist_message").setAttribute("hidden", "hidden");
+		console.log(playlist);
 	}
 
 </script>
