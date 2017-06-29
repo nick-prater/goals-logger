@@ -40,29 +40,30 @@
 		console.log(playlist.getInfo());
 	});
 
-
-	/* Handle Zoom Buttons */
-	$container.on("click", ".btn-zoom-in", function() {
-		ee.emit("zoomin");
-	});
-
-	$container.on("click", ".btn-zoom-out", function() {
-		ee.emit("zoomout");
-	});
-
+	/* Handle Trim Button */
 	$container.on("click", ".btn-trim-audio", function() {
 		ee.emit("trim");
 	});
 
 
+	/* Handle Zoom Buttons */
+	$(".btn-zoom-in").on("click", function() {
+		ee.emit("zoomin");
+	});
+
+	$(".btn-zoom-out").on("click", function() {
+		ee.emit("zoomout");
+	});
+
+
 	/* Handle Mode Buttons */
-	$("div.btn-playlist-state-group").on("click", ".btn-select", function() {
+	$(".btn-select").on("click", function() {
 		deselect_mode_buttons();
 		$(this).addClass("active");
 		ee.emit("statechange", "select");
 	});
 
-	$("div.btn-playlist-state-group").on("click", ".btn-shift", function() {
+	$(".btn-shift").on("click", function() {
 		deselect_mode_buttons();
 		$(this).addClass("active");
 		ee.emit("statechange", "shift");
