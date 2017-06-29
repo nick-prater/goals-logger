@@ -124,10 +124,6 @@ $container.on("click", ".btn-clear", function() {
 
 
 
-$container.on("click", ".btn-info", function() {
-  console.log(playlist.getInfo());
-});
-
 $container.on("click", ".btn-download", function () {
   ee.emit('startaudiorendering', 'wav');
 });

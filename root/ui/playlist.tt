@@ -35,6 +35,12 @@
 	}
 
 
+	/* Handle Save Button */
+	$("div.btn-playlist-state-group").on("click", ".btn-info", function() {
+		console.log(playlist.getInfo());
+	});
+
+
 	/* Handle Zoom Buttons */
 	$container.on("click", ".btn-zoom-in", function() {
 		ee.emit("zoomin");
