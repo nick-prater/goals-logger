@@ -83,12 +83,6 @@ __PACKAGE__->table("clips");
   is_nullable: 1
   size: 200
 
-=head2 category
-
-  data_type: 'enum'
-  extra: {list => ["goal","half_time_report","full_time_report","interview","commercial","other"]}
-  is_nullable: 0
-
 =head2 language
 
   data_type: 'enum'
@@ -160,6 +154,14 @@ __PACKAGE__->table("clips");
   datetime_undef_if_invalid: 1
   is_nullable: 1
 
+=head2 category_id
+
+  data_type: 'integer'
+  default_value: 6
+  extra: {unsigned => 1}
+  is_foreign_key: 1
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -192,21 +194,6 @@ __PACKAGE__->add_columns(
   { data_type => "varchar", is_nullable => 1, size => 1000 },
   "out_cue",
   { data_type => "varchar", is_nullable => 1, size => 200 },
-  "category",
-  {
-    data_type => "enum",
-    extra => {
-      list => [
-        "goal",
-        "half_time_report",
-        "full_time_report",
-        "interview",
-        "commercial",
-        "other",
-      ],
-    },
-    is_nullable => 0,
-  },
   "language",
   {
     data_type => "enum",
@@ -262,6 +249,14 @@ __PACKAGE__->add_columns(
     datetime_undef_if_invalid => 1,
     is_nullable => 1,
   },
+  "category_id",
+  {
+    data_type => "integer",
+    default_value => 6,
+    extra => { unsigned => 1 },
+    is_foreign_key => 1,
+    is_nullable => 0,
+  },
 );
 
 =head1 PRIMARY KEY
@@ -291,6 +286,21 @@ __PACKAGE__->has_many(
   "GOALS::Schema::Result::Button",
   { "foreign.clip_id" => "self.clip_id" },
   { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 category
+
+Type: belongs_to
+
+Related object: L<GOALS::Schema::Result::ClipCategory>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "category",
+  "GOALS::Schema::Result::ClipCategory",
+  { clip_category_id => "category_id" },
+  { is_deferrable => 1, on_delete => "RESTRICT", on_update => "RESTRICT" },
 );
 
 =head2 channel
@@ -349,8 +359,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07045 @ 2017-06-30 11:18:42
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:z8oBOWhW5c7w2Vb7SEms8w
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2017-06-30 20:49:10
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:uVgqHYOXdGYXSsP5deXlug
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

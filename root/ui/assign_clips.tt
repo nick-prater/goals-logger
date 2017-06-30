@@ -465,7 +465,7 @@
 				row.cells.item(i).innerText = clip_row.source;       // Source
 				row.cells.item(i).setAttribute("class", "clip_list_source");
 				i++;
-				row.cells.item(i).innerText = clip_row.category;     // Category
+				row.cells.item(i).innerText = clip_row.category_display_name;     // Category
 				row.cells.item(i).setAttribute("class", "clip_list_category");
 				i++;
 				row.cells.item(i).innerText = clip_row.display_date; // Date

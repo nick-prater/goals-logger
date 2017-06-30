@@ -282,7 +282,7 @@ sub rename : Local : Args(1) {
 		people => $params->{people},
 		description => $params->{description},
 		out_cue => $params->{out_cue},
-		category => $params->{category},
+		category_id => $params->{category},
 		language => $params->{language},
 	}) or do {
 		$c->error("ERROR updating clip");
@@ -343,7 +343,7 @@ sub all : Path('all') : Args(0) {
 	$where->{status} = ['complete'];
 
 	# By default, don't return clips assigned to buttons
-	$search_params->{join} = 'buttons';
+	$search_params->{join} = ['buttons', 'category'];
 	if( !$c->request->param('button_clips') ) {
 		$where->{button_id} = undef;
 	}
@@ -387,7 +387,7 @@ sub all : Path('all') : Args(0) {
 	# multiple status values are comma separated
 	if( $c->request->param('category') ) {
  		$c->log->debug("searching for clips with category of: " . $c->request->param('category'));
-		$where->{category} = [ split(',', $c->request->param('category')) ];
+		$where->{category_id} = [ split(',', $c->request->param('category')) ];
 	};
 
 	# Show deleted clips only if requested
@@ -409,7 +409,8 @@ sub all : Path('all') : Args(0) {
 			clip_id => $clip->clip_id,
 			title => $clip->title,
 			status => $clip->status,
-			category => $clip->category,
+			category_id => $clip->category_id,
+			category_display_name => $clip->category->display_name,
 			duration_seconds => $clip->duration_seconds,
 			match_title => $clip->match_title,
 			commentator => $clip->commentator,
@@ -487,7 +488,7 @@ sub upload : Path : Local {
 		people => $params->{people},
 		description => $params->{description},
 		out_cue => $params->{out_cue},
-		category => $params->{category},
+		category_id => $params->{category},
 		language => $params->{language},
 		duration_seconds => $duration_seconds,
 		profile_id => $c->session->{profile_id},
@@ -610,7 +611,7 @@ sub create : Path : Local {
 		people => $params->{people},
 		description => $params->{description},
 		out_cue => $params->{out_cue},
-		category => $params->{category},
+		category_id => $params->{category},
 		language => $params->{language},
 		duration_seconds => int($params->{duration_seconds}),
 		source_label => $channel->source_label,

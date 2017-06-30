@@ -54,6 +54,8 @@ sub upload_clip : Local {
 	my $self = shift;
 	my $c = shift;
 
+	$c->forward('get_available_categories');
+
 	unless( $c->session->{profile_id} ) {
 		$c->log->warn("upload_clip called without a valid session profile_id");
 		$c->response->redirect('/');
@@ -128,7 +130,7 @@ sub rename_clip : Local : Args(1) {
 			people      => $clip->people,
 			description => $clip->description,
 			out_cue     => $clip->out_cue,
-			category    => $clip->category,
+			category    => $clip->category_id,
 			language    => $clip->language,
 		}
 	);
@@ -267,16 +269,17 @@ sub get_available_categories : Private {
 
 	my $self = shift;
 	my $c = shift;
+	my $rs = $c->model('DB::ClipCategory');
+	my @results = $rs->all;
+
+	# Explicitly dereference into a hash
+	my %categories;
+	foreach my $result(@results) {
+		$categories{ $result->clip_category_id } = $result->display_name;
+	}
 
 	$c->stash(
-		categories => {
-			'goal'             => 'Goal',
-			'half_time_report' => 'Half-time',
-			'full_time_report' => 'Full-time',
-			'interview'        => 'Interview',
-			'commercial'       => 'Commercial',
-			'other'            => 'Other',
-		}
+		categories => \%categories
 	)
 }
 

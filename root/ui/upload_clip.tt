@@ -6,7 +6,7 @@
        Andrew White
        Paul Kelly
 
-    Copyright (C) 2012 NP Broadcast Limited.
+    Copyright (C) 2012,2017 NP Broadcast Limited.
 
     GOALS-logger is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -94,12 +94,9 @@
 						<li>
 							<label for="category">category</label>
 							<select name="category" id="clip_category">
-								<option value="goal">Goal</option>
-								<option value="half_time_report">Half-time</option>
-								<option value="full_time_report">Full-time</option>
-								<option value="interview">Interview</option>
-								<option value="commercial">Commercial</option>
-								<option value="other">Other</option>
+							[% FOREACH category_id IN categories.keys.sort %]
+								<option value="[% category_id %]">[% categories.$category_id | html %]</option>
+							[% END %]
 							</select>
 						</li>
 

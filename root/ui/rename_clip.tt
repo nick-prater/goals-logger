@@ -92,7 +92,7 @@
 							[% FOREACH value IN categories.keys %]
 								<option value="[% value %]"
 									[%- IF clip.category == value -%]
-										selected
+										selected="selected"
 									[%- END -%]
 								>[% categories.$value | html %]</option>
 							[% END %]
@@ -105,7 +105,7 @@
 							[% FOREACH value IN languages.keys %]
 								<option value="[% value %]"
 									[%- IF clip.language == value -%]
-										selected
+										selected="selected"
 									[%- END -%]
 								>[% languages.$value | html %]</option>
 							[% END %]
