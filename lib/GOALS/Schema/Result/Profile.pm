@@ -1,21 +1,36 @@
-package Schema::Result::Profile;
+use utf8;
+package GOALS::Schema::Result::Profile;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
+
+=head1 NAME
+
+GOALS::Schema::Result::Profile
+
+=cut
 
 use strict;
 use warnings;
 
 use Moose;
 use MooseX::NonMoose;
-use namespace::autoclean;
+use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Core';
+
+=head1 COMPONENTS LOADED
+
+=over 4
+
+=item * L<DBIx::Class::InflateColumn::DateTime>
+
+=back
+
+=cut
 
 __PACKAGE__->load_components("InflateColumn::DateTime");
 
-=head1 NAME
-
-Schema::Result::Profile
+=head1 TABLE: C<profiles>
 
 =cut
 
@@ -58,7 +73,31 @@ __PACKAGE__->add_columns(
   "display_name",
   { data_type => "varchar", default_value => "", is_nullable => 0, size => 50 },
 );
+
+=head1 PRIMARY KEY
+
+=over 4
+
+=item * L</profile_id>
+
+=back
+
+=cut
+
 __PACKAGE__->set_primary_key("profile_id");
+
+=head1 UNIQUE CONSTRAINTS
+
+=head2 C<profile_code>
+
+=over 4
+
+=item * L</profile_code>
+
+=back
+
+=cut
+
 __PACKAGE__->add_unique_constraint("profile_code", ["profile_code"]);
 
 =head1 RELATIONS
@@ -67,13 +106,13 @@ __PACKAGE__->add_unique_constraint("profile_code", ["profile_code"]);
 
 Type: has_many
 
-Related object: L<Schema::Result::Button>
+Related object: L<GOALS::Schema::Result::Button>
 
 =cut
 
 __PACKAGE__->has_many(
   "buttons",
-  "Schema::Result::Button",
+  "GOALS::Schema::Result::Button",
   { "foreign.profile_id" => "self.profile_id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -82,13 +121,13 @@ __PACKAGE__->has_many(
 
 Type: has_many
 
-Related object: L<Schema::Result::Channel>
+Related object: L<GOALS::Schema::Result::Channel>
 
 =cut
 
 __PACKAGE__->has_many(
   "channels",
-  "Schema::Result::Channel",
+  "GOALS::Schema::Result::Channel",
   { "foreign.profile_id" => "self.profile_id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -97,20 +136,35 @@ __PACKAGE__->has_many(
 
 Type: has_many
 
-Related object: L<Schema::Result::Clip>
+Related object: L<GOALS::Schema::Result::Clip>
 
 =cut
 
 __PACKAGE__->has_many(
   "clips",
-  "Schema::Result::Clip",
+  "GOALS::Schema::Result::Clip",
+  { "foreign.profile_id" => "self.profile_id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 playlists
+
+Type: has_many
+
+Related object: L<GOALS::Schema::Result::Playlist>
+
+=cut
+
+__PACKAGE__->has_many(
+  "playlists",
+  "GOALS::Schema::Result::Playlist",
   { "foreign.profile_id" => "self.profile_id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-09-09 14:29:57
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:mDcfzDZf2bumcntbRxYHyQ
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2017-06-30 11:18:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:oo/OItrv06kmZoo7RUlSAQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

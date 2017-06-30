@@ -1,21 +1,36 @@
-package Schema::Result::Event;
+use utf8;
+package GOALS::Schema::Result::Event;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
+
+=head1 NAME
+
+GOALS::Schema::Result::Event
+
+=cut
 
 use strict;
 use warnings;
 
 use Moose;
 use MooseX::NonMoose;
-use namespace::autoclean;
+use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Core';
+
+=head1 COMPONENTS LOADED
+
+=over 4
+
+=item * L<DBIx::Class::InflateColumn::DateTime>
+
+=back
+
+=cut
 
 __PACKAGE__->load_components("InflateColumn::DateTime");
 
-=head1 NAME
-
-Schema::Result::Event
+=head1 TABLE: C<events>
 
 =cut
 
@@ -41,7 +56,7 @@ __PACKAGE__->table("events");
 
   data_type: 'timestamp'
   datetime_undef_if_invalid: 1
-  default_value: '0000-00-00 00:00:00'
+  default_value: current_timestamp
   is_nullable: 0
 
 =head2 event_type
@@ -85,7 +100,7 @@ __PACKAGE__->add_columns(
   {
     data_type => "timestamp",
     datetime_undef_if_invalid => 1,
-    default_value => "0000-00-00 00:00:00",
+    default_value => \"current_timestamp",
     is_nullable => 0,
   },
   "event_type",
@@ -109,6 +124,17 @@ __PACKAGE__->add_columns(
     is_nullable => 0,
   },
 );
+
+=head1 PRIMARY KEY
+
+=over 4
+
+=item * L</event_id>
+
+=back
+
+=cut
+
 __PACKAGE__->set_primary_key("event_id");
 
 =head1 RELATIONS
@@ -117,13 +143,13 @@ __PACKAGE__->set_primary_key("event_id");
 
 Type: has_many
 
-Related object: L<Schema::Result::Clip>
+Related object: L<GOALS::Schema::Result::Clip>
 
 =cut
 
 __PACKAGE__->has_many(
   "clips",
-  "Schema::Result::Clip",
+  "GOALS::Schema::Result::Clip",
   { "foreign.event_id" => "self.event_id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
@@ -132,33 +158,20 @@ __PACKAGE__->has_many(
 
 Type: belongs_to
 
-Related object: L<Schema::Result::EventInput>
+Related object: L<GOALS::Schema::Result::EventInput>
 
 =cut
 
 __PACKAGE__->belongs_to(
   "event_input",
-  "Schema::Result::EventInput",
+  "GOALS::Schema::Result::EventInput",
   { event_input_id => "event_input_id" },
   { is_deferrable => 1, on_delete => "CASCADE", on_update => "CASCADE" },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2012-07-11 17:01:50
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:hAO7crslahXiMvJDX/bttg
-
-
-__PACKAGE__->many_to_many(
-	'channels',
-	'channel_events',
-	'channel'
-);
-
-
-
-
-
-
+# Created by DBIx::Class::Schema::Loader v0.07045 @ 2017-06-30 11:18:42
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:f/shMzn1k55ShTpxTRlU2w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
