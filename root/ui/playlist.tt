@@ -22,12 +22,21 @@
 	});
 
 	playlist.load(
-		JSON.parse(playlist_json)
+		[% playlist.data || "[]" %]
 	).then(function() {
+
+		console.log("loaded playlist", playlist);
+
+		if(playlist.tracks.length) {
+			$("#empty_playlist_message").hide();
+		}
+
 		//initialize the WAV exporter.
 		playlist.initExporter();
-
 	});
+
+	var playlist_id = [% playlist.id || 0 %];
+	var playlist_name = '[% playlist.name.squote %]';
 </script>
 
 <script type="text/javascript" src="/waveform-playlist/js/emitter.js"></script>

@@ -21,7 +21,7 @@
 
 					<div class="form_group">
 						<div class="col-sm-offset-2 col-sm-10">
-							<button type="button" class="btn btn-default save_button" >Save</button>
+							<button type="submit" class="btn btn-default save_button" >Save</button>
 							<button type="button" class="btn btn-default cancel_button">Cancel</button>
 						</div>
 					</div>
@@ -80,18 +80,30 @@
 
 <script type="text/javascript">
 
+	/* Stop default submission on forms - we handle with ajax */
+	$(".form_container form").submit(function(e) {
+		return false;
+	});
+
 	$(".form_container .cancel_button").click(function() {
 		$("div.form_container").hide();
 		$("#clip_list_container").show();
 	});
 
 	$(".form_container .save_button").click(function() {
-		/* If name is unchanged and we have an existing clip id
-		 * ask for confirmation before overwriting.
-		 */
-		//TODO Check if this is an overwrite
-		$("div.form_container").hide();
-		$("#confirm_overwrite_playlist_container").show();
+
+		console.log("existing id", playlist_id);
+		console.log("existing name", playlist_name);
+
+		if(playlist_id && ($("#playlist_name").val() == playlist_name)) {
+			/* Confirm overwrite of an existing clip */
+			$("div.form_container").hide();
+			$("#confirm_overwrite_playlist_container").show();
+		}
+		else {
+			/* Otherwise we're creating a new clip */
+			save_playlist();
+		}
 	});
 
 
@@ -101,8 +113,12 @@
 
 
 	function show_save_dialog() {
+
+		if(playlist_id) {
+			$("#playlist_name").val(playlist_name);
+		};
+
 		$("div.form_container").hide();
-		//TODO initialise name field
 		$("#save_playlist_container").show();
 	}
 
@@ -116,6 +132,15 @@
                         playlist: playlist.getInfo(),
 			name: $("#playlist_name").val()
                 };
+
+		/* If we're overwriting an existing playlist, specify its id */
+		if(playlist_id && ($("#playlist_name").val() == playlist_name)) {
+			console.log("updating existing playlist", playlist_id);
+			data.playlist_id = playlist_id;
+		}
+		else {
+			console.log("creating new playlist record");
+		}
 
 		console.log("saving playlist:", data);
 
@@ -131,8 +156,16 @@
                         },
                         success: function(json, status_text, jq_xhr) {
                                 console.log("saved playlist OK", status_text, json);
+				playlist_name = json.name;
+				playlist_id = json.playlist_id;
 				$("div.form_container").hide();
 				$("#saved_playlist_container").show();
+
+				/* Hide message after timeout */
+				setTimeout(function() {
+					$("div.form_container").hide();
+					$("#clip_list_container").show();
+				}, 500);
                         }
                 });
         }

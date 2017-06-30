@@ -24,30 +24,98 @@ sub add :POST :Local :Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $data = $c->request->body_data;
+	my $rs = $c->model('DB::Playlist');
+	my $playlist;
 
 	use Data::Dumper;
 	$c->log->warn(Dumper $data);
 
+	if($data->{playlist_id}) {
+
+		$c->log->info("Updating existing playlist");
+		$playlist = $rs->find({
+			playlist_id => $data->{playlist_id},
+			profile_id => $c->session->{profile_id},
+		}) or do {
+			die "trying to update a playlist, but it does not exist for this profile";
+		};
+
+		$playlist->update({
+			name => $data->{name},
+			data => encode_json($data->{playlist}),
+		});
+	}
+	else {
+		$c->log->info("creating new playlist record");
+		$playlist = $rs->create({
+			name => $data->{name},
+			data => encode_json($data->{playlist}),
+			profile_id => $c->session->{profile_id},
+		}) or do {
+			$c->error("problem adding new playlist record: $!");
+			die;
+		};
+	}
+
+	$c->stash(
+		current_view => 'JSON',
+		json_data => {
+			name        => $playlist->name,
+			playlist_id => $playlist->id,
+		},
+	);
+}
+
+
+sub edit :GET :Path :Args(1) {
+
+	my $self = shift;
+	my $c = shift;
+	my $playlist_id = shift;
 	my $rs = $c->model('DB::Playlist');
-	my $playlist = $rs->create({
-		name => $data->{name},
-		data => encode_json($data->{playlist}),
+
+	my $playlist = $rs->find({
+		playlist_id => $playlist_id,
 		profile_id => $c->session->{profile_id},
 	}) or do {
-		$c->error("problem adding new playlist record: $!");
-		die;
+		die "No such playlist for this profile";
 	};
 
-	$c->response->content_type('text/plain');
-	$c->response->body("OK\nplaylist_id=" . $playlist->playlist_id);
+	$c->forward('GOALS::Controller::UI', 'get_available_channels');
+	$c->forward('GOALS::Controller::UI', 'get_available_categories');
+
+	$c->stash(
+		clip_url_prefix => $c->config->{clip_url_prefix} || '',
+		build_playlist  => 1,
+		playlist        => $playlist,
+		template        => 'ui/assign_clips.tt',
+	)
 }
+
 
 
 
 sub index :GET :Path :Args(0) {
 
+	my $self = shift;
+	my $c = shift;
 
+	my $rs = $c->model('DB::Playlist');
+	my @playlists = $rs->all;
 
+	# Configure link to edit values
+	foreach my $playlist(@playlists) {
+
+		$playlist->{edit_uri} = $c->uri_for(
+			$c->controller('playlists')->action_for(''),
+			$playlist->playlist_id,
+		);
+	}
+
+	$c->stash(
+		channels => \@playlists,
+		template => "/root/playlists/list.tt",
+	);
 }
 
 
