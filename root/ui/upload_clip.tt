@@ -33,7 +33,7 @@
 
 			<div id="clip_metadata_container" style="display: block">
 
-				<b>Upload Clip</b> - enter clip details and click OK
+				<b>Upload Clip</b> &mdash; enter clip details and click OK
 				<form id="clip_metadata" name="clip_metadata" method="post" enctype="multipart/form-data">
 
 					<ol>
