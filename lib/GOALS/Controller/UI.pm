@@ -71,7 +71,6 @@ sub build_playlist : Local {
 	};
 
 	$c->forward('get_available_channels');
-	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
 
 	# Setting this on the stash configures the hotkey page
