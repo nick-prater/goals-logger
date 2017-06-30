@@ -256,7 +256,10 @@
 			}
 
 
-			function generate_rename_link(clip_row) {
+			function generate_rename_link(playlist_row) {
+
+				/* Until backend rename code implememted, fill field with dummy text */
+				return document.createTextNode('');
 
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
@@ -264,11 +267,11 @@
  				a.addEventListener(
  					"click",
  					function(event) {
- 						window.location.href = "/ui/rename_playlist/" + clip_row.clip_id;
+						window.location.href = "/ui/rename_playlist/" + playlist_row.playlist_id;
  						event.preventDefault();
  					}
  				);
- 				a.setAttribute("id", "clip_rename_link_" + clip_row.clip_id);
+				a.setAttribute("id", "clip_rename_link_" + playlist_row.playlist_id);
 
  				return a;
 			}
