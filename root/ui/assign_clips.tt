@@ -564,6 +564,7 @@
 
 			function generate_rename_link(clip_row) {
 
+[% IF hotkeys %]
  				var a = document.createElement('a');
  				a.setAttribute('href', '');
  				a.appendChild(document.createTextNode('rename'));
@@ -577,6 +578,12 @@
  				a.setAttribute("id", "clip_rename_link_" + clip_row.clip_id);
 
  				return a;
+[% ELSE %]
+				/* Don't currently support renaming from playlists, because work
+				 * in progress is lost when we navigate away to the rename page.
+				 */
+				return document.createTextNode('');
+[% END %]
 			}
 
 
