@@ -1,0 +1,145 @@
+			<div class="form_container" id="save_playlist_container" hidden="hidden">
+				<form class="form-horizontal">
+
+					<div class="form_group">
+						<h1 class="col-sm-offset-2 col-sm-10">Save playlist</h1>
+					</div>
+
+					<div class="form_group">
+						<label class="control-label col-sm-2" for="playlist_name">playlist name:</label>
+						<div class="col-sm-10">
+							<input
+								type="text"
+								name="playlist_name"
+								id="playlist_name"
+								placeholder="Playlist name"
+								size="60"
+								required="required"
+							/>
+						</div>
+					</div>
+
+					<div class="form_group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="button" class="btn btn-default save_button" >Save</button>
+							<button type="button" class="btn btn-default cancel_button">Cancel</button>
+						</div>
+					</div>
+				</form>
+			</div>
+
+			<div class="form_container" id="confirm_overwrite_playlist_container" hidden="hidden">
+				<form class="form-horizontal">
+
+					<div class="form_group">
+						<h1 class="col-sm-offset-2 col-sm-10">Overwrite existing playlist?</h1>
+					</div>
+
+					<div class="form_group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="button" class="btn btn-default overwrite_button">Overwrite</button>
+							<button type="button" class="btn btn-default cancel_button">Cancel</button>
+						</div>
+					</div>
+				</form>
+			</div>
+
+			<div class="form_container" id="saving_playlist_container" hidden="hidden">
+				<form class="form-horizontal">
+					<div class="form_group">
+						<h1 class="col-sm-offset-2 col-sm-10">Saving playlist...</h1>
+					</div>
+				</form>
+			</div>
+
+			<div class="form_container" id="error_saving_playlist_container" hidden="hidden">
+				<form class="form-horizontal">
+
+					<div class="form_group">
+						<h1 class="col-sm-offset-2 col-sm-10">Error saving playlist.</h1>
+					</div>
+
+					<div class="form_group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="button" class="btn btn-default cancel_button">OK</button>
+						</div>
+					</div>
+				</form>
+			</div>
+
+			<div class="form_container" id="saved_playlist_container" hidden="hidden">
+				<form class="form-horizontal">
+					<div class="form_group">
+						<h1 class="col-sm-offset-2 col-sm-10">Playlist saved.</h1>
+					</div>
+				</form>
+			</div>
+
+
+
+
+<script type="text/javascript">
+
+	$(".form_container .cancel_button").click(function() {
+		$("div.form_container").hide();
+		$("#clip_list_container").show();
+	});
+
+	$(".form_container .save_button").click(function() {
+		/* If name is unchanged and we have an existing clip id
+		 * ask for confirmation before overwriting.
+		 */
+		//TODO Check if this is an overwrite
+		$("div.form_container").hide();
+		$("#confirm_overwrite_playlist_container").show();
+	});
+
+
+	$(".form_container .overwrite_button").click(function() {
+		save_playlist();
+	});
+
+
+	function show_save_dialog() {
+		$("div.form_container").hide();
+		//TODO initialise name field
+		$("#save_playlist_container").show();
+	}
+
+
+        function save_playlist() {
+
+		$("div.form_container").hide();
+		$("#saving_playlist_container").show();
+
+                var data = {
+                        playlist: playlist.getInfo(),
+			name: $("#playlist_name").val()
+                };
+
+		console.log("saving playlist:", data);
+
+                $.ajax({
+                        url: "/playlists/add",
+                        method: 'POST',
+			contentType: 'application/json; charset=UTF-8',
+                        data: JSON.stringify(data),
+                        error: function(jq_xhr, status_text, error_text) {
+                                console.log("error saving playlist", status_text, error_text);
+				$("div.form_container").hide();
+				$("#error_saving_playlist_container").show();
+                        },
+                        success: function(json, status_text, jq_xhr) {
+                                console.log("saved playlist OK", status_text, json);
+				$("div.form_container").hide();
+				$("#saved_playlist_container").show();
+                        }
+                });
+        }
+
+
+
+
+
+
+</script>

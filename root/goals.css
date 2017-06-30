@@ -411,3 +411,11 @@ ul.menu_links {
 .fade_icon {
 	height: 14pt;
 }
+
+.form_container button {
+	margin-top: 20px;
+}
+.form_container h1 {
+	font-size: 14pt;
+	font-weight: bold;
+}

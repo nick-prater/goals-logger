@@ -36,9 +36,11 @@
 
 
 	/* Handle Save Button */
-	$("div.btn-playlist-state-group").on("click", ".btn-info", function() {
-		console.log(playlist.getInfo());
+	$(".btn-save-playlist").on("click", function() {
+		$("#clip_list_container").hide();
+		show_save_dialog();
 	});
+
 
 	/* Handle Trim Button */
 	$container.on("click", ".btn-trim-audio", function() {

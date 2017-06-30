@@ -71,8 +71,7 @@
 
 			<!-- This div contains the list of marked clips, which can be selected for editing.
 			-->
-			<div class="clip_list_container">
-
+			<div class="clip_list_container" id="clip_list_container">
 				<div class="clip_list_div">
 					<table id="clip_list" class="clip_list">
 
@@ -106,6 +105,9 @@
 					</table>
 				</div>
 			</div>
+[% IF build_playlist %]
+	[% INSERT "ui/save_playlist.tt" %]
+[% END %]
 		</div>
 
 
