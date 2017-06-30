@@ -1,8 +1,9 @@
-		
+
 			<ul class="menu_links">
-				<li><a href="/channels/list">channels</a></li>
+				<li><a href="/ui/player">event editor</a></li>
 				<li><a href="/ui/upload_clip">upload clip</a></li>
 				<li><a href="/ui/assign_clips">hotkeys</a></li>
-				<li><a href="/ui/build_playlist">package</a></li>
-				<li><a href="/ui/player">audio editor</a></li>
+				<li><a href="/playlists">playlists</a></li>
+				<li>&ensp;<a href="/ui/build_playlist">new playlist</a></li>
+				<li><a href="/channels/list">channels</a></li>
 			</ul>

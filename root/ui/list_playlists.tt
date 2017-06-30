@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+<!--
+    This file is part of GOALS-logger, a broadcast audio logging system by:
+       Nick Prater
+       Andrew White
+       Paul Kelly
+
+    Copyright (C) 2017 NP Broadcast Limited.
+
+    GOALS-logger is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    GOALS-logger is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>talkSPORT GOALS</title>
+		<link rel="stylesheet" href="/waveform-playlist/css/bootstrap.css"/>
+		<link rel="stylesheet" href="/goals.css" />
+	</head>
+	<body>
+
+		<div id="source_list_container" class="filter_list">
+			<h1>[% c.session.profile_name | html %]</h1>
+			<div>
+				<fieldset id="category_to_show_fieldset" class="panel panel-default">
+					<legend>filter</legend>
+					<ul>
+						<li>
+							<input
+								type="checkbox"
+								name="show_deleted_clips"
+								class="filter_checkbox"
+								id="show_deleted_clips_checkbox"
+								value="show_deleted"
+							/>show deleted
+						</li>
+					</ul>
+				</fieldset>
+
+			</div>
+
+
+
+			<hr />
+[% INCLUDE ui/menu_links.tt %]
+			<hr />
+		</div>
+
+		<div id="body_container">
+			<div class="clip_list_container" id="clip_list_container">
+				<div class="clip_list_div">
+					<table id="clip_list" class="clip_list">
+
+						<caption>
+							<div class="clip_list_heading_links">
+								<a href="javascript:delete_selected_clips()">delete selected</a>
+							</div>
+						</caption>
+
+						<thead>
+							<tr class="title_row">
+								<th class="clip_list_checkbox">
+									<input type="checkbox" name="clip_list_select_all" id="clip_list_select_all"/>
+								</th>
+								<th class="clip_list_assign"></th>
+								<th class="clip_list_rename"></th>
+								<th class="clip_list_title">name</th>
+							</tr>
+						</thead>
+						<tbody>
+							<!-- data rows will be populated dynamically -->
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+
+		<script type="text/javascript">
+
+			update_clip_list();
+
+			/* Handle filter change */
+			var filter_checkboxes = document.getElementsByClassName("filter_checkbox");
+			for(var i = 0; i < filter_checkboxes.length; i++) {
+				filter_checkboxes[i].addEventListener(
+					"change",
+					update_clip_list
+				);
+			}
+
+			/* Handle change to clip list "select all" checkbox */
+			document.getElementById("clip_list_select_all").addEventListener(
+				"click",
+				clip_list_select_all
+			);
+
+
+			function clip_list_select_all(e) {
+
+				/* Loop through all visible clip rows, make their selected checkbox
+				 * match that of the 'select all' checkbox
+				 */
+
+				var checked_status = e.target.checked;
+				var checkboxes = document.getElementsByName("clip_row_selected");
+
+				for(var i = 0; i < checkboxes.length; i++) {
+					checkboxes[i].checked = checked_status;
+				}
+			}
+
+
+			function update_clip_list() {
+
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+
+				/* Define handler to deal with response */
+				request.onreadystatechange = function() {
+
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
+						return;
+					}
+
+					if(request.status == 200) {
+						var json_data = JSON.parse(request.responseText);
+						populate_clip_list_from_json(json_data);
+					}
+					else {
+						console.log("ERROR updating clip list");
+					}
+
+					/* Free Up HTTP request object */
+					delete request;
+				}
+
+				var url = "/playlists/all";
+				var show_deleted_checkbox = document.getElementById("show_deleted_clips_checkbox");
+				if(show_deleted_checkbox.checked) {
+					url = url + "?deleted=1";
+				}
+
+				request.open("GET", url, true);
+				request.send();
+			}
+
+
+			function populate_clip_list_from_json(json_data) {
+
+				var table = document.getElementById("clip_list");
+				var rows = table.rows;
+
+				/* Loop through current table to remove redundant rows.
+				 * Work through table rows from highest index, otherwise
+				 * the indexes will start moving around beneath our feet
+				 * as we delete a row and the others all shift up by one
+				 * position. Don't test index 0 as this is the title row.
+				 */
+				for (var i = (rows.length - 1); i > 0; i--) {
+					/* Actually, for now, just delete all existing rows and re-populate later */
+					table.deleteRow(i);
+				}
+
+				/* Then update/create needed rows */
+				for (var playlist in json_data) {
+					populate_playlist_row(json_data[playlist]);
+				}
+			}
+
+
+			function populate_playlist_row(playlist_row) {
+
+				var table = document.getElementById("clip_list");
+				var row_id = "clip_row_" + playlist_row.playlist_id;
+
+				console.log("populating playlist row:", row_id);
+				console.log(playlist_row);
+
+				/* Look to see if we already have a row for this event_row_id */
+				var row = table.rows.namedItem(row_id);
+
+				if(!row) {
+					/* Not an existing row, insert one after header row */
+					row = table.insertRow(1);
+					row.id = row_id;
+
+					/* The table has 4 cells/fields */
+					for( var i = 0; i < 4; i ++  ) {
+						row.insertCell(-1);
+					}
+				}
+
+				/* Reset attributes */
+				row.setAttribute("class", "clip_row");
+				row.dataset.clip_id = playlist_row.playlist_id;
+
+				/* Update/populate the fields */
+				var i = 0;
+
+				/* Normal action links don't show if clip has been deleted */
+				if(playlist_row.is_deleted) {
+					row.classList.add("deleted");
+					i ++;
+					row.cells.item(i).innerHTML = '<a href="javascript:undelete_clip(' + playlist_row.playlist_id + ')">undelete</a>';
+					row.cells.item(i).setAttribute("class", "undelete");
+					i++;
+					i++;
+				}
+				else {
+					row.cells.item(i).innerHTML = '<input type="checkbox" name="clip_row_selected" value="'
+								    + playlist_row.playlist_id + '" id="clip_row_selected_'
+								    + playlist_row.playlist_id + '">';   // checkbox
+					row.cells.item(i).setAttribute("class", "clip_list_checkbox");
+					i++;
+					row.cells.item(i).appendChild( generate_edit_link(playlist_row) );     // Edit
+					i++;
+					row.cells.item(i).appendChild( generate_rename_link(playlist_row) );   // Rename
+					row.cells.item(i).setAttribute("class", "clip_list_rename");
+					i++;
+				}
+
+				row.cells.item(i).innerText = playlist_row.name;        // Title
+				row.cells.item(i).setAttribute("class", "clip_list_title");
+			}
+
+
+			function generate_edit_link(playlist_row) {
+
+ 				var a = document.createElement('a');
+ 				a.setAttribute('href', '');
+ 				a.appendChild(document.createTextNode('edit'));
+ 				a.addEventListener(
+ 					"click",
+ 					function(event) {
+ 						window.location.href = "/playlists/" + playlist_row.playlist_id;
+ 						event.preventDefault();
+ 					}
+ 				);
+ 				a.setAttribute("id", "playlist_edit_link_" + playlist_row.playlist_id);
+
+ 				return a;
+			}
+
+
+			function generate_rename_link(clip_row) {
+
+ 				var a = document.createElement('a');
+ 				a.setAttribute('href', '');
+ 				a.appendChild(document.createTextNode('rename'));
+ 				a.addEventListener(
+ 					"click",
+ 					function(event) {
+ 						window.location.href = "/ui/rename_playlist/" + clip_row.clip_id;
+ 						event.preventDefault();
+ 					}
+ 				);
+ 				a.setAttribute("id", "clip_rename_link_" + clip_row.clip_id);
+
+ 				return a;
+			}
+
+
+			function delete_clip(clip_list) {
+
+				/* This accepts either a single clip_id, or a
+				 * comma-separated list of clips.
+				 */
+				var clips = clip_list.split(",", clip_list);
+				for(var i = 0; i < clips.length; i++) {
+
+					if(clips[i] == playing_clip_id) {
+						clear_player();
+					}
+
+					if(clips[i] == assigning_clip_id) {
+						cancel_assign_clip();
+					}
+				}
+
+				/* Fire off asynchronous request to server */
+				var request = new XMLHttpRequest();
+				request.onreadystatechange = function() {
+
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
+						return;
+					}
+
+					if(request.status == 200) {
+						/* Success */
+						update_clip_list();
+					}
+
+					/* Free Up HTTP request object */
+					delete request;
+				}
+
+				/* Send request */
+				var url = "/playlists/delete/" + clip_list;
+				request.open("GET", url, true);
+				request.send();
+			}
+
+
+			function undelete_clip(clip_id) {
+
+				var request = new XMLHttpRequest();
+				request.onreadystatechange = function() {
+
+					if (request.readyState != 4) {
+						/* Request has not yet completed */
+						return;
+					}
+
+					if(request.status == 200) {
+						/* Success */
+						update_clip_list();
+					}
+
+					/* Free Up HTTP request object */
+					delete request;
+				}
+
+				/* Send request */
+				var url = "/playlists/undelete/" + clip_id;
+				request.open("GET", url, true);
+				request.send();
+			}
+
+
+			function delete_selected_clips() {
+
+				/* Build comma-separated list of selected clips */
+				var clip_list = "";
+				var checkboxes = document.getElementsByName("clip_row_selected");
+				for(var i = 0; i < checkboxes.length; i++) {
+					if(checkboxes[i].checked) {
+						clip_list += checkboxes[i].value + ',';
+					}
+				}
+
+				/* Only continue if something was selected for deletion */
+				if(clip_list) {
+					delete_clip(clip_list);
+				};
+			}
+
+
+			function set_user_message(message) {
+				/* Set innerHTML of user message div */
+				var node = document.getElementById("progress_message_container");
+				node.innerHTML = message;
+			}
+
+		</script>
+	</body>
+</html>
+

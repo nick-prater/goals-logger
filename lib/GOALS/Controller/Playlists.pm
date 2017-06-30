@@ -95,27 +95,124 @@ sub edit :GET :Path :Args(1) {
 
 
 
-sub index :GET :Path :Args(0) {
+sub all :GET :Local :Args(0) {
+
+	my $self = shift;
+	my $c = shift;
+	my $rs = $c->model('DB::Playlist');
+	my $where = {};
+	my @json_data;
+
+	# Show deleted clips only if requested
+	unless( $c->request->param('deleted') ) {
+		$where->{is_deleted} =  0;
+	}
+
+	my @playlists = $rs->search($where);
+
+	# Sanitise returned data
+	foreach my $playlist(@playlists) {
+
+		my $row = {
+			playlist_id => $playlist->playlist_id,
+			name => $playlist->name,
+			is_deleted => ($playlist->is_deleted == 1), # nasty Mysql stores boolean as integer
+		};
+
+		push @json_data, $row;
+	}
+
+	$c->stash(
+		current_view => 'JSON',
+		json_data => \@json_data,
+	);
+}
+
+
+sub list :GET :Path :Args(0) {
 
 	my $self = shift;
 	my $c = shift;
 
-	my $rs = $c->model('DB::Playlist');
-	my @playlists = $rs->all;
+	$c->stash(
+		template => 'ui/list_playlists.tt',
+	);
+}
 
-	# Configure link to edit values
-	foreach my $playlist(@playlists) {
 
-		$playlist->{edit_uri} = $c->uri_for(
-			$c->controller('playlists')->action_for(''),
-			$playlist->playlist_id,
-		);
+sub delete :Local :Args(1) {
+
+	# Mark clips as deleted
+	my $self = shift;
+	my $c = shift;
+	my $clip_list = shift;
+	my $dbh = $c->model('DB')->storage->dbh;
+
+	# Clip list is a comma separated list of clips to delete
+	my @clips = split(/,/, $clip_list);
+
+	# Prepare query
+	my $q = $dbh->prepare("
+		UPDATE playlists SET
+ 		    is_deleted = TRUE,
+		    update_timestamp = CURRENT_TIMESTAMP()
+		WHERE profile_id = ?
+		AND playlist_id = ?
+	");
+
+	foreach my $clip_id(@clips) {
+		$clip_id && $clip_id =~ m/^\d+$/ or next;
+		$c->log->debug("marking clip $clip_id as deleted");
+
+		$q->execute(
+			$c->session->{profile_id},
+			$clip_id,
+		) or do {
+			$c->log->error("ERROR marking clip $clip_id as deleted");
+		};
 	}
 
-	$c->stash(
-		channels => \@playlists,
-		template => "/root/playlists/list.tt",
-	);
+	# We should return something more meaningful, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
+}
+
+
+sub undelete :Local :Args(1) {
+
+	# Mark deleted clips as not deleted
+	my $self = shift;
+	my $c = shift;
+	my $clip_list = shift;
+	my $dbh = $c->model('DB')->storage->dbh;
+
+	# Clip list is a comma separated list of clips to delete
+	my @clips = split(/,/, $clip_list);
+
+	# Prepare query
+	my $q = $dbh->prepare("
+		UPDATE playlists SET
+ 		    is_deleted = FALSE,
+		    update_timestamp = CURRENT_TIMESTAMP()
+		WHERE profile_id = ?
+		AND playlist_id = ?
+	");
+
+	foreach my $clip_id(@clips) {
+		$clip_id && $clip_id =~ m/^\d+$/ or next;
+		$c->log->debug("marking clip $clip_id as not deleted");
+
+		$q->execute(
+			$c->session->{profile_id},
+			$clip_id,
+		) or do {
+			$c->log->error("ERROR marking clip $clip_id as deleted");
+		};
+	}
+
+	# We should return something more meaningful, but for now OK is fine
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
 }
 
 
