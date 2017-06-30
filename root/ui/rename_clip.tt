@@ -89,7 +89,7 @@
 						<li>
 							<label for="category">category</label>
 							<select name="category" id="clip_category">
-							[% FOREACH value IN categories.keys %]
+							[% FOREACH value IN categories.keys.sort %]
 								<option value="[% value %]"
 									[%- IF clip.category == value -%]
 										selected="selected"
@@ -102,7 +102,7 @@
 						<li>
 							<label for="language">language</label>
 							<select name="language" id="clip_language">
-							[% FOREACH value IN languages.keys %]
+							[% FOREACH value IN languages.keys.sort %]
 								<option value="[% value %]"
 									[%- IF clip.language == value -%]
 										selected="selected"
