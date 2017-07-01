@@ -21,6 +21,9 @@
 		zoomLevels: [500, 1000, 3000, 5000]
 	});
 
+	/* Pointer to mixed audio after rendering */
+	var rendered_audio;
+
 	playlist.load(
 		[% playlist.data || "[]" %]
 	).then(function() {
@@ -67,7 +70,7 @@
 
 	/* Handle Save Button */
 	$(".btn-save-playlist").on("click", function() {
-		$("#clip_list_container").hide();
+		$("div.form_container").hide();
 		show_save_dialog();
 	});
 
@@ -140,8 +143,30 @@
 
 
 	/* Handle Export Button */
+	$(".btn-export").on("click", function() {
+		if(playlist_name) {
+			$("#clip_title").val(playlist_name);
+		}
 
+		$("#playlist_status_message").text("Rendering mixdown of playlist...");
+		ee.emit('startaudiorendering', 'wav');
+		$("#clip_metadata button.export_button").attr("disabled", "disabled");
 
+		$("div.form_container").hide();
+		$("#clip_metadata_container").show()
+	});
+
+	/* Export sets of a background render task - handle completion */
+	ee.on('audiorenderingfinished', function (type, data) {
+		if (type != 'wav'){
+			console.log("unexpected end to audio rendering: type=", type);
+			return;
+		}
+
+		$("#playlist_status_message").text("Mixdown complete");
+		$("#clip_metadata button.export_button").removeAttr("disabled");
+		rendered_audio = data;
+	});
 
 
 	/* Deselect all editor mode buttons */

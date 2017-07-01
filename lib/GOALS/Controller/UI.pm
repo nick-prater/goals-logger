@@ -74,13 +74,13 @@ sub build_playlist : Local {
 
 	$c->forward('get_available_channels');
 	$c->forward('get_available_categories');
+	$c->forward('get_available_languages');
 
-	# Setting this on the stash configures the hotkey page
-	# to assign a single clip, then return.
 	$c->stash(
 		clip_url_prefix => $c->config->{clip_url_prefix} || '',
 		build_playlist  => 1,
 		template        => 'ui/assign_clips.tt',
+		clip            => {category => 7},
 	);
 }
 

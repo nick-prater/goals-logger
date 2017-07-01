@@ -14,7 +14,6 @@ var format = "hh:mm:ss.uuu";
 var startTime = 0;
 var endTime = 0;
 var audioPos = 0;
-var downloadUrl = undefined;
 var isLooping = false;
 var playoutPromises;
 
@@ -214,18 +213,6 @@ ee.on("audiosourcesrendered", function() {
 });
 
 
-
-
-ee.on('audiorenderingfinished', function (type, data) {
-  if (type == 'wav'){
-    if (downloadUrl) {
-      window.URL.revokeObjectURL(downloadUrl);
-    }
-
-    downloadUrl = window.URL.createObjectURL(data);
-    displayDownloadLink(downloadUrl);
-  }
-});
 
 ee.on('finished', function () {
   console.log("The cursor has reached the end of the selection !");

@@ -1,0 +1,149 @@
+			<div id="clip_metadata_container" class="form_container" hidden="hidden">
+
+				<b>Export as Clip</b> &mdash; enter clip details and click OK
+				<form id="clip_metadata" name="clip_metadata" method="post" enctype="multipart/form-data">
+
+					<ol>
+
+						<li>
+							<label for="title">title</label>
+							<input
+								type="text"
+								name="title"
+								required="required"
+								placeholder="Short title to show on hotkey"
+								value="[% clip.title | html %]"
+								size="60"
+								id="clip_title"
+							/>
+						</li>
+
+						<li>
+							<label for="people">people</label>
+							<input
+								type="text"
+								name="people"
+								placeholder="Names of the people speaking"
+								value="[% clip.people | html %]"
+								size="60"
+								id="clip_people"
+							/>
+						</li>
+
+						<li>
+							<label for="description">description</label>
+							<textarea
+								name="description"
+								placeholder="A longer description of the clip or notes for the presenter"
+								rows="4"
+								cols="45"
+								id="clip_description"
+							>[%- clip.description | html -%]</textarea>
+						</li>
+
+						<li>
+							<label for="out_cue">out cue</label>
+							<input
+								type="text"
+								name="out_cue"
+								placeholder="enter the last few words or describe how the clip ends"
+								value="[% clip.out_cue | html %]"
+								size="60"
+								id="clip_out_cue"
+							/>
+						</li>
+
+						<li>
+							<label for="category">category</label>
+							<select name="category" id="clip_category">
+							[% FOREACH value IN categories.keys.sort %]
+								<option value="[% value %]"
+									[%- IF clip.category == value -%]
+										selected="selected"
+									[%- END -%]
+								>[% categories.$value | html %]</option>
+							[% END %]
+							</select>
+						</li>
+
+						<li>
+							<label for="language">language</label>
+							<select name="language" id="clip_language">
+							[% FOREACH value IN languages.keys.sort %]
+								<option value="[% value %]"
+									[%- IF clip.language == value -%]
+										selected="selected"
+									[%- END -%]
+								>[% languages.$value | html %]</option>
+							[% END %]
+							</select>
+						</li>
+
+						<li>
+							<!-- This div contains the form used to display status feedback when clips are created.
+							     It is hidden until the create clip button is pressed. Message is populated dynamically
+							-->
+							<div id="clip_export_message">
+
+							</div>
+						</li>
+
+						<li>
+							<button type="button" class="export_button" onclick="send_form()">Export</button>
+							<button type="button" onclick="cancel_form()">Cancel</button>
+						</li>
+					</ol>
+				</form>
+
+			</div>
+
+
+			<!-- This div contains the form used to display status feedback when clips are created.
+			     It is hidden until the create clip button is pressed. Message is populated dynamically
+			-->
+			<div id="progress_message_container" style="display: block">
+
+			</div>
+
+		</div>
+
+
+		<script type="text/javascript">
+
+
+			function send_form() {
+
+				var message_div = document.getElementById("progress_message_container");
+				var form_data = new FormData(document.forms.namedItem("clip_metadata"));
+				form_data.append("clip_file", rendered_audio);
+
+				var request = new XMLHttpRequest();
+
+				request.open("POST", "/clips/upload", true);
+				request.onload = function(event) {
+
+					if(request.status != 200) {
+						message_div.innerHTML = "Error " + request.status + " occurred uploading clip.<br \/>";
+						return;
+					}
+
+					/* Clip uploaded OK */
+					$("#playlist_status_message").html("Upload complete &mdash; New clip created.");
+					$("div.form_container").hide();
+					$("#clip_list_container").show()
+				};
+
+				$("#playlist_status_message").html("Uploading clip...");
+				$("#clip_metadata button.export_button").attr("disabled", "disabled");
+				request.send(form_data);
+			}
+
+
+			function cancel_form() {
+				console.log("Cancelling clip export");
+				$("div.form_container").hide();
+				$("#clip_list_container").show()
+			}
+
+		</script>
+

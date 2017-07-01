@@ -83,12 +83,14 @@ sub edit :GET :Path :Args(1) {
 
 	$c->forward('GOALS::Controller::UI', 'get_available_channels');
 	$c->forward('GOALS::Controller::UI', 'get_available_categories');
+	$c->forward('GOALS::Controller::UI', 'get_available_languages');
 
 	$c->stash(
 		clip_url_prefix => $c->config->{clip_url_prefix} || '',
 		build_playlist  => 1,
 		playlist        => $playlist,
 		template        => 'ui/assign_clips.tt',
+		clip            => {category => 7},
 	)
 }
 
