@@ -128,7 +128,7 @@
 					}
 
 					/* Clip uploaded OK */
-					$("#playlist_status_message").html("Upload complete &mdash; New clip created.");
+					$("#playlist_status_message").html("Upload complete &mdash; New clip created");
 					$("div.form_container").hide();
 					$("#clip_list_container").show()
 				};

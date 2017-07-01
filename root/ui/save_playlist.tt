@@ -44,40 +44,6 @@
 				</form>
 			</div>
 
-			<div class="form_container" id="saving_playlist_container" hidden="hidden">
-				<form class="form-horizontal">
-					<div class="form_group">
-						<h1 class="col-sm-offset-2 col-sm-10">Saving playlist...</h1>
-					</div>
-				</form>
-			</div>
-
-			<div class="form_container" id="error_saving_playlist_container" hidden="hidden">
-				<form class="form-horizontal">
-
-					<div class="form_group">
-						<h1 class="col-sm-offset-2 col-sm-10">Error saving playlist.</h1>
-					</div>
-
-					<div class="form_group">
-						<div class="col-sm-offset-2 col-sm-10">
-							<button type="button" class="btn btn-default cancel_button">OK</button>
-						</div>
-					</div>
-				</form>
-			</div>
-
-			<div class="form_container" id="saved_playlist_container" hidden="hidden">
-				<form class="form-horizontal">
-					<div class="form_group">
-						<h1 class="col-sm-offset-2 col-sm-10">Playlist saved.</h1>
-					</div>
-				</form>
-			</div>
-
-
-
-
 <script type="text/javascript">
 
 	/* Stop default submission on forms - we handle with ajax */
@@ -96,18 +62,26 @@
 		console.log("existing name", playlist_name);
 
 		if(playlist_id && ($("#playlist_name").val() == playlist_name)) {
-			/* Confirm overwrite of an existing clip */
-			$("div.form_container").hide();
-			$("#confirm_overwrite_playlist_container").show();
+			show_confirm_overwrite_dialog();
 		}
 		else {
 			/* Otherwise we're creating a new clip */
+			$(".form_container .save_button").attr("disabled", "disabled");
 			save_playlist();
 		}
 	});
 
 
+	function show_confirm_overwrite_dialog() {
+		/* Confirm overwrite of an existing clip */
+		$("div.form_container").hide();
+		$(".form_container .overwrite_button").removeAttr("disabled");
+		$("#confirm_overwrite_playlist_container").show();
+	}
+
+
 	$(".form_container .overwrite_button").click(function() {
+		$(".form_container .overwrite_button").attr("disabled", "disabled");
 		save_playlist();
 	});
 
@@ -119,14 +93,12 @@
 		};
 
 		$("div.form_container").hide();
+		$(".form_container .save_button").removeAttr("disabled");
 		$("#save_playlist_container").show();
 	}
 
 
         function save_playlist() {
-
-		$("div.form_container").hide();
-		$("#saving_playlist_container").show();
 
                 var data = {
                         playlist: playlist.getInfo(),
@@ -137,9 +109,11 @@
 		if(playlist_id && ($("#playlist_name").val() == playlist_name)) {
 			console.log("updating existing playlist", playlist_id);
 			data.playlist_id = playlist_id;
+			$("#playlist_status_message").html("Saving existing playlist...");
 		}
 		else {
 			console.log("creating new playlist record");
+			$("#playlist_status_message").html("Saving new playlist...");
 		}
 
 		console.log("saving playlist:", data);
@@ -151,21 +125,15 @@
                         data: JSON.stringify(data),
                         error: function(jq_xhr, status_text, error_text) {
                                 console.log("error saving playlist", status_text, error_text);
-				$("div.form_container").hide();
-				$("#error_saving_playlist_container").show();
+				$("#playlist_status_message").html("Error saving playlist");
                         },
                         success: function(json, status_text, jq_xhr) {
                                 console.log("saved playlist OK", status_text, json);
 				playlist_name = json.name;
 				playlist_id = json.playlist_id;
 				$("div.form_container").hide();
-				$("#saved_playlist_container").show();
-
-				/* Hide message after timeout */
-				setTimeout(function() {
-					$("div.form_container").hide();
-					$("#clip_list_container").show();
-				}, 500);
+				$("#playlist_status_message").html("Playlist saved");
+				$("#clip_list_container").show();
                         }
                 });
         }
