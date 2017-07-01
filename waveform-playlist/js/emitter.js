@@ -121,13 +121,6 @@ $container.on("click", ".btn-clear", function() {
 
 
 
-
-
-
-$container.on("click", ".btn-download", function () {
-  ee.emit('startaudiorendering', 'wav');
-});
-
 $container.on("click", ".btn-seektotime", function () {
   var time = parseInt(document.getElementById("seektime").value, 10);
   ee.emit("select", time, time);
@@ -162,20 +155,6 @@ function displaySoundStatus(status) {
 function displayLoadingData(data) {
 	$("#playlist_status_message").text(data);
 	console.log(data);
-}
-
-
-function displayDownloadLink(link) {
-  var dateString = (new Date()).toISOString();
-  var $link = $("<a/>", {
-    'href': link,
-    'download': 'waveformplaylist' + dateString + '.wav',
-    'text': 'Download mix ' + dateString,
-    'class': 'btn btn-small btn-download-link'
-  });
-
-  $('.btn-download-link').remove();
-  $('.btn-download').after($link);
 }
 
 
@@ -225,12 +204,13 @@ ee.on("loadprogress", function(percent, src) {
   displayLoadingData("Track " + name + " has loaded " + Math.round(percent) + "%");
 });
 
+
 ee.on("audiosourcesloaded", function() {
-  displayLoadingData("Tracks have all finished decoding.");
+	displayLoadingData("All tracks have finished decoding.");
 });
 
 ee.on("audiosourcesrendered", function() {
-  displayLoadingData("Tracks have been rendered");
+	displayLoadingData("All tracks have been rendered.");
 });
 
 
