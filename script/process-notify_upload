@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Logmystream::Beanstalk::Tasks;
+use Digest::SHA qw(hmac_sha256_base64);
+use LWP::UserAgent;
+use Time::Piece;
+use JSON::MaybeXS;
+use IO::Handle;
+use Config::ApacheFormat;
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+my $config = read_config();
+my $task = Logmystream::Beanstalk::Tasks->new;
+my $queue = 'notify_upload';
+
+
+while (1) {
+
+	my $job  = $task->get_task($queue);
+	my %args = $job->args;
+	my $error_count = 0;
+
+	# Validate parameters
+	unless(
+		$args->{mediaspec} &&
+		$args->{mediaspec}->{mediaContentId} &&
+		$args->{mediaspec}->{bucket} &&
+		defined $args->{mediaspec}->{title}
+	) {
+		print "error: medispec arguments missing or invalid\n";
+		$job->bury;
+		next;
+	}
+
+	unless(defined $args->{remote_audio_file}) {
+		print "error: remote_audio_file argument missing\n";
+		$job->bury;
+		next;
+	}
+
+	# Build payload
+	my $content = {
+		'mediaContentId' => $args->{mediaspec}->{mediaContentId},
+		'programID' => $args->{mediaspec}->{programId},
+		'asset' => $args->{mediaspec}->{bucket} . $args->{remote_audio_file},
+		'title' => $args->{mediaspec}->{title},
+		'type'  => 'AUDIO',
+	};
+	my $json = encode_json($content);
+
+	# Build request
+	my $url = $config->{tibus_url} . $args->{mediaspec}->{mediaContentId};
+	my $timestamp = gmtime->datetime;
+	my $signature = hmac_sha256_base64(
+		"$config->{tibus_user}|$timestamp",
+		$config->{tibus_secret}
+	);
+
+	# Pad signature
+	while (length($signature) % 4) {
+		$signature .= '=';
+	}
+
+	my $ua = LWP::UserAgent->new(
+		agent => 'NPBroadcast-GOALS/0.1'
+	);
+	my $request = HTTP::Request->new(
+		POST => $url,
+		[
+			'X-AUTH-TOKEN' => $api_key,
+			'X-AUTH-SIGNATURE' => $signature,
+			'X-AUTH-TIMESTAMP' => $timestamp,
+		]
+	);
+	$request->content_type("application/json");
+	$request->content($json);
+
+	my $response = $ua->request($request);
+
+	if(!$response->is_success) {
+		print "Request failed: " . $response->status_line . "\n";
+		print $response->as_string . "\n";
+		$job->bury;
+		next;
+	}
+
+	print "completed OK\n";
+	$job->delete;
+
+	$task->queue_next_task(\%args);
+}
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	my $config_file = $ARGV[0] || '/etc/logmystream.conf';
+	-e $config_file or die "Failed to read configuration file $config_file";
+
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		warn "ERROR reading configuration file $config_file : $!\n";
+		die;
+	};
+
+	for my $key ('tibus_user', 'tibus_key', 'tibus_secret', 'tibus_url') {
+		$rv->{$key} = $c->get($key) or do {
+			die "ERROR: $key is not defined in the configuration_file\n";
+		};
+	}
+
+	return $rv;
+}
+
+use Data::Dumper;
+print Dumper $data;

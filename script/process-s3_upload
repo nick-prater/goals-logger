@@ -1,0 +1,238 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Logmystream::Beanstalk::Tasks;
+use Net::Amazon::S3;
+use IO::Handle;
+use Config::ApacheFormat;
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+my $config = read_config();
+my $task = Logmystream::Beanstalk::Tasks->new;
+my $queue = 's3_upload';
+
+
+while (1) {
+
+	my $job  = $task->get_task($queue);
+	my %args = $job->args;
+	my $error_count = 0;
+	$args{s3_bucket} //= $config->{default_bucket};
+
+	if($args{audio_file}) {
+		s3cmd_upload(
+			access_key  => $config->{s3_key},
+			secret_key  => $config->{s3_secret},
+			bucket_name => $args{s3_bucket},
+			object_name => $args{remote_audio_file},
+			local_file  => $args{audio_file},
+		) or $error_count ++;
+	}
+
+	if($args{waveform_file}) {
+		s3cmd_upload(
+			access_key  => $config->{s3_key},
+			secret_key  => $config->{s3_secret},
+			bucket_name => $args{s3_bucket},
+			object_name => $args{remote_waveform_file},
+			local_file  => $args{waveform_file},
+		) or $error_count ++;
+	}
+
+	if($args{metadata_file}) {
+		s3cmd_upload(
+			access_key  => $config->{s3_key},
+			secret_key  => $config->{s3_secret},
+			bucket_name => $args{s3_bucket},
+			object_name => $args{remote_metadata_file},
+			local_file  => $args{metadata_file},
+		) or $error_count ++;
+	}
+
+	if($error_count) {
+		print "error uploading local files\n";
+		$job->bury;
+		next;
+	}
+
+	# Delete source files after successful upload if requested
+	if($args->{$queue}->{delete_after_upload}) {
+		delete_files(
+			$args{audio_file},
+			$args{waveform_file},
+			$args{metadata_file}
+		);
+	}
+
+
+	print "completed OK\n";
+	$job->delete;
+
+	$task->queue_next_task(\%args);
+}
+
+
+sub delete_files {
+
+	foreach my $file(@_) {
+		$file && -e $file or next;
+
+		print "deleting original file: $args{audio_file}\n";
+		unlink $file or do {
+			print "ERROR deleting source file $!\n";
+		};
+	}
+}
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	my $config_file = $ARGV[0] || '/etc/logmystream.conf';
+	-e $config_file or die "Failed to read configuration file $config_file";
+
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		warn "ERROR reading configuration file $config_file : $!\n";
+		die;
+	};
+
+	for my $key ('s3_key', 's3_secret') {
+		$rv->{$key} = $c->get($key) or do {
+			die "ERROR: $key is not defined in the configuration_file\n";
+		};
+	}
+
+	return $rv;
+}
+
+
+
+sub s3cmd_upload {
+
+	# Alternative upload using standalone s3 command
+	# used after failing to get perl module functioning for talkSPORT uploads
+
+	my %args = @_;
+
+	-e $args{local_file} or do {
+		warn "ERROR local file $args{local_file} does not exist\n";
+		return 0;
+	};
+
+	$args{object_name} or do {
+		warn "ERROR no remote object name defined\n";
+		return 0;
+	};
+
+	# Strip any leading slash from the object name
+	# Uploading an object with a leading slash appears to work ok, but
+	# there is then no sign of the object in the specified bucket
+	$args{object_name} =~ s|^/*||; # strip any leading slashes
+
+	my $mime_type  = mime_type($args{local_file});
+	print "uploading $args{local_file} to s3 $args{bucket_name} :: $args{object_name} ($mime_type)\n";
+
+	my @command_line = (
+		"/usr/bin/s3cmd",
+		"put",
+		"--no-progress",
+		"--access_key=$args{access_key}",
+		"--secret_key=$args{secret_key}",
+		"--add-header=x-amz-acl:bucket-owner-full-control",
+		"--mime-type=$mime_type",
+		$args{local_file},
+		"s3://$args{bucket_name}/$args{object_name}"
+	);
+	#print "running: ", join(" ", @command_line), "\n";
+	system @command_line and do {
+		warn "ERROR uploading $args{local_file} to s3 $!\n";
+		return 0;
+	};
+
+	return 1;
+}
+
+
+sub s3_upload {
+
+	my %args = @_;
+
+	-e $args{local_file} or do {
+		warn "ERROR local file $args{local_file} does not exist\n";
+		return 0;
+	};
+
+	$args{object_name} or do {
+		warn "ERROR no remote object name defined\n";
+		return 0;
+	};
+
+	# Strip any leading slash from the object name
+	# Uploading an object with a leading slash appears to work ok, but
+	# there is then no sign of the object in the specified bucket
+	$args{object_name} =~ s|^/*||; # strip any leading slashes
+
+	my $mime_type  = mime_type($args{local_file});
+
+	print "uploading $args{local_file} to s3 $args{bucket_name} :: $args{object_name} ($mime_type)\n";
+
+	my $s3 = Net::Amazon::S3->new({
+		aws_access_key_id     => $args{access_key},
+		aws_secret_access_key => $args{secret_key},
+		retry                 => 1,
+		secure                => 1,
+	});
+	my $bucket = $s3->bucket($args{bucket_name});
+
+	# Wrap in eval to trap errors such as invalid bucket name which cause s3 module to die
+	eval {
+		$bucket->add_key_filename(
+			$args{object_name},
+			$args{local_file},
+			{
+				content_type => $mime_type,
+				'x-amz-acl'  => 'bucket-owner-full-control',
+			},
+		);
+	} or do {
+		warn "ERROR uploading $args{local_file} to s3 $!\n";
+		warn $s3->err . " :: " . $s3->errstr . "\n";
+		warn $bucket->err . " :: " . $bucket->errstr . "\n";
+		warn $@ if $@;
+		return 0;
+	};
+
+	return 1;
+}
+
+
+sub mime_type {
+
+	# Guess mime type based on file extension
+	my $file_name = shift;
+
+	for($file_name) {
+		m/\.wav$/i  and return 'audio/wav';
+		m/\.flac$/i and return 'audio/x-flac';
+		m/\.m4a$/i  and return 'audio/mp4';
+		m/\.mp3$/i  and return 'audio/mpeg';
+		m/\.png$/i  and return 'image/png';
+		m/\.json$/i and return 'application/json';
+		m/\.txt$/i  and return 'text/plain';
+		m/\.xml$/i  and return 'text/xml';
+	}
+
+	# Default
+	return 'application/octet-stream';
+}
+
+
+
+1;
