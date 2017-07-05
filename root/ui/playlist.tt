@@ -43,6 +43,7 @@
 </script>
 
 <script type="text/javascript" src="/waveform-playlist/js/emitter.js"></script>
+
 <script type="text/javascript">
 	console.log("including playlist");
 
@@ -70,6 +71,7 @@
 
 	/* Handle Save Button */
 	$(".btn-save-playlist").on("click", function() {
+		console.log("save_button");
 		$("div.form_container").hide();
 		show_save_dialog();
 	});
@@ -144,6 +146,7 @@
 
 	/* Handle Export Button */
 	$(".btn-export").on("click", function() {
+		console.log("export_button");
 		if(playlist_name) {
 			$("#clip_title").val(playlist_name);
 		}
@@ -156,6 +159,16 @@
 		$("#clip_metadata_container").show()
 	});
 
+
+	/* Handle Upload Button */
+	$(".btn-upload").on("click", function() {
+		console.log("upload_button");
+		$("#playlist_status_message").text("Rendering mixdown of playlist...");
+		ee.emit('startaudiorendering', 'wav');
+		display_upload_form();
+	});
+
+
 	/* Export sets of a background render task - handle completion */
 	ee.on('audiorenderingfinished', function (type, data) {
 		if (type != 'wav'){
@@ -165,6 +178,7 @@
 
 		$("#playlist_status_message").text("Mixdown complete");
 		$("#clip_metadata button.export_button").removeAttr("disabled");
+		$("#clip_upload button.upload_button").removeAttr("disabled");
 		rendered_audio = data;
 	});
 
