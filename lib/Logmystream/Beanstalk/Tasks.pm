@@ -51,10 +51,13 @@ sub queue_capture_end_of_period {
 	}
 
 	if($f->audio_extension eq 'pcm') {
+
 		if($f->storage_format eq 'flac') {
+			print "chaining pcm_to_flac conversion\n";
 			push(@actions, 'pcm_to_flac');
 		}
 		else {
+			print "chaining pcm_to_wav conversion\n";
 			push(@actions, 'pcm_to_wav');
 		}
 	}

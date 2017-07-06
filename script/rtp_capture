@@ -28,7 +28,7 @@ my $storage_location  = $config->param('storage_location')    || 'local';  # (s3
 my $audio_extension   = $config->param('audio_extension')     or die "no audio extension specified in configuration\n";
 my $file_seconds      = $config->param('file_period_seconds') || 3600;
 my $local_base        = $config->param('local_base')          || '/home/logmystream';
-my $storage_format    = $config->param('storage_extension')   || 'wav';
+my $storage_format    = $config->param('storage_format')      || 'wav';
 my $process_waveform  = $config->param('process_waveform')    // 1;
 my $reconnect_delay_seconds = 15;
 my $rtpdump = 'rtpdump';
@@ -82,10 +82,10 @@ while (1) {
 	my $f = Logmystream::Capture::Files->new({
 		channel_id        => $channel_id,
 		audio_extension   => $audio_extension,
-		storage_extension => $storage_extension,
+		storage_format    => $storage_format,
 		period_seconds    => $file_seconds,
 		local_base        => $local_base,
-		storage_format    => $storage_location,
+		storage_location  => $storage_location,
 	});
 
 	# Open other end of fifo for reading

@@ -1,0 +1,13 @@
+[Unit]
+Description=GOALS starman server
+After=network.target
+
+[Service]
+WorkingDirectory=/home/npb-audio/goals-logger
+User=npb-audio
+Group=npb-audio
+ExecStart=/home/npb-audio/goals-logger/script/process-pcm_to_flac
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
