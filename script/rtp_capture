@@ -1,0 +1,164 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use LWP::UserAgent;
+use Logmystream::Capture::Files;
+use Logmystream::Beanstalk::Tasks;
+use Config::Simple;
+use IO::Handle;
+use URI;
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+# Read configuration from specified file
+$ARGV[0] && -e $ARGV[0] or do {
+	die "configuration file unspecified or missing.\nUsage: $0 [config file]\n";
+};
+my $config = Config::Simple->new($ARGV[0]) or do {
+	die "ERROR parsing config file $!\n";
+};
+my $url              = $config->param('url');
+my $livewire_channel = $config->param('livewire_channel');
+$url || $livewire_channel or die "invalid configuration: either url or livewire_channel must be specified\n";
+$url && $livewire_channel or die "invalid configuration: both url and livewire_channel are specified\n";
+my $channel_id       = $config->param('channel_id')          or die "no channel_id specified in configuration\n";
+my $storage_location = $config->param('storage_location')    || 'local';  # (s3|local);
+my $audio_extension  = $config->param('audio_extension')     or die "no audio extension specified in configuration\n";
+my $file_seconds     = $config->param('file_period_seconds') || 3600;
+my $local_base       = '/home/logmystream';
+my $reconnect_delay_seconds = 15;
+my $rtpdump = '/home/logmystream/rtptools/rtptools-1.20/rtpdump';
+
+unless($url) {
+	$url = sprintf(
+		"rtp://%s:5004",
+		$livewire_channel_to_ip($livewire_channel),
+	);
+}
+
+# Trap and handle SIGINT
+# doing this makes sure our object destructors are called.
+# Without this, execution is simply halted without allowing our
+# objects to close files cleanly.
+$SIG{'INT'} = sub { 
+	print "received SIGINT - exiting\n";
+	exit;
+};
+
+
+# Output can be muted with SIGUSR1 and unmuted with SIGUSR2
+my $muted = 0;
+$SIG{'USR1'} = sub {
+	print "received SIGUSR1 - muting\n";
+	$muted = 1;
+}
+$SIG{'USR2'} = sub {
+	print "received SIGUSR2 - unmuting\n";
+	$muted = 0;
+}
+
+
+
+
+my $task = Logmystream::Beanstalk::Tasks->new({
+	process_metadata => 0,
+});
+
+
+# Parse stream URI
+# The standard URI module doesn't support port and host for rtp://
+# We therefore have a cludge which happens to work with our urls
+# but isn't very generic.
+my ($host, $port) = $url =~ m|^rtp://(.+)\:(\d+)$| or die "unable to parse specified url $url\n";
+
+
+# Continuous loop to keep trying stream
+while (1) {
+
+	my $f = Logmystream::Capture::Files->new({
+		channel_id       => $channel_id,
+		audio_extension  => $audio_extension,
+		period_seconds   => $file_seconds,
+		local_base       => $local_base,
+		storage_location => $storage_location,
+	});
+
+	# Open other end of fifo for reading
+	print "opening rtpdump pipe to capture audio stream\n";
+	open(my $pipe, "-|", $rtpdump, '-F', 'payload', ($host.'/'.$port)) or do {
+		warn "ERROR opening rtpdump pipe for reading $!\n";
+		warn "sleeping for $reconnect_delay_seconds seconds before retrying...\n";
+		sleep $reconnect_delay_seconds;
+		redo;
+	};
+	binmode $pipe;
+	print "rtpdump pipe opened\n";
+
+
+	my $buffer;
+	my $outfile;
+	my $period_bytes;
+	# Each stereo sample is 8 bytes, sampled at 48kHz
+	# 38400 bytes is therefore 0.1 second
+	while(my $bytes = read($pipe, $buffer, 38400)) {
+
+		# Do we need a new file?
+		unless($f->next_period_start_epoch > time) {
+			if ($outfile) {
+				if (($period_bytes % 8) > 0) {
+					warn "UNEXPECTED ERROR: period_bytes is not a multiple of 8\n";
+				}
+				print "output $period_bytes bytes\n";
+				close $outfile or warn "ERROR closing audio file $!\n";
+			}
+
+			if($f->period_start_epoch) {
+				$task->queue_capture_end_of_period($f);
+			}
+
+			$f->start_period;
+			$outfile = $f->open_audio_fh();
+			$period_bytes = 0;
+		}
+
+		# Data format from pipe is 48kHz 24bit stereo
+		# Big endian, 24 bit signed integer.
+		# see: https://wiki.wmfo.org/Operations/Axia_and_Telos/Dumping_a_Livewire_Stream
+		#      https://github.com/kylophone/a-look-at-livewire
+
+		# If muted we write zeros to the output in place of received audio
+		if($muted) {
+			print $outfile "\x00" x $bytes;
+		}
+		else {
+			print $outfile $buffer;
+		}
+
+		$period_bytes += $bytes;
+	}
+
+	print "reached end of input pipe\n";
+	print "sleeping $reconnect_delay_seconds seconds before trying to reconnect...\n";
+	sleep $reconnect_delay_seconds;
+}
+
+
+sub livewire_channel_to_ip {
+
+	my $livewire_channel = shift;
+
+	if($livewire_channel < 1 || $livewire_channel > 32767) {
+		warn "Livewire channel out of range\n";
+		return;
+	}
+
+	my $high_byte = int($livewire_channel / 256);
+	my $low_byte = $livewire_channel % 256;
+
+	return "239.192.$high_byte.$low_byte";
+}
+
+
+
