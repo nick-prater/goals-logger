@@ -106,7 +106,7 @@
 				</div>
 			</div>
 [% IF build_playlist %]
-	[% INCLUDE "ui/upload_clip.tt" %]
+	[% INCLUDE "ui/upload_playlist.tt" %]
 	[% INSERT "ui/save_playlist.tt" %]
 	[% INCLUDE "ui/export_clip.tt" %]
 [% END %]
