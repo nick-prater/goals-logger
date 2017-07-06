@@ -1,0 +1,4 @@
+Place these files in /etc/systemd/system/
+
+The various services needed to run GOALS can then be monitored,
+started and stopped using systemd
