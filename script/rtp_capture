@@ -19,18 +19,21 @@ $ARGV[0] && -e $ARGV[0] or do {
 my $config = Config::Simple->new($ARGV[0]) or do {
 	die "ERROR parsing config file $!\n";
 };
-my $url              = $config->param('url');
-my $livewire_channel = $config->param('livewire_channel');
+my $url               = $config->param('url');
+my $livewire_channel  = $config->param('livewire_channel');
 $url || $livewire_channel or  die "invalid configuration: either url or livewire_channel must be specified\n";
 $url && $livewire_channel and die "invalid configuration: both url and livewire_channel are specified\n";
-my $channel_id       = $config->param('channel_id')          or die "no channel_id specified in configuration\n";
-my $storage_location = $config->param('storage_location')    || 'local';  # (s3|local);
-my $audio_extension  = $config->param('audio_extension')     or die "no audio extension specified in configuration\n";
-my $file_seconds     = $config->param('file_period_seconds') || 3600;
-my $local_base       = '/home/logmystream';
+my $channel_id        = $config->param('channel_id')          or die "no channel_id specified in configuration\n";
+my $storage_location  = $config->param('storage_location')    || 'local';  # (s3|local);
+my $audio_extension   = $config->param('audio_extension')     or die "no audio extension specified in configuration\n";
+my $file_seconds      = $config->param('file_period_seconds') || 3600;
+my $local_base        = $config->param('local_base')          || '/home/logmystream';
+my $storage_format    = $config->param('storage_extension')   || 'wav';
+my $process_waveform  = $config->param('process_waveform')    // 1;
 my $reconnect_delay_seconds = 15;
-my $rtpdump = '/home/logmystream/rtptools/rtptools-1.20/rtpdump';
+my $rtpdump = 'rtpdump';
 
+# Capture from Livewire if no url is supplied
 unless($url) {
 	$url = sprintf(
 		"rtp://%s:5004",
@@ -62,6 +65,7 @@ $SIG{'USR2'} = sub {
 
 my $task = Logmystream::Beanstalk::Tasks->new({
 	process_metadata => 0,
+	process_waveform => $process_waveform,
 });
 
 
@@ -76,11 +80,12 @@ my ($host, $port) = $url =~ m|^rtp://(.+)\:(\d+)$| or die "unable to parse speci
 while (1) {
 
 	my $f = Logmystream::Capture::Files->new({
-		channel_id       => $channel_id,
-		audio_extension  => $audio_extension,
-		period_seconds   => $file_seconds,
-		local_base       => $local_base,
-		storage_location => $storage_location,
+		channel_id        => $channel_id,
+		audio_extension   => $audio_extension,
+		storage_extension => $storage_extension,
+		period_seconds    => $file_seconds,
+		local_base        => $local_base,
+		storage_format    => $storage_location,
 	});
 
 	# Open other end of fifo for reading

@@ -4,11 +4,13 @@ use Beanstalk::Client;
 use Data::Dumper;
 use namespace::autoclean;
 
-our $VERSION = 1.20;
+our $VERSION = 1.21;
 
 # Changes
 #
 # v1.20 - option to disable metadata processing added
+# v1.21 - process pcm to wav or flac depending on option
+#         make waveform generation optional
 
 
 has 'beanstalk' => (
@@ -29,6 +31,13 @@ has 'process_metadata' => (
 	default => 1,
 );
 
+has 'process_waveform' => (
+	is => 'rw',
+	default => 1,
+);
+
+
+
 
 sub queue_capture_end_of_period {
 
@@ -42,14 +51,21 @@ sub queue_capture_end_of_period {
 	}
 
 	if($f->audio_extension eq 'pcm') {
-		push(@actions, 'pcm_to_wav');
+		if($f->storage_format eq 'flac') {
+			push(@actions, 'pcm_to_flac');
+		}
+		else {
+			push(@actions, 'pcm_to_wav');
+		}
 	}
 
 	if($self->process_metadata) {
 		push(@actions, 'process_metadata');
 	}
 
-	push(@actions, 'generate_waveform');
+	if($self->process_waveform) {
+		push(@actions, 'generate_waveform');
+	}
 
 	if($f->storage_location eq 's3') {
 		push(@actions, 's3_upload', 'delete_local_files');
