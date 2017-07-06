@@ -22,7 +22,7 @@
 	});
 
 	/* Pointer to mixed audio after rendering */
-	var rendered_audio;
+	var rendered_audio = null;
 
 	playlist.load(
 		[% playlist.data || "[]" %]
@@ -66,6 +66,14 @@
 		ee.emit("newtrack", audio_url, title_html, playlist.duration);
 		document.getElementById("empty_playlist_message").setAttribute("hidden", "hidden");
 		console.log(playlist);
+	}
+
+
+	function render_wav() {
+
+		$("#playlist_status_message").text("Rendering mixdown of playlist...");
+		rendered_audio = null;
+		ee.emit('startaudiorendering', 'wav');
 	}
 
 
@@ -151,8 +159,7 @@
 			$("#clip_title").val(playlist_name);
 		}
 
-		$("#playlist_status_message").text("Rendering mixdown of playlist...");
-		ee.emit('startaudiorendering', 'wav');
+		render_wav();
 		$("#clip_metadata button.export_button").attr("disabled", "disabled");
 
 		$("div.form_container").hide();
@@ -163,14 +170,14 @@
 	/* Handle Upload Button */
 	$(".btn-upload").on("click", function() {
 		console.log("upload_button");
-		$("#playlist_status_message").text("Rendering mixdown of playlist...");
-		ee.emit('startaudiorendering', 'wav');
+		render_wav();
 		display_upload_form();
 	});
 
 
 	/* Export sets of a background render task - handle completion */
 	ee.on('audiorenderingfinished', function (type, data) {
+
 		if (type != 'wav'){
 			console.log("unexpected end to audio rendering: type=", type);
 			return;
@@ -178,8 +185,15 @@
 
 		$("#playlist_status_message").text("Mixdown complete");
 		$("#clip_metadata button.export_button").removeAttr("disabled");
-		$("#clip_upload button.upload_button").removeAttr("disabled");
 		rendered_audio = data;
+
+		if($("#media_code").attr("disabled") != "disabled") {
+			console.log("wav rendering finished; media_codes loaded - enabling Upload button");
+			$("#upload_playlist_container button.upload_button").removeAttr("disabled");
+		}
+		else {
+			console.log("wav rendering finished, but still waiting for media_codes to load");
+		};
 	});
 
 

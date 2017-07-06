@@ -114,8 +114,15 @@
 					$("#media_code").append(new Option(option_text, JSON.stringify(val)));
 				});
 
-				$("#upload_playlist_container button.upload_button").removeAttr("disabled");
 				$("#media_code").removeAttr("disabled");
+
+				if(rendered_audio) {
+					console.log("enabling upload button. media_codes are loadeed, rendered_audio:", rendered_audio);
+					$("#upload_playlist_container button.upload_button").removeAttr("disabled");
+				}
+				else {
+					console.log("media_codes are loaded, but still waiting for audio to render");
+				}
 			}
                 });
 	}

@@ -115,6 +115,7 @@ sub media_codes :Local :Args(0) {
 	# For test - return dummy data
 	$c->response->content_type('application/json');
 	$c->response->body(encode_json($SAMPLE_DATA));
+	sleep 3;
 	return;
 
 	my $api_user = $c->config->{tibus_user};
