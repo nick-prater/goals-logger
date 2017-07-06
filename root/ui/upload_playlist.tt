@@ -85,6 +85,9 @@
 		$("#media_code").append(new Option("loading...", ""));
 		load_media_codes();
 
+		/* Proprietary field always begins unchecked - needs to be active decsion to check it */
+		$("#proprietary_content").prop("checked", false);
+
 		$("div.form_container").hide();
 		$("#upload_playlist_container").show()
 	}
