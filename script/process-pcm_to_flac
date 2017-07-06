@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Logmystream::Beanstalk::Tasks;
+use IO::Handle;
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+my $task = Logmystream::Beanstalk::Tasks->new;
+my $queue = 'pcm_to_flac';
+
+
+while (1) {
+
+	my $job  = $task->get_task($queue);
+	my %args = $job->args;
+
+	# Validation
+	unless($args{audio_file}) {
+		print "ERROR: no audio file specified\n";
+		$job->bury;
+		next;
+	}
+	unless(-f $args{audio_file}) {
+		print "audio file not found\n";
+		$job->bury;
+		next;
+	}
+
+	# Replace current audio extension with .flac
+	my $out_file = $args{audio_file};
+	$out_file =~ s/\.[^.]+$/.flac/;
+
+	print "converting $args{audio_file} -> $out_file\n";
+	my @command_line = (
+		"ffmpeg",
+		"-loglevel", "warning",
+		"-y",
+		"-ar", "48000",
+		"-ac", "2",
+		"-f", "s24be",
+		"-i",  $args{audio_file},
+		$out_file
+	);
+	print "running command: ", join(" ", @command_line), "\n";
+	my $success = not system @command_line;
+
+	unless($success) {
+		print "error converting file\n";
+		$job->bury;
+		next;
+	}
+
+	print "deleting original file: $args{audio_file}\n";
+	unlink $args{audio_file} or do {
+		print "ERROR deleting source file $!\n";
+	};
+
+
+	print "completed OK\n";
+	$job->delete;
+
+	# Update task arguments with audio file location
+	# Modify remote audio file extension to reflect change to flac
+	$args{remote_audio_file} and $args{remote_audio_file} =~ s/\.[^.]+$/.flac/;
+	$args{audio_file} = $out_file;
+
+	$task->queue_next_task(\%args);
+}
+
+
+
+
