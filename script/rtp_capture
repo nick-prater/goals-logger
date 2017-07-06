@@ -53,13 +53,11 @@ my $muted = 0;
 $SIG{'USR1'} = sub {
 	print "received SIGUSR1 - muting\n";
 	$muted = 1;
-}
+};
 $SIG{'USR2'} = sub {
 	print "received SIGUSR2 - unmuting\n";
 	$muted = 0;
-}
-
-
+};
 
 
 my $task = Logmystream::Beanstalk::Tasks->new({
