@@ -5,12 +5,14 @@ use POSIX 'strftime';
 use File::Path 'make_path';
 use namespace::autoclean;
 
-our $VERSION = 1.01;
+our $VERSION = 1.02;
 has 'channel_id'              => (is => 'ro', required => 1);
 has 'audio_extension'         => (is => 'ro', required => 1);
+has 'storage_extension'       => (is => 'ro', default => '.wav');
 has 'local_base'              => (is => 'ro', required => 1);
 has 'storage_location'        => (is => 'ro', default => 'local');  # can be 's3' or 'local'
 has 'period_seconds'          => (is => 'ro', default => 3600);
+has 'storage_format'          => (is => 'ro', default => 'wav');
 has 'period_start_epoch'      => (is => 'ro', default => 0, writer => 'set_period_start_epoch');
 has 'next_period_start_epoch' => (is => 'ro', default => 0, writer => 'set_next_period_start_epoch');
 
