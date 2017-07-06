@@ -6,7 +6,7 @@ After=network.target
 WorkingDirectory=/home/npb-audio/goals-logger
 User=npb-audio
 Group=npb-audio
-ExecStart=script/process-notify_upload goals.conf
+ExecStart=/home/npb-audio/goals-logger/script/process-notify_upload goals.conf
 Restart=always
 
 [Install]

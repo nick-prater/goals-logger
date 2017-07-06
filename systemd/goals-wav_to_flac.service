@@ -6,7 +6,7 @@ After=network.target
 WorkingDirectory=/home/npb-audio/goals-logger
 User=npb-audio
 Group=npb-audio
-ExecStart=script/process-wav_to_flac
+ExecStart=/home/npb-audio/goals-logger/script/process-wav_to_flac
 Restart=always
 
 [Install]

@@ -6,7 +6,7 @@ After=network.target
 WorkingDirectory=/home/npb-audio/goals-logger
 User=npb-audio
 Group=npb-audio
-ExecStart=script/process-s3_upload s3.conf
+ExecStart=/home/npb-audio/goals-logger/script/process-s3_upload s3.conf
 Restart=always
 
 [Install]
