@@ -26,17 +26,17 @@ while (1) {
 
 	# Validate parameters
 	unless(
-		$args->{mediaspec} &&
-		$args->{mediaspec}->{mediaContentId} &&
-		$args->{mediaspec}->{bucket} &&
-		defined $args->{mediaspec}->{title}
+		$args{mediaspec} &&
+		$args{mediaspec}->{mediaContentId} &&
+		$args{mediaspec}->{bucket} &&
+		defined $args{mediaspec}->{title}
 	) {
 		print "error: medispec arguments missing or invalid\n";
 		$job->bury;
 		next;
 	}
 
-	unless(defined $args->{remote_audio_file}) {
+	unless(defined $args{remote_audio_file}) {
 		print "error: remote_audio_file argument missing\n";
 		$job->bury;
 		next;
@@ -44,16 +44,23 @@ while (1) {
 
 	# Build payload
 	my $content = {
-		'mediaContentId' => $args->{mediaspec}->{mediaContentId},
-		'programID' => $args->{mediaspec}->{programId},
-		'asset' => $args->{mediaspec}->{bucket} . $args->{remote_audio_file},
-		'title' => $args->{mediaspec}->{title},
+		'mediaContentId' => $args{mediaspec}->{mediaContentId},
+		'programID' => $args{mediaspec}->{programId},
+		'asset' => $args{mediaspec}->{bucket} . $args{remote_audio_file},
+		'title' => $args{mediaspec}->{title},
 		'type'  => 'AUDIO',
 	};
+
+	if($args{mediaspec}->{proprietary}) {
+		$content->{proprietary} = JSON->true;
+	}
+
 	my $json = encode_json($content);
 
+	print "sending content: $json\n";
+
 	# Build request
-	my $url = $config->{tibus_url} . $args->{mediaspec}->{mediaContentId};
+	my $url = $config->{tibus_url} . $args{mediaspec}->{mediaContentId};
 	my $timestamp = gmtime->datetime;
 	my $signature = hmac_sha256_base64(
 		"$config->{tibus_user}|$timestamp",
@@ -71,7 +78,7 @@ while (1) {
 	my $request = HTTP::Request->new(
 		POST => $url,
 		[
-			'X-AUTH-TOKEN' => $api_key,
+			'X-AUTH-TOKEN' => $config->{tibus_key},
 			'X-AUTH-SIGNATURE' => $signature,
 			'X-AUTH-TIMESTAMP' => $timestamp,
 		]
@@ -118,6 +125,3 @@ sub read_config {
 
 	return $rv;
 }
-
-use Data::Dumper;
-print Dumper $data;

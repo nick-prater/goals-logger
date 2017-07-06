@@ -11,9 +11,10 @@ buttons_per_row                 5
 keep_deleted_events_days        10
 keep_events_days                16
 
-clips_path       /home/npb-audio/clip
-audio_log_path   /home/npb-audio/audio
-cache_path       /home/npb-audio/cache
+clips_path         /home/npb-audio/clip
+audio_log_path     /home/npb-audio/audio
+cache_path         /home/npb-audio/cache
+upload_queue_path  /home/npb-audio/upload_queue
 
 playout_buttons_ini_path  /home/npb-audio/clip/buttons.ini
 playout_labels_ini_path   /home/npb-audio/clip/labels.ini

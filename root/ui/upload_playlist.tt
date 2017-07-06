@@ -27,6 +27,7 @@
 								type="checkbox"
 								name="proprietary_content"
 								id="proprietary_content"
+								value="true"
 							>
 							</select>
 						</div>

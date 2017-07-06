@@ -59,7 +59,7 @@ while (1) {
 	}
 
 	# Delete source files after successful upload if requested
-	if($args->{$queue}->{delete_after_upload}) {
+	if($args{$queue}->{delete_after_upload}) {
 		delete_files(
 			$args{audio_file},
 			$args{waveform_file},
@@ -80,7 +80,7 @@ sub delete_files {
 	foreach my $file(@_) {
 		$file && -e $file or next;
 
-		print "deleting original file: $args{audio_file}\n";
+		print "deleting file: $file\n";
 		unlink $file or do {
 			print "ERROR deleting source file $!\n";
 		};
