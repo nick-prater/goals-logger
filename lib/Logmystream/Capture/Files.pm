@@ -13,6 +13,7 @@ has 'local_base'              => (is => 'ro', required => 1);
 has 'storage_location'        => (is => 'ro', default => 'local');  # can be 's3' or 'local'
 has 'period_seconds'          => (is => 'ro', default => 3600);
 has 'storage_format'          => (is => 'ro', default => 'wav');
+has 'format_subdirs'          => (is => 'ro', default => 1);
 has 'period_start_epoch'      => (is => 'ro', default => 0, writer => 'set_period_start_epoch');
 has 'next_period_start_epoch' => (is => 'ro', default => 0, writer => 'set_next_period_start_epoch');
 
@@ -140,7 +141,8 @@ sub generate_dir {
 	my $self = shift;
 	my $type = shift; # (audio|waveform|metadata)
 
-	# local files: /my/local/path/media/miskin_radio/2014-07-10/audio
+	# local files: /my/local/path/media/miskin_radio/2014-07-10/audio (format_subdirs->1)
+	# local files: /my/local/path/media/miskin_radio/2014-07-10       (format_subdirs->0)
 	# s3 files:    /my/local/path/media/upload_queue
 	my $path;
 	if($self->storage_location eq 's3') {
@@ -151,13 +153,23 @@ sub generate_dir {
 		);
 	}
 	else {
-		$path = sprintf(
-			"%s/media/%s/%s/%s",
-			$self->local_base,
-			$self->channel_id,
-			strftime("%Y-%m-%d", gmtime($self->period_start_epoch)),
-			$self->generate_subdir($type),
-		);
+		if($self->format_subdirs) {
+			$path = sprintf(
+				"%s/media/%s/%s/%s",
+				$self->local_base,
+				$self->channel_id,
+				strftime("%Y-%m-%d", gmtime($self->period_start_epoch)),
+				$self->generate_subdir($type),
+			);
+		}
+		else {
+			$path = sprintf(
+				"%s/media/%s/%s",
+				$self->local_base,
+				$self->channel_id,
+				strftime("%Y-%m-%d", gmtime($self->period_start_epoch)),
+			);
+		}
 	}
 
 	-d $path or make_path($path) or do {

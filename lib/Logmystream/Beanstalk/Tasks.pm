@@ -76,14 +76,21 @@ sub queue_capture_end_of_period {
 
 	my $params = {
 		audio_file           => $f->generate_path('audio'),
-		waveform_file        => $f->generate_path('waveform'),
-		stream_metadata_file => $f->generate_path('stream_metadata'),
-		metadata_file        => $f->generate_path('metadata'),
 		local_base           => $f->local_base,
 		channel_id           => $f->channel_id,
 		period_start_epoch   => $f->period_start_epoch,
 		next_actions         => \@actions,
 	};
+
+	if($self->process_waveform) {
+		$params->{waveform_file} = $f->generate_path('waveform');
+	}
+
+	if($self->process_metadata) {
+		$params->{stream_metadata_file} = $f->generate_path('stream_metadata');
+		$params->{metadata_file}        = $f->generate_path('metadata');
+	}
+
 
 	if($f->storage_location eq 's3') {
 		$params->{remote_audio_file}    = $f->generate_remote_path('audio');

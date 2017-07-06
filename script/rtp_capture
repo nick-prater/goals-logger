@@ -30,6 +30,7 @@ my $file_seconds      = $config->param('file_period_seconds') || 3600;
 my $local_base        = $config->param('local_base')          || '/home/logmystream';
 my $storage_format    = $config->param('storage_format')      || 'wav';
 my $process_waveform  = $config->param('process_waveform')    // 1;
+my $format_subdirs    = $config->param('format_subdirs')      // 1;
 my $reconnect_delay_seconds = 15;
 my $rtpdump = 'rtpdump';
 
@@ -86,6 +87,7 @@ while (1) {
 		period_seconds    => $file_seconds,
 		local_base        => $local_base,
 		storage_location  => $storage_location,
+		format_subdirs    => $format_subdirs,
 	});
 
 	# Open other end of fifo for reading
