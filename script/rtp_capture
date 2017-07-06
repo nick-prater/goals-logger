@@ -34,7 +34,7 @@ my $rtpdump = '/home/logmystream/rtptools/rtptools-1.20/rtpdump';
 unless($url) {
 	$url = sprintf(
 		"rtp://%s:5004",
-		$livewire_channel_to_ip($livewire_channel),
+		livewire_channel_to_ip($livewire_channel),
 	);
 }
 
@@ -42,7 +42,7 @@ unless($url) {
 # doing this makes sure our object destructors are called.
 # Without this, execution is simply halted without allowing our
 # objects to close files cleanly.
-$SIG{'INT'} = sub { 
+$SIG{'INT'} = sub {
 	print "received SIGINT - exiting\n";
 	exit;
 };
