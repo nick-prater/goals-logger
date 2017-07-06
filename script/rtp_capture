@@ -21,8 +21,8 @@ my $config = Config::Simple->new($ARGV[0]) or do {
 };
 my $url              = $config->param('url');
 my $livewire_channel = $config->param('livewire_channel');
-defined $url || defined $livewire_channel or die "invalid configuration: either url or livewire_channel must be specified\n";
-defined $url && defined $livewire_channel or die "invalid configuration: both url and livewire_channel are specified\n";
+$url || $livewire_channel or  die "invalid configuration: either url or livewire_channel must be specified\n";
+$url && $livewire_channel and die "invalid configuration: both url and livewire_channel are specified\n";
 my $channel_id       = $config->param('channel_id')          or die "no channel_id specified in configuration\n";
 my $storage_location = $config->param('storage_location')    || 'local';  # (s3|local);
 my $audio_extension  = $config->param('audio_extension')     or die "no audio extension specified in configuration\n";
