@@ -1,0 +1,13 @@
+[Unit]
+Description=GOALS starman server
+After=network.target
+
+[Service]
+WorkingDirectory=/home/npb-audio/goals-logger
+User=npb-audio
+Group=npb-audio
+ExecStart=script/process-notify_upload goals.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
