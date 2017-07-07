@@ -114,7 +114,6 @@ sub assign : Local : Args(2) {
 	};
 
 	$c->forward('refresh_buttons_config');
-
 	$c->detach('buttons_json');
 }
 
@@ -229,12 +228,7 @@ sub refresh_sources_ini : Private {
 
 	$c->log->debug('refresh_sources_ini called');
 
-	# We need a profile_code to filter out irrelevant channels
-	unless($c->session->{profile_id} && $c->session->{profile_code}) {
-		$c->error("refresh_sources_ini() called without a session profile_id");
-		die;
-	}
-
+	$c->forward('GOALS::Controller::UI', 'require_profile');
 	$c->forward('get_sources');
 
 	# Output ini file in the form:

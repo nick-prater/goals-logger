@@ -34,12 +34,7 @@ sub player : Local {
 	my $self = shift;
 	my $c = shift;
 
-	# It is now mandatory to have session data to define our profile
-	unless( $c->session->{profile_code} ) {
-		$c->log->warn("ERROR: profile not defined in session data");
-		$c->response->redirect('/');
-	}
-
+	$c->forward('require_profile');
 	$c->forward('get_available_channels');
 	$c->forward('get_available_start_dates');
 	$c->forward('get_available_categories');
@@ -54,12 +49,8 @@ sub upload_clip : Local {
 	my $self = shift;
 	my $c = shift;
 
+	$c->forward('require_profile');
 	$c->forward('get_available_categories');
-
-	unless( $c->session->{profile_id} ) {
-		$c->log->warn("upload_clip called without a valid session profile_id");
-		$c->response->redirect('/');
-	};
 }
 
 
@@ -67,11 +58,7 @@ sub build_playlist : Local {
 	my $self = shift;
 	my $c = shift;
 
-	unless( $c->session->{profile_id} ) {
-		$c->log->warn("build_playlist called without a valid session profile_id");
-		$c->response->redirect('/');
-	};
-
+	$c->forward('require_profile');
 	$c->forward('get_available_channels');
 	$c->forward('get_available_categories');
 	$c->forward('get_available_languages');
@@ -89,11 +76,7 @@ sub assign_clips : Local {
 	my $self = shift;
 	my $c = shift;
 
-	unless( $c->session->{profile_id} ) {
-		$c->log->warn("assign_clips called without a valid session profile_id");
-		$c->response->redirect('/');
-	};
-
+	$c->forward('require_profile');
 	$c->forward('get_available_channels');
 	$c->forward('get_buttons');
 	$c->forward('get_available_categories');
@@ -365,6 +348,22 @@ sub profile_code_from_id : Private {
 	);
 
 	return $profile->profile_code;
+}
+
+
+sub require_profile :Private {
+
+	my $self = shift;
+	my $c = shift;
+
+	# It is now mandatory to have session data to define our profile
+	unless( $c->session->{profile_code} ) {
+		$c->log->warn("ERROR: profile not defined in session data");
+		$c->response->redirect(
+			$c->uri_for("/")
+		);
+		$c->detach;
+	}
 }
 
 
