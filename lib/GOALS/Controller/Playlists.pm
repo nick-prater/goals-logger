@@ -30,6 +30,8 @@ sub add :POST :Local :Args(0) {
 	use Data::Dumper;
 	$c->log->warn(Dumper $data);
 
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
 	if($data->{playlist_id}) {
 
 		$c->log->info("Updating existing playlist");
@@ -74,6 +76,8 @@ sub edit :GET :Path :Args(1) {
 	my $playlist_id = shift;
 	my $rs = $c->model('DB::Playlist');
 
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
 	my $playlist = $rs->find({
 		playlist_id => $playlist_id,
 		profile_id => $c->session->{profile_id},
@@ -102,8 +106,13 @@ sub all :GET :Local :Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $rs = $c->model('DB::Playlist');
-	my $where = {};
 	my @json_data;
+
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
+	my $where = {
+		profile_id => $c->session->{profile_id},
+	};
 
 	# Show deleted clips only if requested
 	unless( $c->request->param('deleted') ) {
@@ -150,6 +159,8 @@ sub delete :Local :Args(1) {
 	my $clip_list = shift;
 	my $dbh = $c->model('DB')->storage->dbh;
 
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
 	# Clip list is a comma separated list of clips to delete
 	my @clips = split(/,/, $clip_list);
 
@@ -187,6 +198,8 @@ sub undelete :Local :Args(1) {
 	my $c = shift;
 	my $clip_list = shift;
 	my $dbh = $c->model('DB')->storage->dbh;
+
+	$c->forward('GOALS::Controller::UI', 'require_profile');
 
 	# Clip list is a comma separated list of clips to delete
 	my @clips = split(/,/, $clip_list);
