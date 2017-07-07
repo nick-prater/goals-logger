@@ -110,7 +110,10 @@
 				$("#media_code").empty();
 
 				json.forEach(function(val, index) {
-					var option_text = val.booth + "|" + val.title + " [" + val.mediaContentId + "]";
+					var option_text = (val.booth || "--")
+					                + " | "
+					                + val.title
+					                + " [" + val.mediaContentId + "]";
 					$("#media_code").append(new Option(option_text, JSON.stringify(val)));
 				});
 
