@@ -163,6 +163,9 @@ sub media_codes :Local :Args(0) {
 		die "Unexpected content type from remote server";
 	}
 
+	$c->log->info("JSON response received OK - passing on to client:");
+	#$c->log->info($response->content);
+
 	$c->response->content_type('application/json');
 	$c->response->body($response->content);
 }
