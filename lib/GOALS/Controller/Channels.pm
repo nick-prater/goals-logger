@@ -196,13 +196,7 @@ sub record : Chained('base') : PathPart('record') : Args(2) {
 
 	# Update XML file used by rot_manager
         $c->forward('write_channel_config');
-
-	# Send user back to channel list
-	return $c->res->redirect(
-		$c->uri_for(
-			$c->controller('Channels')->action_for('list'),
-		)
-	);
+	$c->forward('channel_list');
 }
 
 
@@ -262,14 +256,7 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 
 		# Update ini file used by studio player
 		$c->forward('/button_box/refresh_sources_ini');
-
-		# Send user back to channel list
-		return $c->res->redirect(
-			$c->uri_for(
-				$c->controller('Channels')->action_for('list'),
-
-			)
-		);
+		$c->forward('channel_list');
 	}
 	else {
 		$c->log->error("edit method called without POST");
@@ -303,14 +290,7 @@ sub add :Chained('base') :PathPart('add') :Args(0) {
 
 		# Update ini file used by studio player
 		$c->forward('/button_box/refresh_sources_ini');
-
-		# Send user back to channel list
-		return $c->res->redirect(
-			$c->uri_for(
-				$c->controller('Channels')->action_for('list'),
-
-			)
-		);
+		$c->forward('channel_list');
 	}
 	else {
 		$c->log->error("edit method called without POST");
@@ -338,14 +318,7 @@ sub delete : Chained('base_channel') : PathPart('delete') : Args(0) {
 
 	# Update ini file used by studio player
 	$c->forward('/button_box/refresh_sources_ini');
-
-	# Send user back to channel list
-	$c->res->redirect(
-		$c->uri_for(
-			$c->controller('Channels')->action_for('list'),
-		)
-	);
-	$c->detach;
+	$c->forward('channel_list')
 }
 
 
@@ -397,7 +370,17 @@ sub write_channel_config : Private {
 }
 
 
+sub channel_list :Private {
 
+	my $self = shift;
+	my $c = shift;
+
+	$c->log->info("Redirecting to channel list");
+	$c->response->redirect(
+		$c->uri_for("/channels/list/")
+	);
+	$c->detach;
+}
 
 
 
