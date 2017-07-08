@@ -319,7 +319,7 @@ sub add :Chained('base') :PathPart('add') :Args(0) {
 
 
 
-sub delete : Chained('base_channel') : PathPart('update') : Args(0) {
+sub delete : Chained('base_channel') : PathPart('delete') : Args(0) {
 
 	my $self = shift;
 	my $c = shift;
@@ -332,6 +332,8 @@ sub delete : Chained('base_channel') : PathPart('update') : Args(0) {
 	$channel->search_related('clips')->update({channel_id => undef});
 
 	# Delete the channel and its associated events and event_inputs
+	$channel->search_related('event_inputs')->search_related('events')->delete;
+	$channel->search_related('event_inputs')->delete;
 	$channel->delete;
 
 	# Update ini file used by studio player
