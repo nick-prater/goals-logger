@@ -534,6 +534,8 @@ sub create : Path : Local {
 	my $self = shift;
 	my $c = shift;
 
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
 	# Parse submitted JSON structure
 	my $json = JSON->new;
 	my $body = File::Slurp::read_file($c->request->body);
@@ -546,12 +548,6 @@ sub create : Path : Local {
 	foreach (keys %{$params}) {
 		$params->{$_} = trim_whitespace( $params->{$_} );
 		$c->log->debug("$_ :: $params->{$_}");
-	}
-
-	# Validate profile_code
-	unless($c->session->{profile_id} && $c->session->{profile_code}) {
-		$c->error("create() called without a session profile_id");
-		die;
 	}
 
         # As we use the submitted profile code to determine a
