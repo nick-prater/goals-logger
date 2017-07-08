@@ -110,6 +110,8 @@ sub list : Chained('base') : PathPart('list') : Args(0) {
 	my $self = shift;
 	my $c = shift;
 
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
 	my @channels = $c->stash->{rs}->all;
 
 	# Configure link to edit values
