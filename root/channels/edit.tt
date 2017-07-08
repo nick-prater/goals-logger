@@ -93,7 +93,10 @@
 					<li>
 						<label for="source">Livewire channel</label>
 						<input
-							type="text"
+							type="number"
+							min="1"
+							max="32767"
+							required="required"
 							name="source"
 							id="source"
 							value="[% channel.source | html %]"
