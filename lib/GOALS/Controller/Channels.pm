@@ -185,6 +185,7 @@ sub show : Chained('base_channel') : PathPart('') : Args(0) {
 	my $c = shift;
 
 	$c->log->debug('running show method');
+	$c->forward('GOALS::Controller::UI', 'require_profile');
 
 	$c->stash->{template} = 'channels/edit.tt';
 
