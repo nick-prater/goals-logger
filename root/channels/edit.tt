@@ -39,7 +39,11 @@
 		>
 
 			<fieldset>
+[% IF delete_uri %]
 				<legend>Edit Recording Channel Details</legend>
+[% ELSE %]
+				<legend>Add New Recording Channel</legend>
+[% END %]
 
 				<ol>
 					<li>
@@ -48,6 +52,7 @@
 							type="text"
 							name="source_label"
 							value="[% channel.source_label | html %]"
+							placeholder="Label to Display"
 							required
 							size="60"
 						/>
@@ -93,9 +98,13 @@
 							id="source"
 							value="[% channel.source | html %]"
 							placeholder="Livewire Channel ID"
+[% IF delete_uri %]
 							disabled="disabled"
+[% END %]
 						/>
+[% IF delete_uri %]
 						<a href="javascript:enable_source_edit()">edit</a>
+[% END %]
 					</li>
 
 
@@ -103,13 +112,22 @@
 
 			</fieldset>
 
+[% IF delete_uri %]
 			<input type="submit" value="Update" />
+[% ELSE %]
+			<input type="submit" value="Add" />
+[% END %]
+
 			<input type="button" value="Cancel" onclick="window.location='[% cancel_uri %]'" />
+
+[% IF delete_uri %]
 			&emsp;
 			&emsp;
 			<input type="button" value="Delete" onclick="javascript:show_confirm_delete()" />
+[% END %]
 		</form>
 
+[% IF delete_uri %]
 		<form
 			action="[% delete_uri %]"
 			method="post"
@@ -135,7 +153,6 @@
 
 
 <script type="text/javascript">
-
 function enable_source_edit() {
 	document.getElementById("source").removeAttribute("disabled");
 }
@@ -149,12 +166,8 @@ function cancel_delete() {
 	document.getElementById("confirm_delete").setAttribute("hidden", "hidden");
 	document.getElementById("channel_metadata").removeAttribute("hidden");
 }
-
-
-
-
 </script>
-
+[% END %]
 
 	</body>
 </html>

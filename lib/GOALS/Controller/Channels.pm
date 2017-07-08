@@ -105,6 +105,33 @@ sub list_xml : Chained('base') : PathPart('xml') : Args(0) {
 
 
 
+sub new_channel : Chained('base') : PathPart('new') : Args(0) {
+
+	my $self = shift;
+	my $c = shift;
+
+	$c->log->debug('running new method');
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
+	my $update_uri = $c->uri_for(
+		$c->controller('channels')->action_for('add')
+	);
+
+	my $cancel_uri = $c->uri_for(
+		$c->controller('channels')->action_for('list'),
+	);
+
+	$c->stash(
+		update_uri => $update_uri,
+		cancel_uri => $cancel_uri,
+	);
+
+	$c->forward('/ui/get_available_profiles');
+	$c->stash->{template} = 'channels/edit.tt';
+}
+
+
+
 sub list : Chained('base') : PathPart('list') : Args(0) {
 
 	my $self = shift;
@@ -248,6 +275,48 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 		$c->log->error("edit method called without POST");
 	}
 }
+
+
+sub add :Chained('base') :PathPart('add') :Args(0) {
+
+
+	my $self = shift;
+	my $c = shift;
+
+	$c->log->debug('running add method');
+
+	if ($c->req->method eq 'POST') {
+
+		my $params = $c->req->params;
+		my $channel = $c->stash->{rs};
+
+		$channel->create({
+			source_label => $params->{source_label},
+			source       => $params->{source},
+			match_title  => $params->{match_title},
+			commentator  => $params->{commentator},
+			profile_id   => $params->{profile_id},
+		}) or do {
+			$c->error("problem adding new event record: $!");
+			die;
+		};
+
+		# Update ini file used by studio player
+		$c->forward('/button_box/refresh_sources_ini');
+
+		# Send user back to channel list
+		return $c->res->redirect(
+			$c->uri_for(
+				$c->controller('Channels')->action_for('list'),
+
+			)
+		);
+	}
+	else {
+		$c->log->error("edit method called without POST");
+	}
+}
+
 
 
 sub delete : Chained('base_channel') : PathPart('update') : Args(0) {

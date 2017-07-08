@@ -92,7 +92,9 @@
 
 		<p />
 
-		<a href="/ui/player">DONE</a>
+		<a href="/channels/new">Add</a>
+		&emsp;
+		<a href="/ui/player">Done</a>
 
 	</body>
 </html>
