@@ -192,6 +192,8 @@ sub record : Chained('base') : PathPart('record') : Args(2) {
 		$channel->update({
 			recording => $recording{$start_stop}
 		});
+
+		$c->forward('write_channel_ini', [$channel]);
 	}
 
 	# Update XML file used by rot_manager
@@ -254,6 +256,9 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 			profile_id   => $params->{profile_id},
 		});
 
+		$c->forward('write_channel_ini', [$channel]);
+        	$c->forward('write_channel_config');
+
 		# Update ini file used by studio player
 		$c->forward('/button_box/refresh_sources_ini');
 		$c->forward('channel_list');
@@ -290,6 +295,7 @@ sub add :Chained('base') :PathPart('add') :Args(0) {
 
 		# Update ini file used by studio player
 		$c->forward('/button_box/refresh_sources_ini');
+        	$c->forward('write_channel_config');
 		$c->forward('channel_list');
 	}
 	else {
@@ -316,14 +322,88 @@ sub delete : Chained('base_channel') : PathPart('delete') : Args(0) {
 	$channel->search_related('event_inputs')->delete;
 	$channel->delete;
 
+	# remove configuration file
+	my $config_path = $c->config->{recorder_config_path} . "/" . $channel->channel_id . ".conf";
+	-e $config_path and unlink($config_path) or do {
+		$c->error("Failed to delete channel configuration $config_path $!");
+	};
+
 	# Update ini file used by studio player
 	$c->forward('/button_box/refresh_sources_ini');
+        $c->forward('write_channel_config');
 	$c->forward('channel_list')
 }
 
 
 
+sub write_inis :Chained('base') :Args(0) {
+
+	# New style individual ini files
+	my $self = shift;
+	my $c = shift;
+
+	my @channels = $c->stash->{rs}->all;
+
+	foreach my $channel(@channels) {
+		$c->forward('write_channel_ini', [$channel]);
+	}
+
+	$c->response->content_type('text/plain');
+	$c->response->body("OK");
+}
+
+
+sub write_channel_ini :Private {
+
+	my $self = shift;
+	my $c = shift;
+	my $channel = shift;
+
+	$c->log->debug(sprintf(
+		"writing new configuration for channel %u :: %s\n",
+		$channel->channel_id,
+		$channel->source_label,
+	));
+
+	# Write new config to temp file - we'll move it later
+	my $outfile = File::Temp->new(
+		UNLINK => 0,
+	) or do {
+		$c->error("ERROR creating temporary file for channel config: $!");
+		die;
+	};
+	my $temp_path = $outfile->filename;
+	$c->log->debug("writing to temporary file $temp_path");
+
+	print $outfile "livewire_channel    " . $channel->source . "\n";
+	print $outfile "channel_id          " . $channel->channel_id . "\n";
+	print $outfile "storage_location    local\n";
+	print $outfile "audio_extension     pcm\n";
+	print $outfile "storage_format      flac\n";
+	print $outfile "keep_days           " . $c->config->{keep_audio_days} . "\n";
+	print $outfile "file_period_seconds 60\n";
+	print $outfile "local_base          /home/npb-audio\n";
+	print $outfile "process_waveform    0\n";
+	print $outfile "format_subdirs      0\n";
+	print $outfile "recording           " . ($channel->recording eq 'yes' ? 1 : 0) . "\n";
+
+	close $outfile or do {
+		$c->log->error("ERROR closing temporary file: $!\n");
+	};       
+
+	my $dest_path = $c->config->{recorder_config_path} . "/" . $channel->channel_id . ".conf"; 
+	$c->log->debug("moving $temp_path -> $dest_path");
+	move($temp_path, $dest_path) or do {
+		$c->error("Failed to move configuration file");
+	};
+
+	return;
+}
+
+
 sub write_channel_config : Private {
+
+	# This writes the legacy xml config format
 
 	my $self = shift;
 	my $c = shift;
