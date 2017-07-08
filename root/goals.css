@@ -299,8 +299,10 @@ table#clip_list tr.clip_row:nth-child(even) {
 
 form#channel_metadata label {
 	float: left;
-	font-size: 14px;
-	width: 110px;
+	font-size: 12pt;
+	text-align: right;
+	margin-right: 1em;
+	width: 8em;
 }
 
 form#channel_metadata ol li {

@@ -35,6 +35,7 @@
 			action="[% update_uri %]"
 			method="post"
 			id="channel_metadata"
+			class="channel_metadata"
 		>
 
 			<fieldset>
@@ -84,6 +85,18 @@
 							[% END %]
 						</select>
 					</li>
+					<li>
+						<label for="source">Livewire channel</label>
+						<input
+							type="text"
+							name="source"
+							id="source"
+							value="[% channel.source | html %]"
+							placeholder="Livewire Channel ID"
+							disabled="disabled"
+						/>
+						<a href="javascript:enable_source_edit()">edit</a>
+					</li>
 
 
 				</ol>
@@ -91,9 +104,57 @@
 			</fieldset>
 
 			<input type="submit" value="Update" />
+			<input type="button" value="Cancel" onclick="window.location='[% cancel_uri %]'" />
+			&emsp;
+			&emsp;
+			<input type="button" value="Delete" onclick="javascript:show_confirm_delete()" />
 		</form>
 
-		<input type="button" name="Cancel" value="Cancel" onclick="window.location='[% cancel_uri %]'" />
+		<form
+			action="[% delete_uri %]"
+			method="post"
+			id="confirm_delete"
+			class="channel_metadata"
+			hidden="hidden"
+		>
+
+			<fieldset>
+				<legend>Delete Recording Channel</legend>
+				<p>
+					Do you really want to <b>delete</b> this recording channel and <b>remove</b> all it's
+					associated events and configuration?
+				</p>
+				<p>
+					<b>This operation cannot be undone.</b>
+				</p>
+			</fieldset>
+
+			<input type="submit" value="Delete" />
+			<input type="button" value="Cancel" onclick="javascript:cancel_delete()" />
+		</form>
+
+
+<script type="text/javascript">
+
+function enable_source_edit() {
+	document.getElementById("source").removeAttribute("disabled");
+}
+
+function show_confirm_delete() {
+	document.getElementById("channel_metadata").setAttribute("hidden", "hidden");
+	document.getElementById("confirm_delete").removeAttribute("hidden");
+}
+
+function cancel_delete() {
+	document.getElementById("confirm_delete").setAttribute("hidden", "hidden");
+	document.getElementById("channel_metadata").removeAttribute("hidden");
+}
+
+
+
+
+</script>
+
 
 	</body>
 </html>

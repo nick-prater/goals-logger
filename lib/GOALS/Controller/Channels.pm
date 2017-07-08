@@ -190,17 +190,22 @@ sub show : Chained('base_channel') : PathPart('') : Args(0) {
 	$c->stash->{template} = 'channels/edit.tt';
 
 	my $update_uri = $c->uri_for(
-			$c->controller('channels')->action_for('update'),
-			[ $c->stash->{channel_id} ],
+		$c->controller('channels')->action_for('update'),
+		[ $c->stash->{channel_id} ],
 	);
 
 	my $cancel_uri = $c->uri_for(
 		$c->controller('channels')->action_for('list'),
 	);
+	my $delete_uri = $c->uri_for(
+		$c->controller('channels')->action_for('delete'),
+		[ $c->stash->{channel_id} ],
+	);
 
 	$c->stash(
 		update_uri => $update_uri,
 		cancel_uri => $cancel_uri,
+		delete_uri => $delete_uri,
 	);
 
 	$c->forward('/ui/get_available_profiles');
@@ -222,7 +227,7 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 
 		$channel->update({
 			source_label => $params->{source_label},
-#			source       => $params->{source},
+			source       => $params->{source},
 			match_title  => $params->{match_title},
 			commentator  => $params->{commentator},
 			profile_id   => $params->{profile_id},
@@ -242,6 +247,34 @@ sub update : Chained('base_channel') : PathPart('update') : Args(0) {
 	else {
 		$c->log->error("edit method called without POST");
 	}
+}
+
+
+sub delete : Chained('base_channel') : PathPart('update') : Args(0) {
+
+	my $self = shift;
+	my $c = shift;
+	my $rs;
+	my $channel = $c->stash->{channel};
+
+	$c->log->debug('running delete method');
+
+	# Unlink clips from this channel
+	$channel->search_related('clips')->update({channel_id => undef});
+
+	# Delete the channel and its associated events and event_inputs
+	$channel->delete;
+
+	# Update ini file used by studio player
+	$c->forward('/button_box/refresh_sources_ini');
+
+	# Send user back to channel list
+	$c->res->redirect(
+		$c->uri_for(
+			$c->controller('Channels')->action_for('list'),
+		)
+	);
+	$c->detach;
 }
 
 
