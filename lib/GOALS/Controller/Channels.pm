@@ -295,6 +295,8 @@ sub add :Chained('base') :PathPart('add') :Args(0) {
 			die;
 		};
 
+		$c->forward('write_channel_ini', [$channel]);
+
 		# Update ini file used by studio player
 		$c->forward('/button_box/refresh_sources_ini');
         	$c->forward('write_channel_config');
