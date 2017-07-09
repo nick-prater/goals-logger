@@ -150,7 +150,6 @@ sub process_line {
 
 	# Map received pin field to GOALS event_id
 	my @mapping;
-	$port == 1 and @mapping = (    1,     1,     1,     1,     1);  # Debugging
 	$port == 5 and @mapping = (undef, undef, undef, undef,     1);
 	$port == 6 and @mapping = (    2,     3,     4,     5,     6);
 
