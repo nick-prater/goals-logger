@@ -133,8 +133,8 @@ sub add : Path('add') {
 	}
 
 	unless($timestamp) {
-		$timestamp = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime());
-		$c->log->debug("defaulting to timestamp: $timestamp");
+		$c->log->debug("defaulting to current timestamp");
+		$timestamp = DateTime->now();
 	}
 
 	# We don't check that the specified event_id or event_type is valid
