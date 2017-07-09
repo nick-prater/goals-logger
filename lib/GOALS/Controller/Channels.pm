@@ -169,6 +169,8 @@ sub record : Chained('base') : PathPart('record') : Args(2) {
 	# /record/start/1,2,3,4
 	# /record/stop/5,6
 
+	$c->forward('GOALS::Controller::UI', 'require_profile');
+
 	my %recording = (
 		'start' => 'yes',
 		'stop'  => 'no',
