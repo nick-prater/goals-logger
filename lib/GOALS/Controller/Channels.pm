@@ -407,7 +407,11 @@ sub write_channel_config : Private {
 
 	my $self = shift;
 	my $c = shift;
-	my $dest_path = $c->config->{rot_manager}->{channel_config_file};
+	my $dest_path = $c->config->{rot_manager}->{channel_config_file} or do {
+		$c->log->info("Configuration doesn't specify rot_manager->channel_config_file");
+		$c->log->info("Skipping generation of (deprecated) xml channel configuration");
+		return;
+	};
 
         $c->forward('generate_channel_xml');
 
