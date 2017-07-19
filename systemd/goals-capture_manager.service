@@ -1,0 +1,13 @@
+[Unit]
+Description=GOALS starman server
+After=network.target
+
+[Service]
+WorkingDirectory=/home/npb-audio/goals-logger
+User=npb-audio
+Group=npb-audio
+ExecStart=/home/npb-audio/goals-logger/script/capture_manager /home/npb-audio/goals-logger/goals.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

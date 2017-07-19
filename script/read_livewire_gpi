@@ -1,0 +1,211 @@
+#!/usr/bin/perl
+
+=head1 read_gpi
+
+This script is part of the NP Broadcast GOALS logging/production system, as
+developed for use at talkSPORT.
+
+It receives data from an Axia GPI module, which it connects to by unicast
+telnet. The Axia port/pin to GOALS event is coded within this script, which
+is not ideal and hardly scalable. But it works.
+
+In response to an active GPI, this script submits an event to the main
+database server using an asynchronous HTTP request.
+
+=head1 AUTHOR
+
+Nick Prater
+
+=head1 LICENCE
+
+This file is part of GOALS-logger, a broadcast audio logging system.
+
+Copyright (C) 2017 NP Broadcast Limited.
+
+GOALS-logger is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+GOALS-logger is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
+
+=head2 VERSIONS
+
+
+=cut
+
+
+use warnings;
+use strict;
+use AnyEvent;
+use AnyEvent::Handle;
+use AnyEvent::HTTP;
+use Log::Log4perl;
+use IO::Handle;
+
+our $VERSION = 1.0;
+my $AXIA_NODE_IP = '192.168.30.72';
+my $ERROR_DELAY_SECONDS = 5;
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+# Ininitialise logging
+Log::Log4perl->easy_init($Log::Log4perl::DEBUG);
+my $log = Log::Log4perl::get_logger("");
+
+$log->error("starting $0");
+
+# Trap exit signals
+$SIG{INT}  = \&handle_exit;
+$SIG{TERM} = \&handle_exit;
+
+# Global State
+my %event_status;
+
+
+# This script is really rather specific to this application
+# and makes certain assumptions about the mapping of GPI pins
+# to event_id and channel_id numvers
+
+# Set up event handlers to respond to input from GPI interface
+# This allows us to do asynchronous HTTP requests.
+
+
+while(1) {
+
+	my $cv = AnyEvent->condvar;
+
+	my $handle = AnyEvent::Handle->new(
+		connect => [$AXIA_NODE_IP, 93],
+		on_connect => sub {
+			my $handle = shift;
+			$handle->push_write("ADD GPI\r\n");
+		},
+		on_error => sub {
+			my $handle = shift;
+			my $message = shift;
+			
+			$log->error("gpi socket error: $message");
+			$cv->send;
+		},
+	);
+
+	# Define a recursive event handler
+	# Schedule another read as each line is received
+	my @read_request;
+	@read_request = (
+		line => "\n",
+		sub {
+			my $handle = shift;
+			my $line = shift;
+			process_line($line);
+			$handle->push_read(@read_request);
+		}
+	);
+
+	# Start the recursive read event handler
+	$handle->push_read(@read_request);
+
+	# Wait here, servicing the event loop
+	$cv->recv;
+
+	$log->error("sleeping $ERROR_DELAY_SECONDS before restarting connection");
+	sleep $ERROR_DELAY_SECONDS;
+}
+
+
+$log->info("$0 finished");
+
+
+
+
+sub process_line {
+
+	# Handle a line of data received from the GPI module
+	my $line = shift;
+
+	# Strip trailing whitespace
+	$line =~ s/\s*$//;
+	
+	# Ignore blank lines
+	$line or return;
+	
+	# Log received line for debugging purposes
+	$log->info("RX: [$line]");
+
+	# GPI Node returns e.g. "GPI 1 lLhHh"
+	# Extract the GPI port and the pin status field
+	my ($port, $pin_field) = $line =~ m/^GPI (\d) ([lLhH]{5})$/ or return;
+
+	# Split the pin status field into individual pins
+	# Translate the pin field status l|L|h|H into boolean 1|0
+	my @pin_status = map {m/H/i ? 1: 0} (split //, $pin_field);
+
+	# Map received pin field to GOALS event_id
+	my @mapping;
+	$port == 5 and @mapping = (undef, undef, undef, undef,     1);
+	$port == 6 and @mapping = (    2,     3,     4,     5,     6);
+
+	# Consider each pin event in turn
+	foreach my $pin(0..4) {
+
+		my $event_id = $mapping[$pin] or next;
+		if(!exists $event_status{$pin} || $event_status{$pin} != $pin_status[$pin]) {
+			$event_status{$pin} = $pin_status[$pin];
+
+			# Axia inputs are active low
+			if($pin_status[$pin] == 0) {
+				submit_event($mapping[$pin]);
+			}
+		}
+	}
+}
+
+
+
+sub submit_event {
+
+	my $event_id = shift;
+	my $url = sprintf(
+		'http://%s/events/add/%u',
+		"localhost",
+		$event_id,
+	);
+
+	$log->info("submitting event with url: $url");
+
+	http_get(
+		$url,
+		sub {
+			my $data = shift;
+			my $header = shift;
+			my $status = $header->{Status};
+			
+			if ($status =~ /^2/) {
+				$log->debug("$url :: OK-$status");
+			}
+			else {
+				$log->error("$url :: ERROR-$status $header->{Reason}");
+			}
+			
+			#TODO: 
+			# Could retry if first submission fails
+		}
+	);
+}
+
+
+
+sub handle_exit {
+
+	$log->info("SIGTERM or SIGKILL received, shutting down...");
+	exit;
+}
+

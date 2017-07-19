@@ -1,0 +1,284 @@
+#!/usr/bin/perl
+
+=head1 capture_manager
+
+This script is part of the NP Broadcast GOALS logging/production system, as
+developed for use at talkSPORT.
+
+It looks to a master configuration file, the path to which is either specified as a
+command-line argument, or by default /etc/npb.conf
+
+This in turn points to an XML file defining which channels are to be recorded.
+
+Rotter processes are started and monitored as required to fulfill the channel
+configuration.
+
+We don't daemonise or handle our own logs because we expect systemd to do that.
+
+=head1 AUTHOR
+
+Nick Prater
+
+=head1 LICENCE
+
+This file is part of GOALS-logger, a broadcast audio logging system.
+
+Copyright (C) 2017 NP Broadcast Limited.
+
+GOALS-logger is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+GOALS-logger is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with GOALS-logger.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
+
+use warnings;
+use strict;
+use Log::Log4perl;
+use NPB::Audio::RTPcapture;
+use POSIX;
+use Config::ApacheFormat;
+use Config::Simple;
+use File::Find;
+use File::stat;
+use IO::Handle;
+
+our $VERSION = 1.0;
+my $PROCESS_CHECK_DELAY_SECONDS = 5;
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+# Ininitialise logging
+Log::Log4perl->easy_init($Log::Log4perl::DEBUG);
+my $log = Log::Log4perl::get_logger("");
+
+$log->error("starting $0");
+
+# Global state
+my $channels = {};
+my $config_mtimes = {};
+my $next_process_check_time = 0;
+
+# Config file can be specified as a command line argument
+my $config = read_config();
+
+# Trap SIGINT so that child recorder processes can be gracefully shut-down
+$SIG{INT}  = \&handle_SIGINT_TERM;
+$SIG{TERM} = \&handle_SIGINT_TERM;
+$SIG{CHLD} = \&handle_SIGCHLD;
+
+while (1) {
+
+	read_channel_configs();
+	find_redundant_channels();
+
+	$log->info("sleeping for $PROCESS_CHECK_DELAY_SECONDS seconds before next check");
+	$next_process_check_time = time + $PROCESS_CHECK_DELAY_SECONDS;
+	
+	while(time < $next_process_check_time) {
+		sleep $next_process_check_time - time;
+	}
+}
+
+
+exit;
+
+
+
+
+
+sub start_recorder {
+
+	my $channel_params = shift;
+
+	my $rtp_capture = NPB::Audio::RTPcapture->new(
+		config_file => $channel_params->{config_file},
+		recording   => $channel_params->{recording},
+	) or do {
+		$log->error("ERROR initialising NPB::Audio::RTPcapture object");
+		return undef;
+	};
+
+	$rtp_capture->start or do {
+		$log->error("ERROR starting RTPcapture instance");
+		return undef;
+	};
+	
+	return $rtp_capture;
+}
+
+
+sub handle_SIGINT_TERM {
+
+	$log->info("received SIGINT or SIGTERM, shutting down...");
+	
+	foreach my $channel_id(keys %{$channels}) {
+		$channels->{$channel_id}->{rtp_capture}->stop;
+		delete $channels->{$channel_id};
+	}
+
+	exit;
+}
+
+
+sub handle_SIGCHLD {
+
+	$log->debug("received SIGCHLD");
+	$next_process_check_time = 0;
+}
+
+
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	
+	my $config_file = $ARGV[0] || '/etc/npb.conf';
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		$log->error("ERROR reading configuration file $config_file : $!");
+		die;
+	};
+
+	$rv->{recorder_config_path} = $c->get('recorder_config_path') or do {
+		$log->error("ERROR: recorder_config_path is not defined or invalid in the configuration_file");
+		die;
+	};
+
+	return $rv;	
+}
+
+
+sub find_redundant_channels {
+	
+	foreach my $channel_id(keys %{$channels}) {
+		my $config_path = "$config->{recorder_config_path}/$channel_id.conf";
+		$log->debug("checking configuration exists for channel $channel_id : $config_path");
+		if(-e $config_path) {
+			$log->debug("OK configuration still active");
+			next;
+		}
+		else {
+			$log->info("channel $channel_id is no longer active");
+			$channels->{$channel_id}->{rtp_capture}->stop();
+			delete $channels->{$channel_id};
+		}
+	}
+}
+
+
+sub read_channel_configs {
+
+	$log->debug("reading channel configs from: ". $config->{recorder_config_path});
+	find(
+		\&read_channel_config,
+		$config->{recorder_config_path},
+	);
+}
+
+
+sub read_channel_config {
+
+	my $file = $_;
+	my $full_path = $File::Find::name;
+	my ($channel_id) = $file =~ m/^(\d+)\.conf$/ or return;
+
+	# Has this file changed since we last looked?
+	my $mtime = stat($full_path)->mtime;
+	if($config_mtimes->{$channel_id} && 
+	  ($config_mtimes->{$channel_id} == $mtime)
+	) {
+		$log->debug("file $file has not changed - mtime: $mtime");
+		return;
+	}
+	else {
+		$config_mtimes->{$channel_id} = $mtime;
+	}
+	
+	$log->debug("reading channel_config: $_");
+	my $c = eval {
+		Config::Simple->new($full_path)
+	} or do { 
+		$log->error("error reading configuration file $File::Find::name");
+		return;
+	};
+
+	# Only read interesting configuration options
+	my $channel_params  = {
+		livewire_channel => $c->param('livewire_channel'),
+		channel_id       => $c->param('channel_id'),
+		recording        => $c->param('recording'),
+		config_file      => $full_path,
+	};
+
+	# Validation
+	unless(
+		$channel_params->{channel_id} &&
+		$channel_params->{channel_id} == $channel_id
+	) {
+		$log->error("configuration contains invalid channel_id");
+		return;
+	}
+
+	unless(
+		$channel_params->{livewire_channel} &&
+		$channel_params->{livewire_channel} =~ m/^\d+$/ &&
+		$channel_params->{livewire_channel} <= 32767 
+	) {
+		$log->error("configuration contains invalid livewire_channel");
+		return;
+	}
+
+	# What if any action is needed?
+	if(! $channels->{$channel_id}) {
+		$channel_params->{rtp_capture} = start_recorder($channel_params) or do {
+			$log->error("Failed to initialise RTPcapture");
+			return;
+		};
+		$channels->{$channel_id} = $channel_params;
+	}
+	elsif($channels->{$channel_id}->{livewire_channel} != $channel_params->{livewire_channel}) {
+		$channels->{$channel_id}->{rtp_capture}->stop;
+		$channels->{$channel_id}->{rtp_capture}->start;
+	}
+	elsif($channels->{$channel_id}->{rtp_capture}->recording != $channel_params->{recording}) {
+		if($channel_params->{recording}) {
+			$channels->{$channel_id}->{rtp_capture}->unmute();
+		}
+		else {
+			$channels->{$channel_id}->{rtp_capture}->mute();
+		}
+	}
+
+	# Check it is running
+	$channels->{$channel_id}->{rtp_capture}->is_alive or do {
+		$channels->{$channel_id}->{rtp_capture}->stop;
+		$channels->{$channel_id}->{rtp_capture}->start;
+	};
+
+	return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

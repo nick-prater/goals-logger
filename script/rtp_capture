@@ -31,6 +31,7 @@ my $local_base        = $config->param('local_base')          || '/home/logmystr
 my $storage_format    = $config->param('storage_format')      || 'wav';
 my $process_waveform  = $config->param('process_waveform')    // 1;
 my $format_subdirs    = $config->param('format_subdirs')      // 1;
+my $muted             = !($config->param('recording') // 1);
 my $reconnect_delay_seconds = 15;
 my $rtpdump = 'rtpdump';
 
@@ -53,7 +54,6 @@ $SIG{'INT'} = sub {
 
 
 # Output can be muted with SIGUSR1 and unmuted with SIGUSR2
-my $muted = 0;
 $SIG{'USR1'} = sub {
 	print "received SIGUSR1 - muting\n";
 	$muted = 1;
