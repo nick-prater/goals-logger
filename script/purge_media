@@ -1,0 +1,140 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Config::Simple;
+use IO::Handle;
+use Logmystream::Log;
+use DateTime::Format::HTTP;
+use File::Path;
+
+
+our $VERSION = 0.01;
+my $LOCAL_BASE = '/home/logmystream';
+my $SHORT_NAME = "purge_media";
+my $LOG_FILE   = "/var/log/logmystream/$SHORT_NAME.log";
+
+# This script will typically run at least once every day
+# if we find media files much older than a few days beyond
+# the keep_days threshold, perhaps something has gone badly wrong.
+# Maybe the clock is wrong? For safety, stop and request admin help!
+my $DELETE_WINDOW_DAYS = 180;
+
+
+STDERR->autoflush(1);
+STDOUT->autoflush(1);
+
+############
+# Strategy
+# There are two ways we could approach this:
+#
+#  1. Look at all channel configuration files, then look for corresponding
+#     media files to purge.
+#
+#  2. Look for media files, then see if we have a corresponding channel
+#     configuration.
+#
+# As loggers may share storage, yet be unaware of another logger's channel
+# configuration, we make each logger responsible for purging it's own files.
+# This means it will not touch another logger's files (and we therefore need
+# another check to ensure there's no orphaned audio). It also means we don't
+# have to parse huge directory/object trees, as we're only looking for our
+# own files, rather than parsing every possible file looking for a channel
+# that we know about.
+#
+# This script is passed the location of a channel configuration file. It will
+# then purge files relating to that channel.
+############
+
+
+Logmystream::Log::configure_logging($LOG_FILE) or die "ERROR configuring logging to $LOG_FILE\n";
+my $log = Log::Log4perl::get_logger("");
+$log->info("");
+$log->info("$SHORT_NAME v$VERSION starting");
+
+
+# Read configuration from specified file
+$ARGV[0] && -e $ARGV[0] or do {
+	$log->logdie("configuration file unspecified or missing.\nUsage: $0 [config file]\n");
+};
+my $config = Config::Simple->new($ARGV[0]) or do {
+	$log->logdie("ERROR parsing config file $!");
+};
+$log->info("using configuration file $ARGV[0]");
+
+
+my $channel_id       = $config->param('channel_id')        or $log->fatal("no channel_id specified in configuration") && exit;
+my $keep_days        = $config->param('keep_days')         or $log->fatal("no keep_days specified in configuration - doing nothing") && exit;
+
+unless($keep_days && $keep_days =~ m/^\d+$/) {
+	$log->warn("keep_days appears to be zero or not an integer - skipping this channel");
+	exit;
+};
+$log->info("     channel_id : $channel_id");
+$log->info("       keep_days: $keep_days");
+
+
+purge_local_storage();
+
+$log->info("$SHORT_NAME run complete.");
+
+
+sub purge_local_storage {
+
+	$log->info("purging local storage...");
+
+	my $media_dir = "$LOCAL_BASE/media/$channel_id";
+	opendir DIR, $media_dir or do {
+		$log->warn("unable to open directory $media_dir");
+		return undef;
+	};
+
+	while(my $date_dir = readdir DIR) {
+
+		$date_dir =~ m/^\d\d\d\d-\d\d-\d\d$/ or do {
+			$log->debug("$date_dir is not a date - skipping");
+			next;
+		};
+
+		my $dir_dt = DateTime::Format::HTTP->parse_datetime($date_dir) or do {
+			$log->warn("failed to parse file/directory name $date_dir - skipping");
+			next;
+		};
+
+		$log->debug("processing $date_dir");
+
+		if(ok_to_delete($dir_dt, $keep_days)){
+			$log->info("deleting $media_dir/$date_dir");
+			File::Path::remove_tree("$media_dir/$date_dir") or do {
+				$log->error("ERROR deleting tree $media_dir/$date_dir $!");
+			};
+			sleep 1;
+		}
+	}
+
+	$log->info("done purging local storage.");
+}
+
+sub ok_to_delete {
+
+	my $dt_file = shift;
+	my $keep_days = shift;
+	my $days = DateTime->today->delta_days($dt_file)->in_units('days');
+
+	$log->debug("age: $days");
+
+	# Is this outside our safety period
+	if (($days - $keep_days) > $DELETE_WINDOW_DAYS) {
+ 		$log->warn("There are media files more than $DELETE_WINDOW_DAYS older than the purge time");
+		$log->warn("This is unexpected, as we usually purge files every day. Perhaps the clock is wrong?");
+		$log->warn("Stopping this process and waiting for manual intervention.");
+		exit;
+	}
+	elsif($days > $keep_days) {
+		$log->debug("OK to delete");
+		return 1;
+	}
+
+	$log->debug("KEEP");
+	return 0;
+}
