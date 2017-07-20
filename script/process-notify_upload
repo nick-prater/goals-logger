@@ -46,7 +46,7 @@ while (1) {
 	my $content = {
 		'mediaContentId' => $args{mediaspec}->{mediaContentId},
 		'programID' => $args{mediaspec}->{programId},
-		'asset' => $args{mediaspec}->{bucket} . $args{remote_audio_file},
+		'asset' => $args{mediaspec}->{bucket} . '/' . $args{remote_audio_file},
 		'title' => $args{mediaspec}->{title},
 		'type'  => 'AUDIO',
 	};
