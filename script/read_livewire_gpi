@@ -150,8 +150,8 @@ sub process_line {
 
 	# Map received pin field to GOALS event_id
 	my @mapping;
-	$port == 5 and @mapping = (undef, undef, undef, undef,     1);
-	$port == 6 and @mapping = (    2,     3,     4,     5,     6);
+	$port == 4 and @mapping = (undef, undef, undef, undef,     1);
+	$port == 5 and @mapping = (    2,     3,     4,     5,     6);
 
 	# Consider each pin event in turn
 	foreach my $pin(0..4) {
@@ -194,9 +194,6 @@ sub submit_event {
 			else {
 				$log->error("$url :: ERROR-$status $header->{Reason}");
 			}
-			
-			#TODO: 
-			# Could retry if first submission fails
 		}
 	);
 }
