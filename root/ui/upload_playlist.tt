@@ -2,11 +2,11 @@
 			<div class="form_container" id="upload_playlist_container" hidden="hidden">
 				<form class="form-horizontal" id="upload_metadata">
 
-					<div class="form_group">
+					<div class="form-group">
 						<h1 class="col-sm-offset-2 col-sm-10">Upload to Amazon</h1>
 					</div>
 
-					<div class="form_group">
+					<div class="form-group">
 						<label class="control-label col-sm-2" for="upload_id">media code:</label>
 						<div class="col-sm-10">
 							<select
@@ -20,20 +20,19 @@
 						</div>
 					</div>
 
-					<div class="form_group">
-						<label class="control-label col-sm-2" for="p">proprietary content:</label>
-						<div class="col-sm-10">
+					<div class="form-group">
+						<label class="control-label col-sm-2" for="proprietary_content">proprietary content:</label>
+						<div class="col-sm-8">
 							<input
 								type="checkbox"
 								name="proprietary_content"
 								id="proprietary_content"
 								value="true"
-							>
-							</select>
+							/>
 						</div>
 					</div>
 
-					<div class="form_group">
+					<div class="form-group">
 						<div class="col-sm-offset-2 col-sm-10">
 							<button type="submit" class="btn btn-default upload_button">Upload</button>
 							<button type="button" class="btn btn-default cancel_button">Cancel</button>
