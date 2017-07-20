@@ -4,15 +4,16 @@ use warnings;
 use strict;
 use Config::Simple;
 use IO::Handle;
-use Logmystream::Log;
+use NPB::Log;
 use DateTime::Format::HTTP;
 use File::Path;
 
 
 our $VERSION = 0.01;
-my $LOCAL_BASE = '/home/logmystream';
+my $LOCAL_BASE = '/home/npb-audio/';
 my $SHORT_NAME = "purge_media";
-my $LOG_FILE   = "/var/log/logmystream/$SHORT_NAME.log";
+#my $LOG_FILE   = "/var/log/$SHORT_NAME.log";
+my $LOG_FILE   = "/tmp/$SHORT_NAME.log";
 
 # This script will typically run at least once every day
 # if we find media files much older than a few days beyond
@@ -47,7 +48,7 @@ STDOUT->autoflush(1);
 ############
 
 
-Logmystream::Log::configure_logging($LOG_FILE) or die "ERROR configuring logging to $LOG_FILE\n";
+NPB::Log::configure_logging($LOG_FILE) or die "ERROR configuring logging to $LOG_FILE\n";
 my $log = Log::Log4perl::get_logger("");
 $log->info("");
 $log->info("$SHORT_NAME v$VERSION starting");
