@@ -1,5 +1,5 @@
 [Unit]
-Description=GOALS starman server
+Description=GOALS pcm_to_flac service
 After=network.target
 
 [Service]

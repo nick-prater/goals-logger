@@ -1,5 +1,5 @@
 [Unit]
-Description=GOALS starman server
+Description=GOALS Read Livewire GPI Service
 After=network.target
 
 [Service]

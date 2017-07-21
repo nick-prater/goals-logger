@@ -1,5 +1,5 @@
 [Unit]
-Description=GOALS starman server
+Description=GOALS s3 upload service
 After=network.target
 
 [Service]

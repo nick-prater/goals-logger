@@ -1,5 +1,5 @@
 [Unit]
-Description=GOALS starman server
+Description=GOALS capture manager
 After=network.target
 
 [Service]
