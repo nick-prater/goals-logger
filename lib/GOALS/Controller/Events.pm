@@ -201,7 +201,7 @@ sub purge_deleted : Local {
 	);
 
 	$attributes->{join} = 'clips';
-	$where->{'me.update_timestamp'} = { '<' => $delete_dt };
+	$where->{'me.update_timestamp'} = { '<' => $delete_dt->strftime("%Y-%m-%d %H:%M:%S") };
 	$where->{'me.status'} = 'deleted';
 	$where->{'clips.clip_id'} = undef;
 
@@ -238,15 +238,21 @@ sub purge_expired : Local {
 	my $delete_dt = DateTime->now->subtract( days => $keep_days );
 	my $rs = $c->model('DB::Event');
 	my $where = {};
+	my $attributes = {};
 
 	$c->log->debug(
 		"purging from database events prior to ".
 		$delete_dt->strftime("%Y-%m-%dT%H:%M:%SZ")
 	);
 
-	$where->{update_timestamp} = { '<' => $delete_dt };
+	$attributes->{join} = 'clips';
+	$where->{'me.update_timestamp'} = { '<' => $delete_dt->strftime("%Y-%m-%d %H:%M:%S") };
+	$where->{'clips.clip_id'} = undef;
 
-	my $events = $rs->search($where);
+	my $events = $rs->search(
+		$where,
+		$attributes
+	);
 	$events->delete;
 
 	# Return an OK
