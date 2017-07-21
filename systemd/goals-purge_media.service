@@ -1,0 +1,13 @@
+[Unit]
+Description=GOALS file purging service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/npb-audio/goals-logger
+User=npb-audio
+Group=npb-audio
+ExecStart=/home/npb-audio/goals-logger/script/purge_media /home/npb-audio/goals-logger/goals.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

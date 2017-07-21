@@ -3,17 +3,15 @@
 use warnings;
 use strict;
 use Config::Simple;
+use Config::ApacheFormat;
 use IO::Handle;
-use NPB::Log;
+use Log::Log4perl;
 use DateTime::Format::HTTP;
 use File::Path;
 
-
-our $VERSION = 0.01;
-my $LOCAL_BASE = '/home/npb-audio/';
+our $VERSION = 0.1;
 my $SHORT_NAME = "purge_media";
-#my $LOG_FILE   = "/var/log/$SHORT_NAME.log";
-my $LOG_FILE   = "/tmp/$SHORT_NAME.log";
+my $LOOP_DELAY_SECONDS = 5400;
 
 # This script will typically run at least once every day
 # if we find media files much older than a few days beyond
@@ -21,9 +19,43 @@ my $LOG_FILE   = "/tmp/$SHORT_NAME.log";
 # Maybe the clock is wrong? For safety, stop and request admin help!
 my $DELETE_WINDOW_DAYS = 180;
 
-
 STDERR->autoflush(1);
 STDOUT->autoflush(1);
+
+# Ininitialise logging
+Log::Log4perl->easy_init($Log::Log4perl::DEBUG);
+my $log = Log::Log4perl::get_logger("");
+$log->info("$SHORT_NAME v$VERSION starting");
+
+my $config = read_config();
+
+# Main loop - regularly purge audio channels
+while(1) {
+	process_channels();
+	$log->info("sleeping for $LOOP_DELAY_SECONDS until next run");
+	sleep $LOOP_DELAY_SECONDS;
+}
+
+
+
+sub process_channels {
+
+	my $config_dir = $config->{recorder_config_path};
+	opendir CONFIG_DIR, $config_dir or do {
+		$log->warn("unable to open directory $config_dir");
+		return;
+	};
+
+	while(my $config_file = readdir CONFIG_DIR) {
+		$config_file =~ m/^\d+\.conf$/ or next;
+		process_channel("$config_dir/$config_file");
+	}
+
+	closedir CONFIG_DIR;
+}
+
+
+
 
 ############
 # Strategy
@@ -48,46 +80,50 @@ STDOUT->autoflush(1);
 ############
 
 
-NPB::Log::configure_logging($LOG_FILE) or die "ERROR configuring logging to $LOG_FILE\n";
-my $log = Log::Log4perl::get_logger("");
-$log->info("");
-$log->info("$SHORT_NAME v$VERSION starting");
 
 
-# Read configuration from specified file
-$ARGV[0] && -e $ARGV[0] or do {
-	$log->logdie("configuration file unspecified or missing.\nUsage: $0 [config file]\n");
-};
-my $config = Config::Simple->new($ARGV[0]) or do {
-	$log->logdie("ERROR parsing config file $!");
-};
-$log->info("using configuration file $ARGV[0]");
+sub process_channel {
 
+	my $config_file = shift;
 
-my $channel_id       = $config->param('channel_id')        or $log->fatal("no channel_id specified in configuration") && exit;
-my $keep_days        = $config->param('keep_days')         or $log->fatal("no keep_days specified in configuration - doing nothing") && exit;
+	# Read configuration from specified file
+	$config_file && -e $config_file or do {
+		$log->logdie("configuration file unspecified or missing.\nUsage: $0 [config file]\n");
+	};
 
-unless($keep_days && $keep_days =~ m/^\d+$/) {
-	$log->warn("keep_days appears to be zero or not an integer - skipping this channel");
-	exit;
-};
-$log->info("     channel_id : $channel_id");
-$log->info("       keep_days: $keep_days");
+	my $config = Config::Simple->new($config_file) or do {
+		$log->error("ERROR parsing config file $!");
+		return;
+	};
+	$log->info("using channel configuration file $config_file");
 
+	my $channel_id = $config->param('channel_id') or $log->fatal("no channel_id specified in configuration") && exit;
+	my $keep_days  = $config->param('keep_days')  or $log->fatal("no keep_days specified in configuration - doing nothing") && exit;
 
-purge_local_storage();
+	unless($keep_days && $keep_days =~ m/^\d+$/) {
+		$log->error("keep_days appears to be zero or not an integer - skipping this channel");
+		return;
+	};
 
-$log->info("$SHORT_NAME run complete.");
+	$log->info("channel_id : $channel_id");
+	$log->info("  keep_days: $keep_days");
+
+	purge_local_storage($channel_id, $keep_days);
+}
+
 
 
 sub purge_local_storage {
 
+	my $channel_id = shift;
+	my $keep_days = shift;
+
 	$log->info("purging local storage...");
 
-	my $media_dir = "$LOCAL_BASE/media/$channel_id";
+	my $media_dir = "$config->{audio_log_path}/$channel_id";
 	opendir DIR, $media_dir or do {
 		$log->warn("unable to open directory $media_dir");
-		return undef;
+		return;
 	};
 
 	while(my $date_dir = readdir DIR) {
@@ -138,4 +174,29 @@ sub ok_to_delete {
 
 	$log->debug("KEEP");
 	return 0;
+}
+
+  
+sub read_config {
+
+	# Returns a hash reference populated with needed configuration parameters
+	# This is run before logging is initialised, so cannot use Log4perl output
+	my $rv = {};
+	
+	my $config_file = $ARGV[0] || '/etc/npb.conf';
+	my $c = Config::ApacheFormat->new();
+
+	$c->read($config_file) or do {
+		$log->error("ERROR reading configuration file $config_file : $!");
+		die;
+	};
+
+	foreach my $key('audio_log_path', 'recorder_config_path') {
+		$rv->{$key} = $c->get($key) or do {
+			$log->error("ERROR: $key is not defined or invalid in the configuration_file");
+			die;
+		};
+	}
+
+	return $rv;	
 }
