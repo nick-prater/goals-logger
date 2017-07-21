@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# Purge media for logmystream
-for channel in /home/logmystream/config/*
-do
-	sudo -u logmystream /home/logmystream/scripts/purge_media $channel
-done
-
