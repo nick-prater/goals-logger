@@ -196,9 +196,8 @@ td.button_box, tr.button_box {
 }
 
 .clip_list_heading_links {
-	position: absolute;
 	top: 0.1em;
-	left: 1.8em;
+	float: left;
 }
 
 table#clip_list {
