@@ -99,6 +99,43 @@ sub edit :GET :Path :Args(1) {
 }
 
 
+sub rename :POST :Local :Args(1) {
+
+	my $self = shift;
+	my $c = shift;
+	my $playlist_id = shift;
+	my $data = $c->request->body_data;
+	my $rs = $c->model('DB::Playlist');
+
+	use Data::Dumper;
+	$c->log->warn(Dumper $data);
+
+	unless($c->session->{profile_id}) {
+		die "No valid session";
+	}
+
+	my $playlist = $rs->find({
+		playlist_id => $playlist_id,
+		profile_id => $c->session->{profile_id},
+	}) or do {
+		die "No such playlist for this profile";
+	};
+
+	$playlist->update({
+		name => $data->{name},
+	}) or do {
+		$c->error("ERROR renaming playlist");
+		die;
+	};
+
+	$c->stash(
+		current_view => 'JSON',
+		json_data => {
+			name        => $playlist->name,
+			playlist_id => $playlist->id,
+		},
+	);
+}
 
 
 sub all :GET :Local :Args(0) {
@@ -144,6 +181,8 @@ sub list :GET :Path :Args(0) {
 
 	my $self = shift;
 	my $c = shift;
+
+	$c->forward('GOALS::Controller::UI', 'require_profile');
 
 	$c->stash(
 		template => 'ui/list_playlists.tt',

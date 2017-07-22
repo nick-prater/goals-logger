@@ -262,10 +262,6 @@ table#clip_list tr.clip_row:nth-child(even) {
 	text-align: center;
 }
 
-.clip_list_title {
-
-}
-
 .clip_list_source {
 	width: 6em;
 	text-align: center;

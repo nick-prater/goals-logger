@@ -28,6 +28,7 @@
 		<title>talkSPORT GOALS</title>
 		<link rel="stylesheet" href="/waveform-playlist/css/bootstrap.css"/>
 		<link rel="stylesheet" href="/goals.css" />
+		<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
 	</head>
 	<body>
 
@@ -84,6 +85,40 @@
 						</tbody>
 					</table>
 				</div>
+			</div>
+			<div class="form_container" id="rename_playlist_container" hidden="hidden">
+				<form class="form-horizontal">
+
+					<div class="form_group">
+						<h1 class="col-sm-offset-2 col-sm-10">Rename playlist</h1>
+					</div>
+
+					<div class="form_group">
+						<label class="control-label col-sm-2" for="playlist_name">playlist name:</label>
+						<div class="col-sm-10">
+							<input
+								type="text"
+								name="playlist_name"
+								id="playlist_name"
+								placeholder="Playlist name"
+								size="60"
+								required="required"
+							/>
+						</div>
+					</div>
+
+					<div class="form_group">
+					<div id="rename_playlist_message" class="col-sm-10 alert alert-danger" hidden="hidden">
+					</div>
+					</div>
+
+					<div class="form_group">
+						<div class="col-sm-offset-2 col-sm-10">
+							<button type="submit" class="btn btn-default save_button" >Save</button>
+							<button type="button" class="btn btn-default cancel_button">Cancel</button>
+						</div>
+					</div>
+				</form>
 			</div>
 		</div>
 
@@ -179,6 +214,30 @@
 				for (var playlist in json_data) {
 					populate_playlist_row(json_data[playlist]);
 				}
+
+				/* Add listener for rename events */
+				$("a.rename_link").click(handle_rename_click);
+				$("button.cancel_button").click(cancel_rename_playlist);
+				$("button.save_button").click(rename_playlist);
+			}
+
+
+			function handle_rename_click(e) {
+				var row = $(e.target).closest("tr");
+				var name = row.find("td.playlist_name:first").text();
+				var playlist_id = row.data("playlist_id");
+
+				$("#clip_list_container").hide();
+				$("#playlist_name").val(name);
+				$("#rename_playlist_container").data("playlist_id", playlist_id);
+				$("#rename_playlist_message").hide();
+				$("#rename_playlist_container").show();
+			}
+
+
+			function cancel_rename_playlist() {
+				$("#rename_playlist_container").hide();
+				$("#clip_list_container").show();
 			}
 
 
@@ -206,7 +265,7 @@
 
 				/* Reset attributes */
 				row.setAttribute("class", "clip_row");
-				row.dataset.clip_id = playlist_row.playlist_id;
+				row.dataset.playlist_id = playlist_row.playlist_id;
 
 				/* Update/populate the fields */
 				var i = 0;
@@ -228,13 +287,12 @@
 					i++;
 					row.cells.item(i).appendChild( generate_edit_link(playlist_row) );     // Edit
 					i++;
-					row.cells.item(i).appendChild( generate_rename_link(playlist_row) );   // Rename
-					row.cells.item(i).setAttribute("class", "clip_list_rename");
+					row.cells.item(i).innerHTML = '<a href="javascript:void(0)" class="rename_link">rename</a>';
 					i++;
 				}
 
 				row.cells.item(i).innerText = playlist_row.name;        // Title
-				row.cells.item(i).setAttribute("class", "clip_list_title");
+				row.cells.item(i).setAttribute("class", "playlist_name");
 			}
 
 
@@ -256,43 +314,12 @@
 			}
 
 
-			function generate_rename_link(playlist_row) {
-
-				/* Until backend rename code implememted, fill field with dummy text */
-				return document.createTextNode('');
-
- 				var a = document.createElement('a');
- 				a.setAttribute('href', '');
- 				a.appendChild(document.createTextNode('rename'));
- 				a.addEventListener(
- 					"click",
- 					function(event) {
-						window.location.href = "/ui/rename_playlist/" + playlist_row.playlist_id;
- 						event.preventDefault();
- 					}
- 				);
-				a.setAttribute("id", "clip_rename_link_" + playlist_row.playlist_id);
-
- 				return a;
-			}
-
-
 			function delete_clip(clip_list) {
 
-				/* This accepts either a single clip_id, or a
+				/* This accepts either a single playlist_id, or a
 				 * comma-separated list of clips.
 				 */
 				var clips = clip_list.split(",", clip_list);
-				for(var i = 0; i < clips.length; i++) {
-
-					if(clips[i] == playing_clip_id) {
-						clear_player();
-					}
-
-					if(clips[i] == assigning_clip_id) {
-						cancel_assign_clip();
-					}
-				}
 
 				/* Fire off asynchronous request to server */
 				var request = new XMLHttpRequest();
@@ -319,7 +346,7 @@
 			}
 
 
-			function undelete_clip(clip_id) {
+			function undelete_clip(playlist_id) {
 
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function() {
@@ -339,7 +366,7 @@
 				}
 
 				/* Send request */
-				var url = "/playlists/undelete/" + clip_id;
+				var url = "/playlists/undelete/" + playlist_id;
 				request.open("GET", url, true);
 				request.send();
 			}
@@ -363,11 +390,42 @@
 			}
 
 
-			function set_user_message(message) {
-				/* Set innerHTML of user message div */
-				var node = document.getElementById("progress_message_container");
-				node.innerHTML = message;
+			function rename_playlist(e) {
+
+				e.preventDefault();
+				e.stopPropagation();
+
+				var playlist_id = $("#rename_playlist_container").data("playlist_id");
+				var data = {
+					name: $("#playlist_name").val()
+				};
+
+				console.log("renaming playlist:", playlist_id, data);
+
+				$.ajax({
+					url: "/playlists/rename/" + playlist_id,
+					method: 'POST',
+					contentType: 'application/json; charset=UTF-8',
+					data: JSON.stringify(data),
+					error: function(jq_xhr, status_text, error_text) {
+						console.log("error renaming playlist", status_text, error_text);
+						$("#rename_playlist_message").text("Error renaming playlist: " + error_text);
+						$("#rename_playlist_message").show();
+					},
+					success: function(json, status_text, jq_xhr) {
+						console.log("renamed playlist OK", status_text, json);
+						
+						var playlist_name = json.name;
+						var playlist_id = json.playlist_id;
+						$("#clip_row_" + playlist_id).find("td.playlist_name").text(playlist_name);
+
+						$("#rename_playlist_container").hide();
+						$("#clip_list_container").show();
+					}
+				});
 			}
+
+
 
 		</script>
 	</body>
