@@ -416,3 +416,8 @@ ul.menu_links {
 	font-size: 14pt;
 	font-weight: bold;
 }
+/* Hide Mute/Solo/Volume controls - we'll come up with a way to optionally display them later */
+.playlist .controls div.btn-group,
+.playlist .controls label {
+	display: none;
+}
