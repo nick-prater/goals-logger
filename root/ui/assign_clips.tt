@@ -32,6 +32,11 @@
 		<link rel="stylesheet" href="/waveform-playlist/css/main.css">
 [% END %]
 		<link rel="stylesheet" href="/goals.css" />
+		<script type="text/javascript">
+			/* If a specific clip_id is specified, display only that clip and select it for assignment */
+			var assign_clip_id = [% assign_clip_id || 0 %];
+			var assign_clip_title = '';
+		</script>
 	</head>
 	<body>
 
@@ -120,10 +125,6 @@
 			var playing_clip_id = 0;
 			var playing_button_id = 0;
 			var duration_original_html;
-
-			/* If a specific clip_id is specified, display only that clip and select it for assignment */
-			var assign_clip_id = [% assign_clip_id || 0 %];
-			var assign_clip_title = '';
 
 [% IF hotkeys %]
 			update_buttons();
@@ -308,6 +309,7 @@
 				/* If page is loaded with assign_clip_id defined, that
 				 * means we should load just that clip into the list
 				 */
+				console.log("assign_clip_id:", assign_clip_id);
 				if(assign_clip_id) {
 					url = "/clips/all?clip_id=" + assign_clip_id;
 				}
@@ -660,7 +662,7 @@
 			function cancel_assign_clip() {
 
 				/* If we are already assigning a clip, cancel it */
-				if(assigning_clip_id > 0) {
+				if(assigning_clip_id != 0) {
 
 					/* Unset row highlighting */
 					var row = document.getElementById("clip_row_" + assigning_clip_id);
@@ -679,8 +681,6 @@
 
 				/* Clear message */
 				set_user_message("");
-
-				assign_clip_id = 0;
 			}
 
 
