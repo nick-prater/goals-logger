@@ -238,7 +238,8 @@
 		set_user_message (
 			"click on one of the player hotkey buttons above to load with clip <i>" +
 			clip_title +
-			"</i>"
+			"</i>" +
+			'&emsp;<a href="/ui/player">cancel</a>'
 		);
 	}
 
