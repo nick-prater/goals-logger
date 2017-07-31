@@ -2,14 +2,13 @@
 
 use warnings;
 use strict;
-use Config::Simple;
 use Config::ApacheFormat;
 use IO::Handle;
 use Log::Log4perl;
 use DateTime::Format::HTTP;
 use File::Path;
 
-our $VERSION = 0.1;
+our $VERSION = 0.2;
 my $SHORT_NAME = "purge_media";
 my $LOOP_DELAY_SECONDS = 5400;
 
@@ -91,14 +90,16 @@ sub process_channel {
 		$log->logdie("configuration file unspecified or missing.\nUsage: $0 [config file]\n");
 	};
 
-	my $config = Config::Simple->new($config_file) or do {
-		$log->error("ERROR parsing config file $!");
+	$log->info("reading configuration file: $config_file");
+
+	my $c = Config::ApacheFormat->new();
+	$c->read($config_file) or do {
+		$log->error("ERROR reading configuration file $config_file : $!");
 		return;
 	};
-	$log->info("using channel configuration file $config_file");
 
-	my $channel_id = $config->param('channel_id') or $log->fatal("no channel_id specified in configuration") && exit;
-	my $keep_days  = $config->param('keep_days')  or $log->fatal("no keep_days specified in configuration - doing nothing") && exit;
+	my $channel_id = $c->get('channel_id') or $log->fatal("no channel_id specified in configuration") && exit;
+	my $keep_days  = $c->get('keep_days')  or $log->fatal("no keep_days specified in configuration - doing nothing") && exit;
 
 	unless($keep_days && $keep_days =~ m/^\d+$/) {
 		$log->error("keep_days appears to be zero or not an integer - skipping this channel");
