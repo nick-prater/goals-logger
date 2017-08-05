@@ -142,12 +142,13 @@
 						<li>
 							<label for="category">category</label>
 							<select name="category" id="clip_category">
-								<option value="goal">Goal</option>
-								<option value="half_time_report">Half-time</option>
-								<option value="full_time_report">Full-time</option>
-								<option value="interview">Interview</option>
-								<option value="commercial">Commercial</option>
-								<option value="other">Other</option>
+							[% FOREACH value IN categories.keys.sort %]
+								<option value="[% value %]"
+									[%- IF clip.category == value -%]
+										selected="selected"
+									[%- END -%]
+								>[% categories.$value | html %]</option>
+							[% END %]
 							</select>
 						</li>
 
