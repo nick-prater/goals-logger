@@ -705,6 +705,7 @@ sub validate_wav : Private {
 	my $c = shift;
 	my $path = shift;
 
+	$c->log->debug("validating WAV $path");
 	my $wav = Audio::Wav->read($path) or do {
 		$c->log->error("ERROR: failed to read wav file");
 		$c->error("ERROR reading WAV file");
@@ -712,12 +713,14 @@ sub validate_wav : Private {
 	};
 
 	# Debugging - dump info
+	$c->log->debug("getting WAV info");
 	my $info = $wav->get_info;
 	foreach my $key(keys %{$info}) {
 		$c->log->debug("$key :: $info->{$key}");
 	}
 
-	# Debugging - dump detailsmy $info = $wav->get_info;
+	# Debugging - dump details
+	$c->log->debug("getting WAV details");
 	my $details = $wav->details;
 	foreach my $key(keys %{$details}) {
 		$key eq 'info' and next; # already dumped above
