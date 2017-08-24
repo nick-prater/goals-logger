@@ -5854,15 +5854,20 @@ console.log("render_controls", data, _this2);
                        'a.delete_track',
                        {
                          attributes: {
-                           href: 'javascript:void(0)'
+                           href: 'javascript:void(0)',
+                           title: 'delete track'
                          },
                          onclick: function onclick() {
                            _this2.ee.emit('delete_track', _this2);
                          }
                        },
-                       ['X']
+                       [
+                         (0, _h2.default)('i.fa.fa-window-close')
+                       ]
                      ),
-                     (0, _h2.default)('header', [this.name]),
+                     (0, _h2.default)('header', [
+                       this.name
+                     ]),
                      (0, _h2.default)('div.btn-group', [
                          (0, _h2.default)('span.btn.btn-default.btn-xs.btn-mute' + muteClass, {
 	        onclick: function onclick() {

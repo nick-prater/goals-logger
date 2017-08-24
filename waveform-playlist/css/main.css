@@ -58,6 +58,16 @@
 	background: white;
 	text-align: center;
 }
+.playlist .controls a.delete_track {
+	background-color: white;
+	color: black;
+	margin-right: 2px;
+	float: left;
+	text-decoration: none;
+}
+.playlist .controls a.delete_track:hover {
+	color: red;
+}
 .playlist .controls header {
 	overflow: hidden;
 	color: white;
