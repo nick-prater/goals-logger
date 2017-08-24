@@ -1833,7 +1833,23 @@ var WaveformPlaylist =
 	        _this2.adjustTrackPlayout();
 	        _this2.drawRequest();
 	      });
-	
+
+              ee.on('delete_track', function (selected_track) {
+
+                  /* See https://github.com/naomiaro/waveform-playlist/issues/32 */
+                  _this2.tracks = _this2.tracks.filter((track, i) => {
+
+                      if(track === selected_track) {
+                          track.scheduleStop();
+                      }
+
+                      return track !== selected_track;
+                  });
+
+                  _this2.adjustDuration();
+                  _this2.draw(_this2.render());
+              });
+
 	      ee.on('volumechange', function (volume, track) {
 	        track.setGainLevel(volume / 100);
 	      });
@@ -5823,16 +5839,32 @@ var WaveformPlaylist =
 	    key: 'renderControls',
 	    value: function renderControls(data) {
 	      var _this2 = this;
-	
 	      var muteClass = data.muted ? '.active' : '';
 	      var soloClass = data.soloed ? '.active' : '';
 	      var numChan = this.peaks.data.length;
-	
+//NP
+console.log("render_controls", data, _this2);
+
 	      return (0, _h2.default)('div.controls', {
 	        attributes: {
 	          style: 'height: ' + numChan * data.height + 'px; width: ' + data.controls.width + 'px; position: absolute; left: 0; z-index: 10;'
 	        }
-	      }, [(0, _h2.default)('header', [this.name]), (0, _h2.default)('div.btn-group', [(0, _h2.default)('span.btn.btn-default.btn-xs.btn-mute' + muteClass, {
+	      }, [
+                     (0, _h2.default)(
+                       'a.delete_track',
+                       {
+                         attributes: {
+                           href: 'javascript:void(0)'
+                         },
+                         onclick: function onclick() {
+                           _this2.ee.emit('delete_track', _this2);
+                         }
+                       },
+                       ['X']
+                     ),
+                     (0, _h2.default)('header', [this.name]),
+                     (0, _h2.default)('div.btn-group', [
+                         (0, _h2.default)('span.btn.btn-default.btn-xs.btn-mute' + muteClass, {
 	        onclick: function onclick() {
 	          _this2.ee.emit('mute', _this2);
 	        }
