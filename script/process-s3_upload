@@ -23,7 +23,7 @@ while (1) {
 	$args{s3_bucket} //= $config->{default_bucket};
 
 	if($args{audio_file}) {
-		s3cmd_upload(
+		awscli_upload(
 			access_key  => $config->{s3_key},
 			secret_key  => $config->{s3_secret},
 			bucket_name => $args{s3_bucket},
@@ -33,7 +33,7 @@ while (1) {
 	}
 
 	if($args{waveform_file}) {
-		s3cmd_upload(
+		awscli_upload(
 			access_key  => $config->{s3_key},
 			secret_key  => $config->{s3_secret},
 			bucket_name => $args{s3_bucket},
@@ -43,7 +43,7 @@ while (1) {
 	}
 
 	if($args{metadata_file}) {
-		s3cmd_upload(
+		awscli_upload(
 			access_key  => $config->{s3_key},
 			secret_key  => $config->{s3_secret},
 			bucket_name => $args{s3_bucket},
@@ -113,6 +113,46 @@ sub read_config {
 }
 
 
+sub awscli_upload {
+
+	# Alternative upload using official AWS cli tool
+	# apt install awscli
+
+	my %args = @_;
+
+	-e $args{local_file} or do {
+		warn "ERROR local file $args{local_file} does not exist\n";
+		return 0;
+	};
+
+	$args{object_name} or do {
+		warn "ERROR no remote object name defined\n";
+		return 0;
+	};
+
+	print "uploading $args{local_file} to s3 $args{bucket_name} :: $args{object_name}\n";
+
+	$ENV{AWS_ACCESS_KEY_ID} = $args{access_key};
+	$ENV{AWS_SECRET_ACCESS_KEY} = $args{secret_key};
+
+	my @command_line = (
+		'/usr/bin/aws', 's3', 'cp',
+		$args{local_file},
+		"s3://$args{bucket_name}/$args{object_name}",	
+		'--acl', 'bucket-owner-full-control',
+		'--quiet',
+	);
+
+	print "running: ", join("  ", @command_line), "\n";
+	system @command_line and do {
+		warn "ERROR uploading $args{local_file} to s3 $!\n";
+		return 0;
+	};
+
+	print "upload OK\n";
+	return 1;
+}
+
 
 sub s3cmd_upload {
 
@@ -150,7 +190,7 @@ sub s3cmd_upload {
 		$args{local_file},
 		"s3://$args{bucket_name}/$args{object_name}"
 	);
-	#print "running: ", join(" ", @command_line), "\n";
+	print "running: ", join("  ", @command_line), "\n";
 	system @command_line and do {
 		warn "ERROR uploading $args{local_file} to s3 $!\n";
 		return 0;
