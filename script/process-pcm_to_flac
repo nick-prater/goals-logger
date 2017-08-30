@@ -42,7 +42,7 @@ while (1) {
 		"-ac", "2",
 		"-f", "s24be",
 		"-i",  $args{audio_file},
-		"-ac", "2",
+		"-ac", "1",
 		"-sample_fmt", "s16",
 		$out_file
 	);
