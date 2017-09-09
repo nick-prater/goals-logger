@@ -2059,7 +2059,7 @@ var WaveformPlaylist =
 	
 	      this.isRendering = true;
 	      //this.offlineAudioContext = new OfflineAudioContext(2, 44100 * this.duration, 44100);
-	      this.offlineAudioContext = new OfflineAudioContext(2, 48000 * this.duration, 48000);
+	      this.offlineAudioContext = new OfflineAudioContext(1, 48000 * this.duration, 48000);
 	
 	      var currentTime = this.offlineAudioContext.currentTime;
 	
