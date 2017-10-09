@@ -8645,7 +8645,18 @@ console.log("render_controls", data, _this2);
 	
 	  function interleave(inputL, inputR) {
 	    var length = inputL.length + inputR.length;
-	    var result = new Float32Array(length);
+
+            // Allocate array to hold audio samples - this allocation may
+            // fail if the audio duration is too long.
+	    var result;
+            try {
+              result = new Float32Array(length);
+            }
+            catch (error) {
+              console.log("failed to allocate array for interleaved audio sampless");
+              window.alert("Error: failed to allocate memory for audio");
+              return null;
+            }
 	
 	    var index = 0;
 	    var inputIndex = 0;
