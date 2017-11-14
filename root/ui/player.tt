@@ -27,6 +27,9 @@
 		<meta charset="utf-8">
 		<title>talkSPORT GOALS</title>
 		<link rel="stylesheet" href="/goals.css" />
+
+		<!-- used for upload component ajax -->
+		<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
 	</head>
 	<body>
 
@@ -266,11 +269,16 @@
 				<button type="button" onclick="play_from_in_point()">|----</button>
 				<button type="button" onclick="play_to_out_point(1.5)">----|</button>
 				<button type="button" onclick="display_clip_metadata()" id="export_clip_button">CREATE CLIP</button>
+				<button type="button" onclick="display_upload_metadata()">UPLOAD</button>
 				<button type="button" onclick="download_clip()">DOWNLOAD</button>
 				<button type="button" onclick="play_pause()" id="play_pause_button" class="play_pause_button">PLAY</button>
 			</div>
 
 			<hr />
+
+
+[% INCLUDE "ui/upload_playlist.tt" %]
+
 
 			<!-- This div contains the form used to input metadata for a new audio clip
 			     it is hidden until the create clip button is pressed
@@ -402,6 +410,7 @@
 			var clip_marker = document.getElementById('clip_marker');
 			var waveform_svg = document.getElementById('waveform_svg');
 			var clip_metadata = document.getElementById('clip_metadata_container');
+			var upload_metadata_element = document.getElementById('upload_playlist_container');
 
 			/* Global state variables */
 			var in_point_seconds;          // Marked clip in point, relative to start of audio, to ms resolution
@@ -414,6 +423,7 @@
 			var waiting_for_audio_load;    // If true, respond to canplay event
 			var load_position_seconds = 0; // If non-zero, autoplay starts from this time position in audio
 			var click_seconds = 0;         // Keeps track of where mouse button was last clicked
+			var rendered_audio = true;     // Upload form won't allow submit unless this flag is true
 			var max_clip_seconds = [% max_clip_seconds %];
 
 			/* Keep track of fractional seconds for selected audio:
@@ -444,6 +454,15 @@
 					refresh_event_list
 				);
 			}
+
+			/* Handle Upload form Cancel */
+			$(".form_container .cancel_button").click(function() {
+				hide_clip_metadata()
+			});
+
+			/* Override default upload form action */
+			$("#upload_playlist_container .upload_button").off("click");
+			$("#upload_playlist_container .upload_button").on("click", upload_clip);
 
 
 			function play_pause() {
@@ -580,32 +599,32 @@
 			}
 
 
-			function display_clip_metadata() {
+			function display_clip_trim() {
 
 				/* Hide clip list */
 				var clip_list = document.getElementById('clip_list_container');
 				clip_list.style.display = "none";
 
+				/* Hide clip details */
+				clip_metadata.style.display = "none";
+
+				/* Hide upload details */
+				$("#upload_playlist_container").hide();
+
 				/* Update times */
 				var in_point_ms  = audio_start_dt.valueOf() + (in_point_seconds * 1000);
 				var out_point_ms = audio_start_dt.valueOf() + (out_point_seconds * 1000);
-				var duration_seconds = (out_point_seconds - in_point_seconds);
 
 				/* This updates the drop down boxes to reflect the given start/end points */
 				set_audio_times_from_local_epoch_ms(in_point_ms, out_point_ms);
 
 				/* Load Audio for marked clip */
+				console.log("loading audio for marked clip");
 				autoplay = false;
 				load_audio();
 
-				/* Update text fields on metadata form */
-				var duration_text_field = document.getElementById('create_clip_duration');
-				duration_text_field.innerHTML = seconds_to_hours_mins_secs(duration_seconds);
-
-				/* Show clip_details div */
-				clip_metadata.style.display = "block";
-
 				/* Show clip trim buttons */
+				console.log("showing fine trim buttons");
 				var node;
 				node = document.getElementById("coarse_trim_buttons");
 				node.style.display = "none";
@@ -614,10 +633,36 @@
 			}
 
 
+			function display_clip_metadata() {
+
+
+				/* Update text fields on metadata form */
+				var duration_seconds = (out_point_seconds - in_point_seconds);
+				var duration_text_field = document.getElementById('create_clip_duration');
+				duration_text_field.innerHTML = seconds_to_hours_mins_secs(duration_seconds);
+
+				/* Show clip_details div */
+				display_clip_trim();
+				clip_metadata.style.display = "block";
+			}
+
+
+			function display_upload_metadata() {
+
+				display_clip_trim();
+				display_upload_form();
+			}
+
+
 			function hide_clip_metadata() {
+
+				console.log("hiding metadata forms, showing event list");
 
 				/* Hide clip_details div */
 				clip_metadata.style.display = "none";
+
+				/* Hide upload details */
+				$("#upload_playlist_container").hide();
 
 				/* Hide trim buttons */
 				var node;
@@ -629,6 +674,39 @@
 				/* Show event list */
 				var clip_list = document.getElementById('clip_list_container');
 				clip_list.style.display = "block";
+			}
+
+
+			function upload_clip(event) {
+
+				console.log("upload button clicked");
+ 				var spec = new audio_spec()
+				spec.media_code = $("#media_code").val();
+				spec.proprietary_content = $("#proprietary_content").prop("checked");
+
+				var request = new XMLHttpRequest();
+
+				request.open("POST", "/uploads/post_clip", true);
+				request.setRequestHeader('Content-Type', 'application/json');
+				request.onload = function(event) {
+
+					if(request.status != 200) {
+						console.log("error queuing upload: " + request.status);
+						$("#upload_playlist_message").text("Error uploading audio: " + request.status);
+						$("#upload_playlist_container button.upload_button").removeAttr("disabled");
+						return;
+					}
+
+					/* Clip uploaded OK */
+					console.log("clip uploaded ok");
+					$("#upload_playlist_message").html("Upload queued OK");
+					$("div.form_container").hide();
+					$("#clip_list_container").show()
+				};
+
+				$("#upload_playlist_message").html("Uploading clip...");
+				$("#upload_playlist_container button.upload_button").attr("disabled", "disabled");
+				request.send(JSON.stringify(spec));
 			}
 
 

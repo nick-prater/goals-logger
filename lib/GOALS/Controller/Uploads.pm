@@ -111,11 +111,9 @@ sub media_codes :Local :Args(0) {
 	my $self = shift;
 	my $c = shift;
 
-
 	# For test - return dummy data
 	#$c->response->content_type('application/json');
 	#$c->response->body(encode_json($SAMPLE_DATA));
-	#sleep 3;
 	#return;
 
 	my $api_user = $c->config->{tibus_user};
@@ -248,6 +246,97 @@ sub post :Local {
 }
 
 
+
+sub post_clip :Local {
+
+	my $self = shift;
+	my $c = shift;
+	my $params = $c->request->body_params;
+
+	# We need parameters:
+	#  media_code
+	#  proprietary_content
+	#  source file
+	my $params = $c->req->body_data;
+
+	# Validate audio spec
+	$c->forward(
+		'/audio/validate_audio_params',
+		[
+			start_iso  => $params->{start_iso},
+			end_iso    => $params->{end_iso},
+			channel_id => $params->{channel_id},
+		]
+	) or die;
+
+	# Create (or get cached) audio file
+	my $audio_cache_path = $c->forward(
+		'/audio/generate_audio',
+		[ channel_id => $params->{channel_id} ]
+	) or do {
+		$c->error("unable to prepare requested audio file");
+		die;
+	};
+
+	# Extract media code info
+	$params->{media_code} or do {
+		return $c->error("ERROR: no media_code supplied");
+	};
+	my $media_code = decode_json($params->{media_code}) or do {
+		return $c->error("ERROR: failed to decode json media code");
+	};
+
+	# Extract upload bucket
+	my $bucket = $media_code->{bucket} or do {
+		return $c->error("ERROR: no bucket argument supplied");
+	};
+	$bucket =~ s|^s3://||i; # Strip any leading 's3://' prefix;
+
+	# Set proprietary media flag if specified
+	if($params->{proprietary_content}) {
+		# Force to boolean value
+		$media_code->{proprietary} = !!$params->{proprietary_content};
+	}
+
+	# move file
+	my $tmp = File::Temp->new(
+		DIR => $c->config->{upload_queue_path},
+		SUFFIX => '.wav',
+		UNLINK => 0,
+	);
+	my $local_path = $tmp->filename;
+	my ($local_name) = $local_path =~ m|.+/(.+)$|;
+
+	$c->log->info("copying upload $audio_cache_path -> $local_path");
+	copy($audio_cache_path => $local_path) or do {
+		$c->log->error("Failed to copy $audio_cache_path -> $local_path : $!");
+		die "ERROR moving audio file to upload queue";
+	};
+
+	# queue task
+	my $task = Logmystream::Beanstalk::Tasks->new;
+	my $task_params = {
+		audio_file        => $local_path,
+		remote_audio_file => $local_name,
+		s3_bucket         => $bucket,
+		mediaspec         => $media_code,
+		next_actions      => ['wav_to_flac', 's3_upload', 'notify_upload'],
+		options => {
+			s3_upload => {
+				delete_after_upload => 1
+			},
+		},
+	};
+
+	my $job_id = $task->queue_next_task($task_params);
+
+	# Return status to page
+	$c->log->debug("Upload queued OK, job_id: $job_id");
+	$c->stash(
+		current_view => 'JSON',
+		json_data => { job_id => $job_id },
+	)
+}
 
 
 

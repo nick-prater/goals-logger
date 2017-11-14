@@ -38,6 +38,10 @@
 							<button type="button" class="btn btn-default cancel_button">Cancel</button>
 						</div>
 					</div>
+
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10" id="upload_playlist_message"></div>
+					</div>
 				</form>
 			</div>
 
